@@ -4,6 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.group32.cs261project.ui.SimulationData.PlaneArrivedHolding;
+import com.group32.cs261project.ui.SimulationData.PlaneArrivedTakeoff;
+import com.group32.cs261project.ui.SimulationData.PlaneDiverted;
+import com.group32.cs261project.ui.SimulationData.PlaneEmergency;
+import com.group32.cs261project.ui.SimulationData.PlaneLanded;
+import com.group32.cs261project.ui.SimulationData.PlaneTookOff;
+import com.group32.cs261project.ui.SimulationData.SimEvent;
+
 public class SimulationData {
 
     // ----- Config inputs -----
@@ -19,6 +27,14 @@ public class SimulationData {
     public int holdingQueue = 0;
     public int takeoffQueue = 0;
 
+    // ----- Live plane snapshot for UI -----
+    public final List<PlaneDTO> planes = new ArrayList<>();
+
+    // Breakdown counts (UI convenience)
+    public int holdingEmergencyCount = 0;
+    public int holdingNormalCount = 0;
+    public int outboundQueueCount = 0;
+
     // ----- Results/report fields (filled at end) -----
     public int maxHoldingQueue = 0;
     public int maxTakeoffQueue = 0;
@@ -33,6 +49,16 @@ public class SimulationData {
     public double avgOutboundDelayMin = 0;
     public int maxInboundDelayMin = 0;
     public int maxOutboundDelayMin = 0;
+
+    // Event List
+    public List<SimEvent> events = new ArrayList<>();
+    public sealed interface SimEvent permits PlaneArrivedHolding, PlaneArrivedTakeoff, PlaneLanded, PlaneTookOff, PlaneEmergency, PlaneDiverted {}
+    public record PlaneArrivedHolding(String planeId, boolean emergency) implements SimEvent {}
+    public record PlaneArrivedTakeoff(String planeId) implements SimEvent {}
+    public record PlaneLanded(String planeId, int runwayIndex) implements SimEvent {}
+    public record PlaneTookOff(String planeId, int runwayIndex) implements SimEvent {}
+    public record PlaneEmergency(String planeId) implements SimEvent {}
+    public record PlaneDiverted(String planeId, String reason) implements SimEvent {}
 
     // Enums - allowed values for runway config
     public enum RunwayMode { LANDING, TAKE_OFF, MIXED;
@@ -65,6 +91,17 @@ public class SimulationData {
             return sb.toString().trim(); // Remove trailing space
         }
      }
+
+     // Plane enums + DTO for UI visuals
+    public enum PlaneDirection { INBOUND, OUTBOUND }
+    public enum PlaneStatus { HOLDING, LANDING, TAKING_OFF, DIVERTED, COMPLETED }
+    public static class PlaneDTO {
+        public String code;
+        public PlaneDirection direction;
+        public PlaneStatus status;
+        public boolean emergency;
+        public int etaTicks; // remaining ticks in landing/takeoff/divert (0 otherwise)
+    }
     // --- Runway Config Inner Class -----
     public static class RunwayConfig {
         public final int id; // Runway identifier
@@ -119,6 +156,26 @@ public class SimulationData {
             rr.status = r.status;
             d.runways.add(rr);
         }
+
+        // Copy queue breakdown counts
+        d.holdingEmergencyCount = holdingEmergencyCount;
+        d.holdingNormalCount = holdingNormalCount;
+        d.outboundQueueCount = outboundQueueCount;
+
+        // Deep copy planes list
+        d.planes.clear();
+        for (PlaneDTO p : planes) {
+            PlaneDTO pp = new PlaneDTO();
+            pp.code = p.code;
+            pp.direction = p.direction;
+            pp.status = p.status;
+            pp.emergency = p.emergency;
+            pp.etaTicks = p.etaTicks;
+            d.planes.add(pp);
+        }
+
+        // Copy events 
+        d.events = new ArrayList<>(events);
 
         return d;
     }

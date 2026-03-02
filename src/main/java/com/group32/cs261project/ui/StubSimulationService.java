@@ -1,12 +1,13 @@
 package com.group32.cs261project.ui;
 
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.*;
 /* Stub implementation of simulation backend.
 *  It implements the SimulationService interface methods: start, updateConfig, stop, and isRunning.
+*  Will be replaced by SimulationService once backend is complete.
 */
 public class StubSimulationService implements SimulationService {
 
@@ -24,12 +25,50 @@ public class StubSimulationService implements SimulationService {
 
     private Random rng;
 
+    // Plane Storage and queues
+    private final Map<String, Plane> planes = new HashMap<>();
+
+    // FIFO within each queue, but emergencies take priority
+    private final Deque<String> holdingEmergency = new ArrayDeque<>();
+    private final Deque<String> holdingNormal = new ArrayDeque<>();
+
+    private final Deque<String> outboundQueue = new ArrayDeque<>();
+
+    private int planeSeq = 1;
+
+    // Tune durations in "ticks" - 1 minute per tick
+    private static final int LANDING_TICKS = 2;   // 2 minutes
+    private static final int TAKEOFF_TICKS = 2;   // 2 minutes
+    private static final int DIVERT_TICKS = 3;    // shows diverted for a bit before removal
+
+    private static final double P_EMERGENCY = 0.10;
+    private static final double P_DIVERT_GIVEN_EMERGENCY = 0.10;
+
+     // ----- Internal plane model (not exposed to UI directly) -----
+    private static class Plane {
+        final String code;
+        final SimulationData.PlaneDirection direction;
+
+        SimulationData.PlaneStatus status;
+        boolean emergency;
+
+        // Diversion roll happens once while holding
+        boolean diversionPending;
+
+        int remainingTicks; // for LANDING/TAKING_OFF/DIVERTED
+
+        Plane(String code, SimulationData.PlaneDirection direction) {
+            this.code = code;
+            this.direction = direction;
+        }
+    }
+
     // Start a simulation based on config
     @Override
     public void start(SimulationData config, Consumer<SimulationData> onSnapshot) {
         // Lock to ensure start is thread-safe
         synchronized (lock) {
-            if (running) return; // Of already running, ignore start request
+            if (running) return; // If already running, ignore start request
 
             // Copy config so caller can't mutate internal state after starting
             current = config.copy();
@@ -37,12 +76,20 @@ public class StubSimulationService implements SimulationService {
 
             sink = onSnapshot; // Store the callback for later tick updates
             rng = new Random(current.stableConfigHash()); // Seed RNG with config hash for deterministic behavior
+            
             running = true; // Mark simulation as running
 
             // Reset accumulators for a new run
             ticks = 0;
             sumHolding = 0;
             sumTakeoff = 0;
+
+            // Clear all planes and queues
+            planes.clear();
+            holdingEmergency.clear();
+            holdingNormal.clear();
+            outboundQueue.clear();
+            planeSeq = 1;
         }
 
         // Tick every 200ms, advance 1 simulated minute per tick
@@ -93,25 +140,60 @@ public class StubSimulationService implements SimulationService {
                 }
             }
 
+            // Advance planes already in progress (landing/takeoff/divery)
+            // Decrement timers, move to COMPLETED, and then remove when done
+            List<String> toRemove = new ArrayList<>();
+
+            for (Plane p : planes.values()) {
+                if (p.status == SimulationData.PlaneStatus.LANDING || p.status == SimulationData.PlaneStatus.TAKING_OFF || p.status == SimulationData.PlaneStatus.DIVERTED) {
+                    p.remainingTicks--;
+                    if (p.remainingTicks <= 0) {
+                        p.status = SimulationData.PlaneStatus.COMPLETED;
+                        toRemove.add(p.code);
+                    }
+                }
+            }
+
+            for (String code : toRemove){
+                planes.remove(code);
+            }
+
             // Generate new arrivals based on rates (using a simple poisson approximation)
             int inboundArrivals = poissonApprox(current.inboundRatePerHour / 60.0);
             int outboundReady = poissonApprox(current.outboundRatePerHour / 60.0);
 
+            for (int i = 0; i < inboundArrivals; i++) spawnInbound();
+            for (int i = 0; i < outboundReady; i++) spawnOutbound();
+
+            // Diversion Logic 
+            // Roll once for emergency planes while holding - we do this after spawning so new emergency planes can be diverted too
+            divertSomeEmergencyFromHoldingOnce();
+
+            // Pull planes from queues to start Landing/Taking off
+            // Respect emergency first then FIFO
+            for (int i = 0; i < landingCapacity; i++) {
+                Plane next = pollNextInboundForLanding();
+                if (next == null) break;
+                next.status = SimulationData.PlaneStatus.LANDING;
+                next.remainingTicks = LANDING_TICKS;
+            }
+
+            for (int i = 0; i < takeoffCapacity; i++) {
+                Plane next = pollNextOutboundForTakeoff();
+                if (next == null) break;
+                next.status = SimulationData.PlaneStatus.TAKING_OFF;
+                next.remainingTicks = TAKEOFF_TICKS;
+            }
+
+            // ----- Update existing summary stats based on queue sizes -----
+
             // Queue evolution
-            current.holdingQueue += inboundArrivals;
-            current.takeoffQueue += outboundReady;
+            int holdingCount = holdingEmergency.size() + holdingNormal.size();
+            int takeoffCount = outboundQueue.size();
 
-            int landed = Math.min(current.holdingQueue, landingCapacity);
-            int tookOff = Math.min(current.takeoffQueue, takeoffCapacity);
-
-            // Remove landed/taken off from queues
-            current.holdingQueue -= landed;
-            current.takeoffQueue -= tookOff;
-
-            // Cancellations/diversions (simple rule)
-            if (current.holdingQueue > 50 && rng.nextDouble() < 0.10) current.divertedCount += 1;
-            if (current.takeoffQueue > 50 && rng.nextDouble() < 0.08) current.cancelledCount += 1;
-
+            current.holdingQueue = holdingCount;
+            current.takeoffQueue = takeoffCount;
+            
             // Delay proxies
             int inboundDelay = Math.min(120, current.holdingQueue);
             int outboundDelay = Math.min(120, current.takeoffQueue);
@@ -121,17 +203,34 @@ public class StubSimulationService implements SimulationService {
 
             // Accumulate averages
             ticks++;
-            sumHolding += current.holdingQueue;
-            sumTakeoff += current.takeoffQueue;
+            sumHolding += holdingCount;
+            sumTakeoff += takeoffCount;
 
-            current.maxHoldingQueue = Math.max(current.maxHoldingQueue, current.holdingQueue);
-            current.maxTakeoffQueue = Math.max(current.maxTakeoffQueue, current.takeoffQueue);
+            current.maxHoldingQueue = Math.max(current.maxHoldingQueue, holdingCount);
+            current.maxTakeoffQueue = Math.max(current.maxTakeoffQueue, takeoffCount);
 
             current.avgHoldingQueue = sumHolding / (double) ticks;
             current.avgTakeoffQueue = sumTakeoff / (double) ticks;
 
             current.avgInboundDelayMin = current.avgHoldingQueue;
             current.avgOutboundDelayMin = current.avgTakeoffQueue;
+
+            // Counts for UI convenience 
+            current.holdingEmergencyCount = holdingEmergency.size();
+            current.holdingNormalCount = holdingNormal.size();
+            current.outboundQueueCount = outboundQueue.size();    
+            
+            // Build planes list for snapshot
+            current.planes.clear();
+            for (Plane p : planes.values()) {
+                SimulationData.PlaneDTO dto = new SimulationData.PlaneDTO();
+                dto.code = p.code;
+                dto.direction = p.direction;
+                dto.status = p.status;
+                dto.emergency = p.emergency;
+                dto.etaTicks = p.remainingTicks;
+                current.planes.add(dto);
+            }
 
             // End automatically after 12 simulated hours (720 minutes) unless user stops
             if (current.simMinute >= 720) {
@@ -142,6 +241,102 @@ public class StubSimulationService implements SimulationService {
         }
 
         if (sink != null) sink.accept(snap);
+    }
+
+    // Spawn inbound planes
+    private void spawnInbound(){
+        String code = genPlaneCode("IN");
+        Plane p = new Plane(code, SimulationData.PlaneDirection.INBOUND);
+        p.emergency = rng.nextDouble() < P_EMERGENCY;
+        p.status = SimulationData.PlaneStatus.HOLDING;
+
+        // Diversion is decided from holding, but only emergencies are eligible
+        p.diversionPending = p.emergency;
+
+        planes.put(code, p);
+
+        if (p.emergency) holdingEmergency.addLast(code);
+        else holdingNormal.addLast(code);
+    }
+
+    // Spawn outbound planes
+    private void spawnOutbound() {
+        String code = genPlaneCode("OUT");
+        Plane p = new Plane(code, SimulationData.PlaneDirection.OUTBOUND);
+        p.emergency = false;
+        p.diversionPending = false;
+        p.status = SimulationData.PlaneStatus.HOLDING; // or a separate OUTBOUND_QUEUE status if you add it
+
+        planes.put(code, p);
+        outboundQueue.addLast(code);
+    }
+
+    private void divertSomeEmergencyFromHoldingOnce() {
+        // Inspect emergency holding queue and divert some planes.
+        // Because removing from the middle of ArrayDeque is awkward, simplest stub approach:
+        // rebuild the deque with diverted planes removed.
+
+        if (holdingEmergency.isEmpty()) return;
+
+        Deque<String> rebuilt = new ArrayDeque<>();
+        while (!holdingEmergency.isEmpty()) {
+            String code = holdingEmergency.pollFirst();
+            Plane p = planes.get(code);
+            if (p == null) continue; // already removed
+
+            if (p.status == SimulationData.PlaneStatus.HOLDING && p.emergency && p.diversionPending) {
+                // Roll once
+                boolean divert = rng.nextDouble() < P_DIVERT_GIVEN_EMERGENCY;
+                p.diversionPending = false;
+
+                if (divert) {
+                    p.status = SimulationData.PlaneStatus.DIVERTED;
+                    p.remainingTicks = DIVERT_TICKS;
+                    current.divertedCount += 1; // keep metric
+                    continue; // do NOT re-add to holding queue
+                }
+            }
+
+            // keep waiting
+            rebuilt.addLast(code);
+        }
+
+        holdingEmergency.addAll(rebuilt);
+    }
+
+    private Plane pollNextInboundForLanding() {
+        String code = !holdingEmergency.isEmpty() ? holdingEmergency.pollFirst() : !holdingNormal.isEmpty() ? holdingNormal.pollFirst() : null;
+        if (code == null) return null;
+
+        Plane p = planes.get(code);
+        if (p == null) return null;
+
+        return p;
+    }
+
+    private Plane pollNextOutboundForTakeoff() {
+        String code = outboundQueue.pollFirst();
+        if (code == null) return null;
+
+        Plane p = planes.get(code);
+        if (p == null) return null;
+
+        return p;
+    }
+
+    // Generate plane code
+    private String genPlaneCode(String prefix) {
+        // deterministic-ish but unique
+        int n = planeSeq++;
+        // add “airline” look
+        String airline = switch (rng.nextInt(5)) {
+            case 0 -> "BAW";
+            case 1 -> "EZY";
+            case 2 -> "VIR";
+            case 3 -> "RYR";
+            default -> "TUI";
+        };
+        return prefix + "-" + airline + String.format("%03d", n);
     }
 
     private int poissonApprox(double lambda) {
