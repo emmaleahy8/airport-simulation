@@ -11,7 +11,9 @@ import com.group32.cs261project.model.Airport;
 import com.group32.cs261project.model.Runway;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
+import com.group32.cs261project.scheduling.Scheduler;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
@@ -21,14 +23,17 @@ public class Main {
         Instant end = start.plus(Duration.ofHours(1));
 
         // If your SimConfig has more fields, set them accordingly.
-        SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, true);
+        SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, true);
 
         Airport airport = new Airport(List.of(
                 new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
         ));
 
-        SimulationEngine<Airport> engine =
-                new SimulationEngine<>(config, airport, new PriorityEventQueue<>());
+        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
+            config, 
+            new SimulationContext(airport, new Scheduler()), 
+            new PriorityEventQueue<>());
+
 
         FlightGenerator generator = new FlightGenerator(config);
 

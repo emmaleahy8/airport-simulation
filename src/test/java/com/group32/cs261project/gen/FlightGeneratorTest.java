@@ -27,7 +27,8 @@ class FlightGeneratorTest {
                 end,
                 123L,
                 15.0,  // inboundFlowPerHour
-                15.0   // outboundFlowPerHour
+                15.0,   // outboundFlowPerHour
+                60
         );
 
         FlightGenerator gen = new FlightGenerator(cfg);
@@ -56,8 +57,8 @@ class FlightGeneratorTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg1 = new SimConfig(start, end, 42L, 15.0, 15.0);
-        SimConfig cfg2 = new SimConfig(start, end, 42L, 15.0, 15.0);
+        SimConfig cfg1 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
+        SimConfig cfg2 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
 
         FlightGenerator g1 = new FlightGenerator(cfg1);
         FlightGenerator g2 = new FlightGenerator(cfg2);
@@ -79,7 +80,7 @@ class FlightGeneratorTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg = new SimConfig(start, end, 999L, 15.0, 15.0);
+        SimConfig cfg = new SimConfig(start, end, 999L, 15.0, 15.0, 60);
 
         FlightGenerator gen = new FlightGenerator(cfg);
         List<GeneratedFlight> flights = gen.generateFlights(FlightType.INBOUND);
