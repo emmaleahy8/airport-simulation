@@ -13,13 +13,9 @@ public final class SimConfig {
     private final long randomSeed;
     private final double inboundRatePerHour;
     private final double outboundRatePerHour;
+    private boolean verbose = false;
 
-    /**
-     * Constructor
-     * @param startTime
-     * @param endTime
-     * @param randomSeed
-     */
+
     public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, double outboundRatePerHour) {
         this.startTime = Objects.requireNonNull(startTime, "startTime");
         this.endTime = Objects.requireNonNull(endTime, "endTime");
@@ -29,6 +25,22 @@ public final class SimConfig {
         this.randomSeed = randomSeed;
         this.inboundRatePerHour = inboundRatePerHour;
         this.outboundRatePerHour = outboundRatePerHour;
+    }
+
+    public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, double outboundRatePerHour, boolean verbose) {
+        this.startTime = Objects.requireNonNull(startTime, "startTime");
+        this.endTime = Objects.requireNonNull(endTime, "endTime");
+        if (endTime.isBefore(startTime)) {
+            throw new IllegalArgumentException("endTime must be >= startTime");
+        }
+        this.randomSeed = randomSeed;
+        this.inboundRatePerHour = inboundRatePerHour;
+        this.outboundRatePerHour = outboundRatePerHour;
+        this.verbose = verbose;
+    }
+
+    public boolean isVerbose() {
+        return this.verbose;
     }
 
     public Instant startTime() {

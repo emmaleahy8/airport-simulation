@@ -21,7 +21,7 @@ public class Main {
         Instant end = start.plus(Duration.ofHours(1));
 
         // If your SimConfig has more fields, set them accordingly.
-        SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0);
+        SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, true);
 
         Airport airport = new Airport(List.of(
                 new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
