@@ -20,7 +20,7 @@ public class Scheduler {
             switch (runway.mode()) {
 
                 case LANDING -> {
-                    if (runway.isAvailableForLanding(now)) {
+                    if (!airport.holdingPattern().isEmpty() && runway.isAvailableForLanding(now)) {
                         airport.holdingPattern().dequeueNextLandingCandidate();
                         runway.occupyUntil(completionTime);
                         engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
@@ -28,7 +28,7 @@ public class Scheduler {
                 }
 
                 case TAKEOFF, MIXED -> {
-                    if (runway.isAvailableForTakeOff(now)) {
+                    if (!airport.takeOffQueue().isEmpty() && runway.isAvailableForTakeOff(now)) {
                         airport.takeOffQueue().dequeue();
                         runway.occupyUntil(completionTime);
                         engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
