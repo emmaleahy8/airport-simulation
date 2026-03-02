@@ -10,6 +10,29 @@ import com.group32.cs261project.sim.SimulationEngine;
 
 public class Scheduler {
 
+    private final MixedModePolicy mixedModePolicy;
+
+    public Scheduler() {
+        this.mixedModePolicy = new AlternatingMixedModePolicy();
+    }
+
+    private void scheduleLandingOperation(
+        Instant completionTime, Runway runway, SimulationEngine<SimulationContext> engine
+    ) {
+        engine.context().airport().holdingPattern().dequeueNextLandingCandidate();
+        runway.occupyUntil(completionTime);
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
+    }
+
+    private void scheduleTakeoffOperation(
+        Instant completionTime, Runway runway, SimulationEngine<SimulationContext> engine
+    ) {
+        engine.context().airport().takeOffQueue().dequeue();
+        runway.occupyUntil(completionTime);
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
+
+    }
+
     public void tryScheduleOperations(Instant now, SimulationEngine<SimulationContext> engine) {
 
         Airport airport = engine.context().airport();
@@ -17,22 +40,24 @@ public class Scheduler {
 
         for (Runway runway : airport.runways()) {
 
+            boolean hasArrivals = !airport.holdingPattern().isEmpty();
+            boolean hasDepartures = !airport.takeOffQueue().isEmpty();
+
             switch (runway.mode()) {
-
                 case LANDING -> {
-                    if (!airport.holdingPattern().isEmpty() && runway.isAvailableForLanding(now)) {
-                        airport.holdingPattern().dequeueNextLandingCandidate();
-                        runway.occupyUntil(completionTime);
-                        engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
-                    }
+                    if (hasArrivals && runway.isAvailable(now))
+                        this.scheduleLandingOperation(completionTime, runway, engine);
                 }
-
-                case TAKEOFF, MIXED -> {
-                    if (!airport.takeOffQueue().isEmpty() && runway.isAvailableForTakeOff(now)) {
-                        airport.takeOffQueue().dequeue();
-                        runway.occupyUntil(completionTime);
-                        engine.schedule(new RunwayOperationCompleteEvent(completionTime, runway));
-
+                case TAKEOFF -> {
+                    if (hasDepartures && runway.isAvailable(now))
+                        this.scheduleTakeoffOperation(completionTime, runway, engine);
+                }
+                case MIXED -> {
+                    if ((hasArrivals || hasDepartures) && runway.isAvailable(now)) {
+                        switch (this.mixedModePolicy.chooseNextOp(hasArrivals, hasDepartures, runway)) {
+                            case LANDING -> this.scheduleLandingOperation(completionTime, runway, engine);
+                            case TAKEOFF -> this.scheduleTakeoffOperation(completionTime, runway, engine);
+                        }
                     }
                 }
             }

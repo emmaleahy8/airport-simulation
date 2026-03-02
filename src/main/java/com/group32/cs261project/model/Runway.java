@@ -100,6 +100,15 @@ public class Runway {
     }
 
     /**
+     * Checks if the runway is available in general
+     * @param time time to check
+     * @return true if status is AVAILABLE and is not occupied
+     */
+    public boolean isAvailable(Instant time) {
+        return this.status == RunwayStatus.AVAILABLE && !this.isOccupied(time);
+    }
+
+    /**
      * Checks if the runway is available for landing at the given time
      * @param time time to check
      * @return true if available
