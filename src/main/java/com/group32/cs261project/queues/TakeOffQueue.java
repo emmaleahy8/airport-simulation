@@ -51,7 +51,7 @@ public class TakeOffQueue {
      * @return number of aircraft in takeoff queue
      */
     public int size() {
-        return queue.size();
+        return this.queue.size();
     }
 
     /**
@@ -59,7 +59,15 @@ public class TakeOffQueue {
      * @return True if no aircraft is in the queue
      */
     public boolean isEmpty() {
-        return queue.isEmpty();
+        return this.queue.isEmpty();
+    }
+
+    /**
+     * Get string representation
+     */
+    @Override
+    public String toString() {
+        return this.queue.toString();
     }
 
 }
