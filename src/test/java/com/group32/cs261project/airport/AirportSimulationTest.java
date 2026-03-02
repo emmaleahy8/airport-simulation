@@ -12,6 +12,7 @@ import com.group32.cs261project.model.Runway;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.events.Event;
 
@@ -26,7 +27,7 @@ import com.group32.cs261project.sim.events.Event;
  */
 class AirportSimulationTest {
 
-    private static final class RecordingEvent implements Event<Airport> {
+    private static final class RecordingEvent implements Event<SimulationContext> {
         private final Instant time;
         private final String label;
         private final List<String> log;
@@ -43,7 +44,7 @@ class AirportSimulationTest {
         }
 
         @Override
-        public void handle(SimulationEngine<Airport> engine) {
+        public void handle(SimulationEngine<SimulationContext> engine) {
             log.add(label);
         }
     }
@@ -68,7 +69,7 @@ class AirportSimulationTest {
         AirportSimulation sim = new AirportSimulation(cfg, airport);
 
         List<String> executed = new ArrayList<>();
-        SimulationEngine<Airport> engine = sim.engine(); // adjust if getter name differs
+        SimulationEngine<SimulationContext> engine = sim.engine(); // adjust if getter name differs
 
         engine.schedule(new RecordingEvent(start.plusSeconds(600), "t10", executed)); // +10 min
         engine.schedule(new RecordingEvent(start.plusSeconds(300), "t5", executed));  // +5 min
@@ -91,7 +92,7 @@ class AirportSimulationTest {
         AirportSimulation sim = new AirportSimulation(cfg, airport);
 
         List<String> executed = new ArrayList<>();
-        SimulationEngine<Airport> engine = sim.engine();
+        SimulationEngine<SimulationContext> engine = sim.engine();
 
         engine.schedule(new RecordingEvent(start.plusSeconds(300), "t5", executed));
         engine.schedule(new RecordingEvent(start.plusSeconds(900), "t15", executed));

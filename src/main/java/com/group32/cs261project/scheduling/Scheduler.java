@@ -5,11 +5,12 @@ import java.time.Instant;
 import com.group32.cs261project.airport.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.model.Airport;
 import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 
 public class Scheduler {
 
-    public static void tryScheduleOperations(Instant now, Airport airport, SimulationEngine<Airport> engine) {
+    public static void tryScheduleOperations(Instant now, Airport airport, SimulationEngine<SimulationContext> engine) {
         Instant completionTime = now.plusSeconds(engine.config().runwayOccupancySeconds());
 
         for (Runway runway : airport.runways()) {
