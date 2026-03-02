@@ -72,4 +72,12 @@ public class HoldingPattern {
             return this.normalQueue.poll();
         }
     }
+
+    /**
+     * Get string representation
+     */
+    @Override
+    public String toString() {
+        return String.format("(%s, %s)", this.emergencyQueue.toString(), this.normalQueue.toString());
+    }
 }
