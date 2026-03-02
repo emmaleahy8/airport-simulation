@@ -27,6 +27,7 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
         if (engine.config().isVerbose())
             System.out.format("%s: %s enqueued to holding pattern\n", time.toString(), aircraft.toString());
         engine.context().airport().holdingPattern().enqueue(aircraft, time);
+        engine.context().scheduler().tryScheduleOperations(time, engine);
     }
     
 }

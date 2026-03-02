@@ -36,6 +36,14 @@ public class Runway {
     }
 
     /**
+     * Get string representation
+     */
+    @Override
+    public String toString() {
+        return String.format("Runway(%s)", String.valueOf(this.runwayNumber));
+    }
+
+    /**
      * Getter for runway number
      * @return the runway number
      */

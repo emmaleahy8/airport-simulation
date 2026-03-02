@@ -24,7 +24,10 @@ public class RunwayOperationCompleteEvent implements Event<SimulationContext> {
 
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
+        if (engine.config().isVerbose())
+            System.out.format("%s: Operation on %s complete\n", time.toString(), runway.toString());
         this.runway.clearOccupancy();
+        engine.context().scheduler().tryScheduleOperations(this.time, engine);
     }
     
 }

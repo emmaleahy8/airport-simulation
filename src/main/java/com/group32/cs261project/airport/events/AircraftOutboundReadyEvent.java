@@ -27,5 +27,6 @@ public class AircraftOutboundReadyEvent implements Event<SimulationContext> {
         if (engine.config().isVerbose())
             System.out.format("%s: %s enqueued to takeoff queue\n", time.toString(), aircraft.toString());
         engine.context().airport().takeOffQueue().enqueue(aircraft, time);
+        engine.context().scheduler().tryScheduleOperations(time, engine);
     }
 }
