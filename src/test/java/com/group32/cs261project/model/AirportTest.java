@@ -64,4 +64,26 @@ class AirportTest {
         assertTrue(airport.findAvailableLandingRunway(t0).isEmpty());
         assertTrue(airport.findAvailableLandingRunway(t1).isPresent());
     }
+    @Test
+    void getRunwayReturnsCorrectRunwayAndAllowsUpdates() {
+        // Create two runways
+        Runway r0 = new Runway(9, 3000, 90, RunwayMode.TAKEOFF, RunwayStatus.AVAILABLE);
+        Runway r1 = new Runway(27, 3000, 270, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+
+        Airport airport = new Airport(List.of(r0, r1));
+
+        // Test getRunway returns the correct runway
+        Runway runway0 = airport.getRunway(9);
+        Runway runway1 = airport.getRunway(27);
+        assertEquals(9, runway0.runwayNumber());
+        assertEquals(27, runway1.runwayNumber());
+
+        // Test setRunwayStatus updates the runway status
+        airport.setRunwayStatus(0, RunwayStatus.INSPECTION);
+        assertEquals(RunwayStatus.INSPECTION, airport.getRunway(0).status());
+
+        // Test setRunwayMode updates the runway mode
+        airport.setRunwayMode(1, RunwayMode.MIXED);
+        assertEquals(RunwayMode.MIXED, airport.getRunway(1).mode());
+    }
 }
