@@ -3,6 +3,7 @@ package com.group32.cs261project.model;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
@@ -22,8 +23,17 @@ public class Airport {
      * Constructor
      * @param runways A list of runway objects
      */
-    public Airport(List<Runway> runways) {
-        this.runways = runways;
+    public Airport(List<RunwayData> runways) {
+
+        this.runways = IntStream.range(0, runways.size())
+            .mapToObj(i -> new Runway(
+                i, 
+                runways.get(i).lengthM(),
+                runways.get(i).bearingDeg(),
+                runways.get(i).mode(),
+                runways.get(i).status()
+            )).toList();
+
         this.holdingPattern = new HoldingPattern();
         this.takeOffQueue = new TakeOffQueue();
     }

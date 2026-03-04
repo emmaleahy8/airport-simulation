@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import com.group32.cs261project.airport.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.model.Aircraft;
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
@@ -58,7 +58,7 @@ class SchedulerTest {
         Instant end = start.plus(Duration.ofHours(1));
 
         // Landing runway available
-        Runway landingRunway = new Runway(1, 3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        RunwayData landingRunway = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
 
         Airport airport = new Airport(List.of(landingRunway));
         
@@ -81,7 +81,7 @@ class SchedulerTest {
         assertEquals(0, airport.holdingPattern().size());
 
         // Runway should be occupied until now + occupancy
-        assertEquals(now.plusSeconds(occupancySeconds), landingRunway.occupiedUntil());
+        assertEquals(now.plusSeconds(occupancySeconds), airport.getRunway(0).occupiedUntil());
 
 
         // Engine should now contain a completion event at the right time
@@ -97,7 +97,7 @@ class SchedulerTest {
         Instant now = start.plusSeconds(300);
         Instant end = start.plus(Duration.ofHours(1));
 
-        Runway takeoffRunway = new Runway(2, 3000, 270, RunwayMode.TAKEOFF, RunwayStatus.AVAILABLE);
+        RunwayData takeoffRunway = new RunwayData(3000, 270, RunwayMode.TAKEOFF, RunwayStatus.AVAILABLE);
 
         Airport airport = new Airport(List.of(takeoffRunway));
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
@@ -114,7 +114,7 @@ class SchedulerTest {
         scheduler.tryScheduleOperations(now, engine);
 
         assertEquals(0, airport.takeOffQueue().size());
-        assertEquals(now.plusSeconds(occupancySeconds), takeoffRunway.occupiedUntil());
+        assertEquals(now.plusSeconds(occupancySeconds), airport.getRunway(0).occupiedUntil());
 
         Event<SimulationContext> e = engine.eventQueue().pop();
         assertNotNull(e);
@@ -128,7 +128,7 @@ class SchedulerTest {
         Instant now = start.plusSeconds(300);
         Instant end = start.plus(Duration.ofHours(1));
 
-        Runway landingRunway = new Runway(1, 3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION);
+        RunwayData landingRunway = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION);
         Airport airport = new Airport(List.of(landingRunway));
 
         int occupancySeconds = 60;
@@ -144,7 +144,7 @@ class SchedulerTest {
         scheduler.tryScheduleOperations(now, engine);
 
         assertTrue(engine.eventQueue().isEmpty());
-        assertNull(landingRunway.occupiedUntil());
+        assertNull(airport.getRunway(0).occupiedUntil());
         assertEquals(0, airport.holdingPattern().size());
     }
 
@@ -154,7 +154,8 @@ class SchedulerTest {
         Instant now = start.plusSeconds(300);
         Instant end = start.plus(Duration.ofHours(1));
 
-        Runway landingRunway = new Runway(1, 3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        RunwayData landingRunway = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+
         Airport airport = new Airport(List.of(landingRunway));
 
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(

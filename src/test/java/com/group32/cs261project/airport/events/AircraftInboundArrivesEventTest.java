@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.model.Aircraft;
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
@@ -37,7 +37,7 @@ class AircraftInboundArrivesEventTest {
         );
 
         Airport airport = new Airport(List.of(
-                new Runway(9, 3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION)
+                new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION)
         ));
 
         SimulationEngine<SimulationContext> engine =

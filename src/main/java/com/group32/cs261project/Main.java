@@ -8,7 +8,7 @@ import com.group32.cs261project.gen.FlightGenerator;
 import com.group32.cs261project.gen.FlightSeeder;
 import com.group32.cs261project.gen.FlightType;
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
 import com.group32.cs261project.scheduling.Scheduler;
@@ -26,7 +26,7 @@ public class Main {
         SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, true);
 
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
+                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
         ));
 
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
