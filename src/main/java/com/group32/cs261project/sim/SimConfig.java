@@ -13,14 +13,11 @@ public final class SimConfig {
     private final long randomSeed;
     private final double inboundRatePerHour;
     private final double outboundRatePerHour;
+    private final int runwayOccupancySeconds;
+    private boolean verbose = false;
 
-    /**
-     * Constructor
-     * @param startTime
-     * @param endTime
-     * @param randomSeed
-     */
-    public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, double outboundRatePerHour) {
+
+    public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, double outboundRatePerHour, int runwayOccupancySeconds) {
         this.startTime = Objects.requireNonNull(startTime, "startTime");
         this.endTime = Objects.requireNonNull(endTime, "endTime");
         if (endTime.isBefore(startTime)) {
@@ -29,6 +26,26 @@ public final class SimConfig {
         this.randomSeed = randomSeed;
         this.inboundRatePerHour = inboundRatePerHour;
         this.outboundRatePerHour = outboundRatePerHour;
+        this.runwayOccupancySeconds = runwayOccupancySeconds;
+    }
+
+    public SimConfig(Instant startTime, Instant endTime, long randomSeed, 
+        double inboundRatePerHour, double outboundRatePerHour, int runwayOccupancySeconds, boolean verbose
+    ) {
+        this.startTime = Objects.requireNonNull(startTime, "startTime");
+        this.endTime = Objects.requireNonNull(endTime, "endTime");
+        if (endTime.isBefore(startTime)) {
+            throw new IllegalArgumentException("endTime must be >= startTime");
+        }
+        this.randomSeed = randomSeed;
+        this.inboundRatePerHour = inboundRatePerHour;
+        this.outboundRatePerHour = outboundRatePerHour;
+        this.runwayOccupancySeconds = runwayOccupancySeconds;
+        this.verbose = verbose;
+    }
+
+    public boolean isVerbose() {
+        return this.verbose;
     }
 
     public Instant startTime() {
@@ -49,5 +66,9 @@ public final class SimConfig {
 
     public double outboundRatePerHour() {
         return this.outboundRatePerHour;
+    }
+
+    public int runwayOccupancySeconds() {
+        return this.runwayOccupancySeconds;
     }
 }

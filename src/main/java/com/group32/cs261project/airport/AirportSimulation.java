@@ -3,7 +3,9 @@ package com.group32.cs261project.airport;
 import java.time.Instant;
 
 import com.group32.cs261project.model.Airport;
+import com.group32.cs261project.scheduling.Scheduler;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
@@ -14,7 +16,7 @@ public class AirportSimulation {
 
     private final SimConfig config;
     private final Airport airport;
-    private final SimulationEngine<Airport> engine;
+    private final SimulationEngine<SimulationContext> engine;
 
     /**
      * Constructor
@@ -24,7 +26,7 @@ public class AirportSimulation {
     public AirportSimulation(SimConfig config, Airport airport) {
         this.config = config;
         this.airport = airport;
-        this.engine = new SimulationEngine<>(config, airport, new PriorityEventQueue<>());
+        this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler()), new PriorityEventQueue<>());
     }
 
     /**
@@ -39,7 +41,7 @@ public class AirportSimulation {
      * Getter for engine
      * @return simulation engine object
      */
-    public SimulationEngine<Airport> engine() {
+    public SimulationEngine<SimulationContext> engine() {
         return this.engine;
     }
 

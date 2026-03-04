@@ -44,7 +44,7 @@ class SimulationEngineTest {
     @Test
     void eventsExecuteInChronologicalOrder() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15);
+        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
@@ -61,7 +61,7 @@ class SimulationEngineTest {
     @Test
     void deterministicTieBreakUsesInsertionOrder() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15);
+        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
@@ -77,7 +77,7 @@ class SimulationEngineTest {
     @Test
     void runUntilDoesNotProcessEventsAfterEndTime() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15);
+        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
@@ -96,7 +96,7 @@ class SimulationEngineTest {
     @Test
     void eventsCanScheduleMoreEvents() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15);
+        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
@@ -115,7 +115,7 @@ class SimulationEngineTest {
     @Test
     void schedulingInThePastThrows() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15);
+        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());

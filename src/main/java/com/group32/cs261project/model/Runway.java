@@ -36,6 +36,14 @@ public class Runway {
     }
 
     /**
+     * Get string representation
+     */
+    @Override
+    public String toString() {
+        return String.format("Runway(%s)", String.valueOf(this.runwayNumber));
+    }
+
+    /**
      * Getter for runway number
      * @return the runway number
      */
@@ -89,6 +97,15 @@ public class Runway {
      */
     public void setStatus(RunwayStatus newStatus) {
         this.status = newStatus;
+    }
+
+    /**
+     * Checks if the runway is available in general
+     * @param time time to check
+     * @return true if status is AVAILABLE and is not occupied
+     */
+    public boolean isAvailable(Instant time) {
+        return this.status == RunwayStatus.AVAILABLE && !this.isOccupied(time);
     }
 
     /**
