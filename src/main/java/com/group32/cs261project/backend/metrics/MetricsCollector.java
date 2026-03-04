@@ -1,4 +1,4 @@
-package com.group32.cs261project.metrics;
+package com.group32.cs261project.backend.metrics;
 
 import java.time.Duration;
 import java.time.Instant;
