@@ -1,4 +1,4 @@
-package com.group32.cs261project.ui;
+package com.group32.cs261project.frontend;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

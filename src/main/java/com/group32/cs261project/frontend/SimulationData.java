@@ -1,16 +1,16 @@
-package com.group32.cs261project.ui;
+package com.group32.cs261project.frontend;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.group32.cs261project.ui.SimulationData.PlaneArrivedHolding;
-import com.group32.cs261project.ui.SimulationData.PlaneArrivedTakeoff;
-import com.group32.cs261project.ui.SimulationData.PlaneDiverted;
-import com.group32.cs261project.ui.SimulationData.PlaneEmergency;
-import com.group32.cs261project.ui.SimulationData.PlaneLanded;
-import com.group32.cs261project.ui.SimulationData.PlaneTookOff;
-import com.group32.cs261project.ui.SimulationData.SimEvent;
+import com.group32.cs261project.frontend.SimulationData.PlaneArrivedHolding;
+import com.group32.cs261project.frontend.SimulationData.PlaneArrivedTakeoff;
+import com.group32.cs261project.frontend.SimulationData.PlaneDiverted;
+import com.group32.cs261project.frontend.SimulationData.PlaneEmergency;
+import com.group32.cs261project.frontend.SimulationData.PlaneLanded;
+import com.group32.cs261project.frontend.SimulationData.PlaneTookOff;
+import com.group32.cs261project.frontend.SimulationData.SimEvent;
 
 public class SimulationData {
 
