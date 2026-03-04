@@ -52,6 +52,11 @@ public class Aircraft {
 
     }
 
+    @Override
+    public String toString() {
+        return String.format("Aircraft(%s, %s)", this.callsign, this.state.toString());
+    }
+
     // getters
     public String callsign() {
         return this.callsign;
