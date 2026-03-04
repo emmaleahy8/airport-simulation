@@ -52,6 +52,19 @@ public class Runway {
     }
 
     /**
+     * Gets the two digit representation of the runway number
+     * @return 2 digit runway number string
+     */
+    public String getRunwayNumberString() {
+        if (this.runwayNumber < 10) {
+            return String.format("0%d", this.runwayNumber);
+        } else {
+            return String.valueOf(this.runwayNumber);
+        }
+
+    }
+
+    /**
      * Getter for runway length
      * @return runway length in metres
      */
