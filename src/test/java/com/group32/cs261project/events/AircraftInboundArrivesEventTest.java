@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
@@ -15,11 +16,7 @@ import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
-import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
-import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class AircraftInboundArrivesEventTest {
 
@@ -41,8 +38,7 @@ class AircraftInboundArrivesEventTest {
                 new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION)
         ));
 
-        SimulationEngine<SimulationContext> engine =
-                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
+        AirportSimulation airportSimulation = new AirportSimulation(cfg, airport);
 
         Aircraft aircraft = new Aircraft(
                 "BA123",
@@ -58,7 +54,7 @@ class AircraftInboundArrivesEventTest {
         AircraftInboundArrivesEvent event =
                 new AircraftInboundArrivesEvent(time, aircraft);
 
-        event.handle(engine);
+        event.handle(airportSimulation.engine());
 
         assertFalse(airport.holdingPattern().isEmpty());
         assertEquals(1, airport.holdingPattern().size());

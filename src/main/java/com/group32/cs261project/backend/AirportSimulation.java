@@ -2,6 +2,7 @@ package com.group32.cs261project.backend;
 
 import java.time.Instant;
 
+import com.group32.cs261project.backend.metrics.MetricsCollector;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.scheduling.Scheduler;
 import com.group32.cs261project.backend.sim.EventQueue;
@@ -26,7 +27,7 @@ public class AirportSimulation {
     public AirportSimulation(SimConfig config, Airport airport) {
         this.config = config;
         this.airport = airport;
-        this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
+        this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler(), new MetricsCollector()), new EventQueue<>());
     }
 
     /**
@@ -75,5 +76,5 @@ public class AirportSimulation {
     public boolean step() {
         return this.engine.step();
     }
-    
+
 }

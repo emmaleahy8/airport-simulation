@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
@@ -15,11 +16,7 @@ import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
-import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
-import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class FIFOQueueIT {
 
@@ -50,11 +47,7 @@ public class FIFOQueueIT {
 
         Airport airport = new Airport(List.of(runway));
 
-        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
-                config,
-                new SimulationContext(airport, new Scheduler()),
-                new EventQueue<>()
-        );
+        AirportSimulation airportSimulation = new AirportSimulation(config, airport);
 
         // -------------------------
         // 2. Create two normal aircraft
@@ -87,13 +80,13 @@ public class FIFOQueueIT {
         // -------------------------
         // 3. Schedule events (order matters)
         // -------------------------
-        engine.schedule(new AircraftInboundArrivesEvent(arrivalTime, firstAircraft));
-        engine.schedule(new AircraftInboundArrivesEvent(arrivalTime, secondAircraft));
+        airportSimulation.engine().schedule(new AircraftInboundArrivesEvent(arrivalTime, firstAircraft));
+        airportSimulation.engine().schedule(new AircraftInboundArrivesEvent(arrivalTime, secondAircraft));
 
         // -------------------------
         // 4. Run simulation
         // -------------------------
-        engine.runUntil(end);
+        airportSimulation.engine().runUntil(end);
 
         // -------------------------
         // 5. Assertions

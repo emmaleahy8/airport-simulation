@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.gen.FlightGenerator;
 import com.group32.cs261project.backend.gen.FlightSeeder;
 import com.group32.cs261project.backend.gen.FlightType;
@@ -11,11 +12,7 @@ import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
-import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
-import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class Main {
     public static void main(String[] args) {
@@ -29,10 +26,7 @@ public class Main {
                 new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
         ));
 
-        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
-            config, 
-            new SimulationContext(airport, new Scheduler()), 
-            new EventQueue<>());
+        AirportSimulation airportSimulation = new AirportSimulation(config, airport);
 
 
         FlightGenerator generator = new FlightGenerator(config);
@@ -40,10 +34,10 @@ public class Main {
         var inbound = generator.generateFlights(FlightType.INBOUND);
         var outbound = generator.generateFlights(FlightType.OUTBOUND);
 
-        FlightSeeder.seedInbound(engine, inbound);
-        FlightSeeder.seedOutbound(engine, outbound);
+        FlightSeeder.seedInbound(airportSimulation.engine(), inbound);
+        FlightSeeder.seedOutbound(airportSimulation.engine(), outbound);
 
-        engine.runUntil(config.endTime());
+        airportSimulation.engine().runUntil(config.endTime());
 
         System.out.println("Simulation finished.");
         System.out.println("Holding pattern size: " + airport.holdingPattern().size());
