@@ -15,11 +15,13 @@ import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
+import com.group32.cs261project.scheduling.Scheduler;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
-public class TakeoffQueueIntegrationTest {
+public class TakeoffQueueIT {
 
     @Test
     void outboundAircraftMaintainFIFOOrderWhenReadyAtSameTime() {
@@ -35,7 +37,8 @@ public class TakeoffQueueIntegrationTest {
                 end,
                 42L,
                 0.0,
-                0.0
+                0.0,
+                60
         );
 
         Runway runway = new Runway(
@@ -48,10 +51,10 @@ public class TakeoffQueueIntegrationTest {
 
         Airport airport = new Airport(List.of(runway));
 
-        SimulationEngine<Airport> engine =
+        SimulationEngine<SimulationContext> engine =
                 new SimulationEngine<>(
                         config,
-                        airport,
+                        new SimulationContext(airport, new Scheduler()),
                         new PriorityEventQueue<>()
                 );
 

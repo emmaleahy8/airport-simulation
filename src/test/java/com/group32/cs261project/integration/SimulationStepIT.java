@@ -13,7 +13,7 @@ import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.events.Event;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
-public class SimulationStepIntegrationTest {
+public class SimulationStepIT {
 
     /**
      * Simple test context that records handled events.
@@ -58,7 +58,8 @@ public class SimulationStepIntegrationTest {
                 start.plusSeconds(3600),
                 123L,
                 0.0,
-                0.0
+                0.0,
+                60
         );
 
         TestContext context = new TestContext();
@@ -120,7 +121,8 @@ public class SimulationStepIntegrationTest {
                 start.plusSeconds(3600),
                 123L,
                 0.0,
-                0.0
+                0.0,
+                60
         );
 
         TestContext context = new TestContext();

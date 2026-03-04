@@ -16,11 +16,13 @@ import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
+import com.group32.cs261project.scheduling.Scheduler;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
-public class SimulationEndToEndTest {
+public class SimulationEndToEndIT {
 
     @Test
     void inboundAndOutboundEventsAreProcessedAndQueuedCorrectly() {
@@ -36,7 +38,8 @@ public class SimulationEndToEndTest {
                 end,
                 42L,
                 5.0,
-                5.0
+                5.0,
+                60
         );
 
         // -------------------------
@@ -55,12 +58,11 @@ public class SimulationEndToEndTest {
         // -------------------------
         // 3. Create simulation engine
         // -------------------------
-        SimulationEngine<Airport> engine =
-                new SimulationEngine<>(
-                        config,
-                        airport,
-                        new PriorityEventQueue<>()
-                );
+        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
+                config,
+                new SimulationContext(airport, new Scheduler()),
+                new PriorityEventQueue<>()
+        );
 
         // -------------------------
         // 4. Create aircraft

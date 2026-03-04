@@ -15,11 +15,13 @@ import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
+import com.group32.cs261project.scheduling.Scheduler;
 import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.sim.SimulationContext;
 import com.group32.cs261project.sim.SimulationEngine;
 import com.group32.cs261project.sim.queue.PriorityEventQueue;
 
-public class EmergencyPriorityIntegrationTest {
+public class EmergencyPriorityIT {
 
     @Test
     void emergencyAircraftIsPrioritizedInHoldingPattern() {
@@ -35,7 +37,8 @@ public class EmergencyPriorityIntegrationTest {
                 end,
                 42L,
                 0.0,
-                0.0
+                0.0,
+                60
         );
 
         // -------------------------
@@ -54,10 +57,10 @@ public class EmergencyPriorityIntegrationTest {
         // -------------------------
         // 3. Engine
         // -------------------------
-        SimulationEngine<Airport> engine =
+        SimulationEngine<SimulationContext> engine =
                 new SimulationEngine<>(
                         config,
-                        airport,
+                        new SimulationContext(airport ,new Scheduler()),
                         new PriorityEventQueue<>()
                 );
 
