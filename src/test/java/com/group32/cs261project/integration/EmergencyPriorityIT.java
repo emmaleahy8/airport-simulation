@@ -1,0 +1,119 @@
+package com.group32.cs261project.integration;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.Instant;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import com.group32.cs261project.backend.AirportSimulation;
+import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.sim.SimConfig;
+
+public class EmergencyPriorityIT {
+
+    @Test
+    void emergencyAircraftIsPrioritizedInHoldingPattern() {
+
+        // -------------------------
+        // 1. Simulation config
+        // -------------------------
+        Instant start = Instant.parse("2025-01-01T00:00:00Z");
+        Instant end = start.plusSeconds(3600);
+
+        SimConfig config = new SimConfig(
+                start,
+                end,
+                42L,
+                0.0,
+                0.0,
+                60
+        );
+
+        // -------------------------
+        // 2. Airport + runway
+        // -------------------------
+        RunwayData runway = new RunwayData(
+                3000,
+                90,
+                RunwayMode.MIXED,
+                RunwayStatus.INSPECTION
+        );
+
+        Airport airport = new Airport(List.of(runway));
+
+        // -------------------------
+        // 3. airportSimulation.engine()
+        // -------------------------
+        AirportSimulation airportSimulation = new AirportSimulation(config, airport);
+
+        // -------------------------
+        // 4. Create aircraft
+        // -------------------------
+        Aircraft normalAircraft = new Aircraft(
+                "NORMAL1",
+                "TestAir",
+                "LHR",
+                "MAN",
+                start.plusSeconds(300),
+                EmergencyStatus.NONE,
+                120.0,
+                AircraftState.OUTSIDE_MODEL
+        );
+
+        Aircraft emergencyAircraft = new Aircraft(
+                "EMERG1",
+                "TestAir",
+                "LHR",
+                "MAN",
+                start.plusSeconds(301),
+                EmergencyStatus.FUEL,
+                10.0,
+                AircraftState.OUTSIDE_MODEL
+        );
+
+        // -------------------------
+        // 5. Schedule inbound events
+        // -------------------------
+        airportSimulation.engine().schedule(new AircraftInboundArrivesEvent(
+                normalAircraft.scheduledTime(),
+                normalAircraft
+        ));
+
+        airportSimulation.engine().schedule(new AircraftInboundArrivesEvent(
+                emergencyAircraft.scheduledTime(),
+                emergencyAircraft
+        ));
+
+        // -------------------------
+        // 6. Run simulation
+        // -------------------------
+        airportSimulation.engine().runUntil(end);
+
+        // -------------------------
+        // 7. Assertions
+        // -------------------------
+
+        // Both should be in holding
+        assertEquals(2, airport.holdingPattern().size());
+
+        // Emergency aircraft should be next landing candidate
+        assertEquals(
+                emergencyAircraft,
+                airport.holdingPattern().peekNextLandingCandidate(),
+                "Emergency aircraft must be prioritized"
+        );
+
+        // Ensure both states updated
+        assertEquals(AircraftState.HOLDING, normalAircraft.state());
+        assertEquals(AircraftState.HOLDING, emergencyAircraft.state());
+    }
+}
