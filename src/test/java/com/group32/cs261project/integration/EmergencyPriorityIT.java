@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.group32.cs261project.airport.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.model.Aircraft;
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
@@ -44,8 +44,7 @@ public class EmergencyPriorityIT {
         // -------------------------
         // 2. Airport + runway
         // -------------------------
-        Runway runway = new Runway(
-                0,
+        RunwayData runway = new RunwayData(
                 3000,
                 90,
                 RunwayMode.MIXED,

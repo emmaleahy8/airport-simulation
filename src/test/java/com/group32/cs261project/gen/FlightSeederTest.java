@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
 import com.group32.cs261project.scheduling.Scheduler;
@@ -28,7 +28,7 @@ class FlightSeederTest {
         SimConfig cfg = new SimConfig(start, end, 123L, 15.0, 15.0, 60);
 
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
+                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
         ));
 
         SimulationEngine<SimulationContext> engine =

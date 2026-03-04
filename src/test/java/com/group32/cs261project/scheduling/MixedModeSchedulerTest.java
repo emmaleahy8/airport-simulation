@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import com.group32.cs261project.airport.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.model.Aircraft;
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.AircraftState;
 import com.group32.cs261project.model.enums.EmergencyStatus;
 import com.group32.cs261project.model.enums.RunwayMode;
@@ -35,7 +35,7 @@ class MixedModeSchedulerTest {
         Instant now = start.plusSeconds(0);
         Instant end = start.plus(Duration.ofHours(1));
 
-        Runway mixed = new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE);
+        RunwayData mixed = new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(mixed));
 
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
@@ -59,7 +59,7 @@ class MixedModeSchedulerTest {
 
         // Simulate completion to free runway (in your real sim, the completion event does this)
         // Here we just advance time and clear occupancy if needed; adjust to your runway model.
-        mixed.clearOccupancy(); // or clearOccupancy()
+        airport.getRunway(0).clearOccupancy(); // or clearOccupancy()
 
         // Ensure both queues still have at least one item for the next choice:
         // (Depending on which op was chosen first, one queue is now empty; add another)

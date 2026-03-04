@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
+import com.group32.cs261project.model.RunwayData;
 import com.group32.cs261project.model.enums.RunwayMode;
 import com.group32.cs261project.model.enums.RunwayStatus;
 import com.group32.cs261project.sim.SimConfig;
@@ -59,7 +59,7 @@ class AirportSimulationTest {
         // Airport must be constructible. Adjust to match your Airport constructor.
         // This uses a single runway as a simple default.
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
+                new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
         ));
 
         // Adjust this line to match your AirportSimulation constructor.
@@ -86,7 +86,7 @@ class AirportSimulationTest {
 
         SimConfig cfg = new SimConfig(start, end, 123, 15, 15, 60);
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
+                new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
         ));
 
         AirportSimulation sim = new AirportSimulation(cfg, airport);
