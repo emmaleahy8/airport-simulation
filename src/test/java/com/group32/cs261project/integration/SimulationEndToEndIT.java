@@ -7,20 +7,20 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.airport.events.AircraftInboundArrivesEvent;
-import com.group32.cs261project.airport.events.AircraftOutboundReadyEvent;
-import com.group32.cs261project.model.Aircraft;
-import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
-import com.group32.cs261project.model.enums.AircraftState;
-import com.group32.cs261project.model.enums.EmergencyStatus;
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
-import com.group32.cs261project.scheduling.Scheduler;
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationContext;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
+import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.scheduling.Scheduler;
+import com.group32.cs261project.backend.sim.EventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationContext;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class SimulationEndToEndIT {
 
@@ -45,8 +45,7 @@ public class SimulationEndToEndIT {
         // -------------------------
         // 2. Create runway + airport
         // -------------------------
-        Runway runway = new Runway(
-                0,
+        RunwayData runway = new RunwayData(
                 3000,
                 90,
                 RunwayMode.MIXED,
@@ -61,7 +60,7 @@ public class SimulationEndToEndIT {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
                 config,
                 new SimulationContext(airport, new Scheduler()),
-                new PriorityEventQueue<>()
+                new EventQueue<>()
         );
 
         // -------------------------

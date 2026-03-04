@@ -6,6 +6,8 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.sim.SimConfig;
+
 class SimConfigTest {
 
     private Instant start() {

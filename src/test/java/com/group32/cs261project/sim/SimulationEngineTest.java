@@ -10,8 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.sim.events.Event;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.events.Event;
+import com.group32.cs261project.backend.sim.EventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class SimulationEngineTest {
 
@@ -47,7 +49,7 @@ class SimulationEngineTest {
         SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
-        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
+        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
 
         engine.schedule(new RecordingEvent<>(start.plusSeconds(600), "t10", log)); // +10 min
         engine.schedule(new RecordingEvent<>(start.plusSeconds(300), "t5", log));  // +5 min
@@ -64,7 +66,7 @@ class SimulationEngineTest {
         SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
-        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
+        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
 
         Instant t = start.plusSeconds(300);
         engine.schedule(new RecordingEvent<>(t, "A", log));
@@ -80,7 +82,7 @@ class SimulationEngineTest {
         SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
-        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
+        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
 
         engine.schedule(new RecordingEvent<>(start.plusSeconds(300), "t5", log));
         engine.schedule(new RecordingEvent<>(start.plusSeconds(600), "t10", log));
@@ -99,7 +101,7 @@ class SimulationEngineTest {
         SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
-        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
+        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
 
         Instant t5 = start.plusSeconds(300);
         Instant t7 = start.plusSeconds(420);
@@ -118,7 +120,7 @@ class SimulationEngineTest {
         SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
         List<String> log = new ArrayList<>();
 
-        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new PriorityEventQueue<>());
+        SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
 
         Instant t10 = start.plusSeconds(600);
         engine.schedule(new RecordingEvent<>(t10, "advance", log));

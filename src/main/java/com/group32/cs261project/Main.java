@@ -4,18 +4,18 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
-import com.group32.cs261project.gen.FlightGenerator;
-import com.group32.cs261project.gen.FlightSeeder;
-import com.group32.cs261project.gen.FlightType;
-import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
-import com.group32.cs261project.scheduling.Scheduler;
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationContext;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.gen.FlightGenerator;
+import com.group32.cs261project.backend.gen.FlightSeeder;
+import com.group32.cs261project.backend.gen.FlightType;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.scheduling.Scheduler;
+import com.group32.cs261project.backend.sim.EventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationContext;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class Main {
     public static void main(String[] args) {
@@ -26,13 +26,13 @@ public class Main {
         SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, true);
 
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
+                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
         ));
 
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             config, 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>());
+            new EventQueue<>());
 
 
         FlightGenerator generator = new FlightGenerator(config);

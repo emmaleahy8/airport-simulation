@@ -8,15 +8,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
-import com.group32.cs261project.scheduling.Scheduler;
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationContext;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.gen.FlightGenerator;
+import com.group32.cs261project.backend.gen.FlightSeeder;
+import com.group32.cs261project.backend.gen.FlightType;
+import com.group32.cs261project.backend.gen.GeneratedFlight;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.scheduling.Scheduler;
+import com.group32.cs261project.backend.sim.EventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationContext;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class FlightSeederTest {
 
@@ -28,11 +32,11 @@ class FlightSeederTest {
         SimConfig cfg = new SimConfig(start, end, 123L, 15.0, 15.0, 60);
 
         Airport airport = new Airport(List.of(
-                new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
+                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
         ));
 
         SimulationEngine<SimulationContext> engine =
-                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new PriorityEventQueue<>());
+                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
 
         FlightGenerator generator = new FlightGenerator(cfg);
         List<GeneratedFlight> inbound = generator.generateFlights(FlightType.INBOUND);
