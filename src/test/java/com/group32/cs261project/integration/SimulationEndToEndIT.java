@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
 import com.group32.cs261project.backend.model.Aircraft;
@@ -16,11 +17,7 @@ import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
-import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
-import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class SimulationEndToEndIT {
 
@@ -55,13 +52,9 @@ public class SimulationEndToEndIT {
         Airport airport = new Airport(List.of(runway));
 
         // -------------------------
-        // 3. Create simulation engine
+        // 3. Create simulation airportSimulation.engine()
         // -------------------------
-        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
-                config,
-                new SimulationContext(airport, new Scheduler()),
-                new EventQueue<>()
-        );
+        AirportSimulation airportSimulation = new AirportSimulation(config, airport);
 
         // -------------------------
         // 4. Create aircraft
@@ -91,12 +84,12 @@ public class SimulationEndToEndIT {
         // -------------------------
         // 5. Schedule events
         // -------------------------
-        engine.schedule(new AircraftInboundArrivesEvent(
+        airportSimulation.engine().schedule(new AircraftInboundArrivesEvent(
                 inboundAircraft.scheduledTime(),
                 inboundAircraft
         ));
 
-        engine.schedule(new AircraftOutboundReadyEvent(
+        airportSimulation.engine().schedule(new AircraftOutboundReadyEvent(
                 outboundAircraft.scheduledTime(),
                 outboundAircraft
         ));
@@ -104,7 +97,7 @@ public class SimulationEndToEndIT {
         // -------------------------
         // 6. Run simulation
         // -------------------------
-        engine.runUntil(end);
+        airportSimulation.engine().runUntil(end);
 
         // -------------------------
         // 7. Assertions
@@ -122,7 +115,7 @@ public class SimulationEndToEndIT {
                 "Takeoff queue should contain outbound aircraft"
         );
 
-        // Engine time should have advanced
-        assertTrue(engine.now().isAfter(start));
+        // airportSimulation.engine() time should have advanced
+        assertTrue(airportSimulation.engine().now().isAfter(start));
     }
 }

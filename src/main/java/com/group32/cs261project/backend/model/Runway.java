@@ -40,7 +40,7 @@ public class Runway {
      */
     @Override
     public String toString() {
-        return String.format("Runway(%s)", String.valueOf(this.runwayNumber));
+        return String.format("Runway(%s)",this.getRunwayNumberString());
     }
 
     /**

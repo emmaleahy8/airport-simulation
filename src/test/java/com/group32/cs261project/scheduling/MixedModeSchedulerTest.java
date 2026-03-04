@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.events.Event;
 import com.group32.cs261project.backend.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.backend.model.Aircraft;
@@ -19,10 +20,8 @@ import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class MixedModeSchedulerTest {
 
@@ -39,10 +38,9 @@ class MixedModeSchedulerTest {
         RunwayData mixed = new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(mixed));
 
-        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
-            new SimConfig(start, end, 1L, 15, 15, 60),
-            new SimulationContext(airport, new Scheduler()),
-            new EventQueue<>()
+        AirportSimulation airportSimulation = new AirportSimulation(
+            new SimConfig(start, end, 1L, 15, 15, 60), 
+            airport
         );
 
         // Add one to each queue
@@ -51,10 +49,10 @@ class MixedModeSchedulerTest {
 
         // Scheduler with alternating policy (adjust ctor)
         Scheduler scheduler = new Scheduler();
-        scheduler.tryScheduleOperations(now, engine);
+        scheduler.tryScheduleOperations(now, airportSimulation.engine());
 
         // Pop completion event 1
-        Event<SimulationContext> e1 = engine.eventQueue().pop();
+        Event<SimulationContext> e1 = airportSimulation.engine().eventQueue().pop();
         assertNotNull(e1);
         assertTrue(e1 instanceof RunwayOperationCompleteEvent);
 
@@ -72,9 +70,9 @@ class MixedModeSchedulerTest {
         }
 
         // Schedule again at same timestamp
-        scheduler.tryScheduleOperations(now, engine);
+        scheduler.tryScheduleOperations(now, airportSimulation.engine());
 
-        Event<SimulationContext> e2 = engine.eventQueue().pop();
+        Event<SimulationContext> e2 = airportSimulation.engine().eventQueue().pop();
         assertNotNull(e2);
         assertTrue(e2 instanceof RunwayOperationCompleteEvent);
 

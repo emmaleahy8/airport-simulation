@@ -23,10 +23,18 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
 
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
+
         if (engine.config().isVerbose())
             System.out.format("%s: %s enqueued to holding pattern\n", time.toString(), aircraft.toString());
+
+        // enqueue to holding pattern
         engine.context().airport().holdingPattern().enqueue(aircraft, time);
+
+        // try to schedule runway operations immediately
         engine.context().scheduler().tryScheduleOperations(time, engine);
+
+        // update metrics by calling onHoldingEnqueue with updated size
+        engine.context().metrics().onHoldingEnqueue(time, engine.context().airport().holdingPattern().size());
     }
     
 }

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.AirportSimulation;
 import com.group32.cs261project.backend.gen.FlightGenerator;
 import com.group32.cs261project.backend.gen.FlightSeeder;
 import com.group32.cs261project.backend.gen.FlightType;
@@ -16,11 +17,7 @@ import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
-import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
-import com.group32.cs261project.backend.sim.SimulationContext;
-import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class FlightSeederTest {
 
@@ -35,19 +32,18 @@ class FlightSeederTest {
                 new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
         ));
 
-        SimulationEngine<SimulationContext> engine =
-                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
+        AirportSimulation airportSimulation = new AirportSimulation(cfg, airport);
 
         FlightGenerator generator = new FlightGenerator(cfg);
         List<GeneratedFlight> inbound = generator.generateFlights(FlightType.INBOUND);
         List<GeneratedFlight> outbound;
         outbound = generator.generateFlights(FlightType.OUTBOUND);
 
-        FlightSeeder.seedInbound(engine, inbound);
-        FlightSeeder.seedOutbound(engine, outbound);
+        FlightSeeder.seedInbound(airportSimulation.engine(), inbound);
+        FlightSeeder.seedOutbound(airportSimulation.engine(), outbound);
 
         // Run the simulation to end: all entry events should have executed.
-        engine.runUntil(end);
+        airportSimulation.engine().runUntil(end);
 
         assertEquals(inbound.size(), airport.holdingPattern().size());
         assertEquals(outbound.size(), airport.takeOffQueue().size());
