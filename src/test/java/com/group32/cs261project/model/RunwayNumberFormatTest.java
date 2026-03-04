@@ -2,8 +2,10 @@ package com.group32.cs261project.model;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
 
 import static org.junit.jupiter.api.Assertions.*;
 

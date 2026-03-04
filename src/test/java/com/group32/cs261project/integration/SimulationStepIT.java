@@ -8,10 +8,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.events.Event;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.events.Event;
+import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 public class SimulationStepIT {
 

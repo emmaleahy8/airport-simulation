@@ -12,19 +12,20 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.airport.events.RunwayOperationCompleteEvent;
-import com.group32.cs261project.model.Aircraft;
-import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.RunwayData;
-import com.group32.cs261project.model.enums.AircraftState;
-import com.group32.cs261project.model.enums.EmergencyStatus;
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationContext;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.events.Event;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.events.Event;
+import com.group32.cs261project.backend.events.RunwayOperationCompleteEvent;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.scheduling.Scheduler;
+import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationContext;
+import com.group32.cs261project.backend.sim.SimulationEngine;
 
 class SchedulerTest {
 
