@@ -46,7 +46,7 @@ public class FIFOQueueIT {
                 3000,
                 90,
                 RunwayMode.MIXED,
-                RunwayStatus.AVAILABLE
+                RunwayStatus.INSPECTION
         );
 
         Airport airport = new Airport(List.of(runway));
