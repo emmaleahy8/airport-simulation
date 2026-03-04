@@ -12,7 +12,7 @@ import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -32,7 +32,7 @@ public class Main {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             config, 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>());
+            new EventQueue<>());
 
 
         FlightGenerator generator = new FlightGenerator(config);

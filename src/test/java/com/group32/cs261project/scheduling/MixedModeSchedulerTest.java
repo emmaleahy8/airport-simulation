@@ -19,7 +19,7 @@ import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -42,7 +42,7 @@ class MixedModeSchedulerTest {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             new SimConfig(start, end, 1L, 15, 15, 60),
             new SimulationContext(airport, new Scheduler()),
-            new PriorityEventQueue<>()
+            new EventQueue<>()
         );
 
         // Add one to each queue

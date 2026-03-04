@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.events.Event;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
@@ -68,7 +68,7 @@ public class SimulationStepIT {
                 new SimulationEngine<>(
                         config,
                         context,
-                        new PriorityEventQueue<>()
+                        new EventQueue<>()
                 );
 
         // Schedule two events
@@ -131,7 +131,7 @@ public class SimulationStepIT {
                 new SimulationEngine<>(
                         config,
                         context,
-                        new PriorityEventQueue<>()
+                        new EventQueue<>()
                 );
 
         Instant pastTime = start.minusSeconds(10);

@@ -17,7 +17,7 @@ import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -36,7 +36,7 @@ class FlightSeederTest {
         ));
 
         SimulationEngine<SimulationContext> engine =
-                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new PriorityEventQueue<>());
+                new SimulationEngine<>(cfg, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
 
         FlightGenerator generator = new FlightGenerator(cfg);
         List<GeneratedFlight> inbound = generator.generateFlights(FlightType.INBOUND);
