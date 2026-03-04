@@ -3,6 +3,7 @@ package com.group32.cs261project.backend;
 import java.time.Instant;
 
 import com.group32.cs261project.backend.metrics.MetricsCollector;
+import com.group32.cs261project.backend.metrics.SimulationReport;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.scheduling.Scheduler;
 import com.group32.cs261project.backend.sim.EventQueue;
@@ -75,6 +76,14 @@ public class AirportSimulation {
      */
     public boolean step() {
         return this.engine.step();
+    }
+
+    /**
+     * Build simulation report
+     * @return simulation report object
+     */
+    public SimulationReport buildReport() {
+        return this.engine.context().metrics().buildReport();
     }
 
 }

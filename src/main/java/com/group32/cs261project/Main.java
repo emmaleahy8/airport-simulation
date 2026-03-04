@@ -44,5 +44,7 @@ public class Main {
         System.out.println("Takeoff queue size:   " + airport.takeOffQueue().size());
         System.out.println("Holding pattern: " + airport.holdingPattern().toString());
         System.out.println("Takeoff queue: " + airport.takeOffQueue().toString());
+
+        System.out.println("Simulation Metrics:\n" + airportSimulation.buildReport().toString());
     }
 }
