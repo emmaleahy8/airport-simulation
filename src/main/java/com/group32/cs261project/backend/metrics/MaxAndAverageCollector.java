@@ -16,17 +16,19 @@ public class MaxAndAverageCollector<T extends Number & Comparable<T>> {
         count++;
     }
 
-    public double getAverage() {
-        if (count == 0) {
-            throw new IllegalStateException("No entries");
-        }
+    public Double getAverage() {
+        if (isEmpty())
+            return null;
         return sum / count;
     }
 
     public T getMax() {
-        if (max == null) {
-            throw new IllegalStateException("No entries");
-        }
+        if (isEmpty())
+            return null;
         return max;
+    }
+
+    public boolean isEmpty() {
+        return count == 0;
     }
 }

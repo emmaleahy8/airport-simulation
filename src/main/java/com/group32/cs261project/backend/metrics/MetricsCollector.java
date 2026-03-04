@@ -55,19 +55,19 @@ public class MetricsCollector {
 
     public void onLandingCompleted(Aircraft aircraft, Instant actualTime) {
         this.holdingTimeMinutesCollector.addEntry(
-            Duration.between(actualTime, aircraft.holdingPatternEntryTime()).toMinutes()
+            Duration.between(aircraft.holdingPatternEntryTime(), actualTime).toMinutes()
         );
         this.arrivalDelayMinutesCollector.addEntry(
-            Duration.between(actualTime, aircraft.scheduledTime()).toMinutes()
+            Duration.between(aircraft.scheduledTime(), actualTime).toMinutes()
         );
     }
 
     public void onTakeoffCompleted(Aircraft aircraft, Instant actualTime) {
         this.takeoffTimeWaitMinutesCollector.addEntry(
-            Duration.between(actualTime, aircraft.takeOffQueueEntryTime()).toMinutes()
+            Duration.between(aircraft.takeOffQueueEntryTime(), actualTime).toMinutes()
         );
         this.departureDelayMinutesCollector.addEntry(
-            Duration.between(actualTime, aircraft.scheduledTime()).toMinutes()
+            Duration.between(aircraft.scheduledTime(), actualTime).toMinutes()
         );
     }
 
@@ -93,6 +93,5 @@ public class MetricsCollector {
             numCancellations
         );
     }
-
     
 }

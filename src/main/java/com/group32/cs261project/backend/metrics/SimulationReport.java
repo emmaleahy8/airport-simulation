@@ -2,18 +2,18 @@ package com.group32.cs261project.backend.metrics;
 
 public record SimulationReport(
     
-    int maxHoldingSize, // maximum size of holding pattern (2b)
-    double avgHoldingTimeMinutes, // avg time in holding pattern (2b)
+    Integer maxHoldingSize, // maximum size of holding pattern (2b)
+    Double avgHoldingTimeMinutes, // avg time in holding pattern (2b)
 
-    int maxTakeoffQueueSize, // maximum size of takeoff queue (1b)
-    double avgTakeoffWaitMinutes, // avg time in takeoff queue (1b)
+    Integer maxTakeoffQueueSize, // maximum size of takeoff queue (1b)
+    Double avgTakeoffWaitMinutes, // avg time in takeoff queue (1b)
     
-    double maxArrivalDelayMinutes, // maximum abs(scheduled arrival time - actual arrival time) (1c)
-    double avgArrivalDelayMinutes, // avg abs(scheuled arrival time - actual arrival time) (1c)
+    Long maxArrivalDelayMinutes, // maximum abs(scheduled arrival time - actual arrival time) (1c)
+    Double avgArrivalDelayMinutes, // avg abs(scheuled arrival time - actual arrival time) (1c)
 
-    double maxDepartureDelayMinutes, // maximum abs(scheduled departure time - actual departure time) (1c)
-    double avgDepartureDelayMinutes, // avg abs(scheduled departure time - actual departure time) (1c)
+    Long maxDepartureDelayMinutes, // maximum abs(scheduled departure time - actual departure time) (1c)
+    Double avgDepartureDelayMinutes, // avg abs(scheduled departure time - actual departure time) (1c)
 
-    int numDiverted, // number of planes diverted (5)
-    int numCancellations // number of planes cancelled based on configurable max wait time (4b)
+    Integer numDiverted, // number of planes diverted (5)
+    Integer numCancellations // number of planes cancelled based on configurable max wait time (4b)
 ) {}
