@@ -27,7 +27,8 @@ class SimConfigTest {
                 end(),
                 42L,
                 20.0,
-                15.0
+                15.0,
+                60
         );
 
         assertEquals(start(), config.startTime());
@@ -49,7 +50,8 @@ class SimConfigTest {
                         end(),
                         1L,
                         10.0,
-                        10.0
+                        10.0,
+                        60
                 )
         );
     }
@@ -62,7 +64,8 @@ class SimConfigTest {
                         null,
                         1L,
                         10.0,
-                        10.0
+                        10.0,
+                        60
                 )
         );
     }
@@ -82,7 +85,8 @@ class SimConfigTest {
                         endBefore,
                         1L,
                         10.0,
-                        10.0
+                        10.0,
+                        60
                 )
         );
     }
@@ -96,7 +100,8 @@ class SimConfigTest {
                 same,
                 1L,
                 10.0,
-                10.0
+                10.0,
+                60
         );
 
         assertEquals(same, config.startTime());
