@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -26,7 +26,7 @@ public class AirportSimulation {
     public AirportSimulation(SimConfig config, Airport airport) {
         this.config = config;
         this.airport = airport;
-        this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler()), new PriorityEventQueue<>());
+        this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler()), new EventQueue<>());
     }
 
     /**

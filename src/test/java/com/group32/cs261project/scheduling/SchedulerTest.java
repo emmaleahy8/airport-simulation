@@ -22,7 +22,7 @@ import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.scheduling.Scheduler;
-import com.group32.cs261project.backend.sim.PriorityEventQueue;
+import com.group32.cs261project.backend.sim.EventQueue;
 import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -67,7 +67,7 @@ class SchedulerTest {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             new SimConfig( start, end, 123L, 15, 15, 60), 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>()
+            new EventQueue<>()
         );
 
         // Put one aircraft in holding
@@ -104,7 +104,7 @@ class SchedulerTest {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             new SimConfig( start, end, 123L, 15, 15, 60), 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>()
+            new EventQueue<>()
         );
 
         Aircraft a = mkAircraft("D1", EmergencyStatus.NONE, start.plusSeconds(200));
@@ -136,7 +136,7 @@ class SchedulerTest {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             new SimConfig( start, end, 123L, 15, 15, occupancySeconds), 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>()
+            new EventQueue<>()
         );
 
         Scheduler scheduler = new Scheduler();
@@ -162,7 +162,7 @@ class SchedulerTest {
         SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
             new SimConfig( start, end, 123L, 15, 15, 60), 
             new SimulationContext(airport, new Scheduler()), 
-            new PriorityEventQueue<>()
+            new EventQueue<>()
         );
 
         Aircraft normal = mkAircraft("N1", EmergencyStatus.NONE, start.plusSeconds(100));
