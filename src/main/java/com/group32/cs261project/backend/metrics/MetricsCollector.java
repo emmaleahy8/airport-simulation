@@ -15,9 +15,11 @@ public class MetricsCollector {
     private final MaxAndAverageCollector<Integer> takeoffQueueSizeCollector; // maximum size of takeoff queue (1b)
     private final MaxAndAverageCollector<Long> takeoffTimeWaitMinutesCollector; // avg time in takeoff queue (1b)
 
-    private final MaxAndAverageCollector<Long> arrivalDelayMinutesCollector; // maximum & average abs(scheduled arrival time - actual arrival time) (1c)
+    // maximum & average(actual arrival time - scheduled arrival time) (1c)
+    private final MaxAndAverageCollector<Long> arrivalDelayMinutesCollector; 
 
-    private final MaxAndAverageCollector<Long> departureDelayMinutesCollector; // maximum & average abs(scheduled departure time - actual departure time) (1c)
+    // maximum & average(actual departure time - scheduled departure time) (1c)
+    private final MaxAndAverageCollector<Long> departureDelayMinutesCollector; 
 
     private int numDiverted; // number of planes diverted (5)
     private int numCancellations; // number of planes cancelled based on configurable max wait time (4b)
