@@ -6,9 +6,10 @@ import java.time.Instant;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.model.Aircraft;
-import com.group32.cs261project.model.enums.AircraftState;
-import com.group32.cs261project.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.gen.GeneratedFlight;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
 class GeneratedFlightTest {
 
