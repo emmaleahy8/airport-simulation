@@ -32,7 +32,7 @@ public class SimulationPaneVisual extends VBox {
 
     // Runway image
     private final Image runwayImg = new Image(
-            Objects.requireNonNull(getClass().getResourceAsStream("resources/com/group32/cs261project/ui/assets/runway_image.png"))
+            Objects.requireNonNull(getClass().getResourceAsStream("/com/group32/cs261project/ui/assets/runway_new.png"))
     );
 
     private final List<ImageView> runwayViews = new ArrayList<>();
