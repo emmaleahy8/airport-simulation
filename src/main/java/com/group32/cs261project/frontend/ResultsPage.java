@@ -1,4 +1,4 @@
-package com.group32.cs261project.ui;
+package com.group32.cs261project.frontend;
 
 import com.group32.cs261project.App;
 

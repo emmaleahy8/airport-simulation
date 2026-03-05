@@ -7,13 +7,13 @@ import javafx.stage.Stage;
 import java.util.EnumMap; 
 import java.util.Map;
 
-import com.group32.cs261project.ui.AppState;
-import com.group32.cs261project.ui.ConfigurePage;
-import com.group32.cs261project.ui.Page;
-import com.group32.cs261project.ui.ResultsPage;
-import com.group32.cs261project.ui.RunningPage;
-import com.group32.cs261project.ui.SimulationService;
-import com.group32.cs261project.ui.StubSimulationService;
+import com.group32.cs261project.frontend.AppState;
+import com.group32.cs261project.frontend.ConfigurePage;
+import com.group32.cs261project.frontend.Page;
+import com.group32.cs261project.frontend.ResultsPage;
+import com.group32.cs261project.frontend.RunningPage;
+import com.group32.cs261project.frontend.SimulationService;
+import com.group32.cs261project.frontend.StubSimulationService;
 
 public class App extends Application {
 

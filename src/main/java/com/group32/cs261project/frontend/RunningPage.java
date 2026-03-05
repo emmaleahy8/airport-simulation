@@ -1,4 +1,4 @@
-package com.group32.cs261project.ui;
+package com.group32.cs261project.frontend;
 
 import javafx.animation.Animation;
 import javafx.animation.PathTransition;
