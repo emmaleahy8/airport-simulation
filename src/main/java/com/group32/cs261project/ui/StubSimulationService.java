@@ -40,6 +40,7 @@ public class StubSimulationService implements SimulationService {
     private static final int LANDING_TICKS = 2;   // 2 minutes
     private static final int TAKEOFF_TICKS = 2;   // 2 minutes
     private static final int DIVERT_TICKS = 3;    // shows diverted for a bit before removal
+    private static final int TAXI_TICKS = 2;      // 2 minutes
 
     private static final double P_EMERGENCY = 0.10;
     private static final double P_DIVERT_GIVEN_EMERGENCY = 0.10;
@@ -55,12 +56,14 @@ public class StubSimulationService implements SimulationService {
         // Diversion roll happens once while holding
         boolean diversionPending;
 
-        int remainingTicks; // for LANDING/TAKING_OFF/DIVERTED
+        int remainingTicks; // for LANDING/TAKING_OFF/DIVERTED/TAXI_TO_RUNWAY
 
         Plane(String code, SimulationData.PlaneDirection direction) {
             this.code = code;
             this.direction = direction;
         }
+
+        int assignedRunwayIndex = -1; // Initially set runway index to -1
     }
 
     // Start a simulation based on config
@@ -140,21 +143,55 @@ public class StubSimulationService implements SimulationService {
                 }
             }
 
-            // Advance planes already in progress (landing/takeoff/divery)
-            // Decrement timers, move to COMPLETED, and then remove when done
+            // Advance planes already in progress (landing/takeoff/divert/taxi)
+            // Decrement timers, transition statuses, and remove when done
             List<String> toRemove = new ArrayList<>();
 
             for (Plane p : planes.values()) {
-                if (p.status == SimulationData.PlaneStatus.LANDING || p.status == SimulationData.PlaneStatus.TAKING_OFF || p.status == SimulationData.PlaneStatus.DIVERTED) {
-                    p.remainingTicks--;
-                    if (p.remainingTicks <= 0) {
+
+                // Only tick planes that are in a timed phase
+                boolean timed =
+                        p.status == SimulationData.PlaneStatus.LANDING
+                    || p.status == SimulationData.PlaneStatus.TAXI_TO_RUNWAY
+                    || p.status == SimulationData.PlaneStatus.TAKING_OFF
+                    || p.status == SimulationData.PlaneStatus.DIVERTED;
+
+                if (!timed) continue;
+
+                p.remainingTicks--;
+
+                if (p.remainingTicks > 0) continue;
+
+                // Phase finished: decide next state
+                switch (p.status) {
+
+                    case LANDING -> {
                         p.status = SimulationData.PlaneStatus.COMPLETED;
                         toRemove.add(p.code);
                     }
+
+                    case TAXI_TO_RUNWAY -> {
+                        // Taxi finished -> start takeoff roll
+                        p.status = SimulationData.PlaneStatus.TAKING_OFF;
+                        p.remainingTicks = TAKEOFF_TICKS; // how long the takeoff roll takes
+                    }
+
+                    case TAKING_OFF -> {
+                        // Takeoff finished -> plane leaves sim
+                        p.status = SimulationData.PlaneStatus.COMPLETED;
+                        toRemove.add(p.code);
+                    }
+
+                    case DIVERTED -> {
+                        p.status = SimulationData.PlaneStatus.COMPLETED;
+                        toRemove.add(p.code);
+                    }
+
+                    default -> { /* nothing */ }
                 }
             }
 
-            for (String code : toRemove){
+            for (String code : toRemove) {
                 planes.remove(code);
             }
 
@@ -181,8 +218,13 @@ public class StubSimulationService implements SimulationService {
             for (int i = 0; i < takeoffCapacity; i++) {
                 Plane next = pollNextOutboundForTakeoff();
                 if (next == null) break;
-                next.status = SimulationData.PlaneStatus.TAKING_OFF;
-                next.remainingTicks = TAKEOFF_TICKS;
+
+                int runwayIndex = pickTakeoffRunwayIndex();
+                if (runwayIndex == -1) break; // no takeoff runway available
+                next.assignedRunwayIndex = runwayIndex;
+                next.status = SimulationData.PlaneStatus.TAXI_TO_RUNWAY;
+                next.remainingTicks = TAXI_TICKS;
+
             }
 
             // ----- Update existing summary stats based on queue sizes -----
@@ -218,17 +260,23 @@ public class StubSimulationService implements SimulationService {
             // Counts for UI convenience 
             current.holdingEmergencyCount = holdingEmergency.size();
             current.holdingNormalCount = holdingNormal.size();
-            current.outboundQueueCount = outboundQueue.size();    
+            current.outboundQueueCount = outboundQueue.size(); 
+            
+            // Export FIFO outbound queue order for the UI
+            current.outboundQueueIds.clear();
+            current.outboundQueueIds.addAll(outboundQueue);
             
             // Build planes list for snapshot
             current.planes.clear();
             for (Plane p : planes.values()) {
                 SimulationData.PlaneDTO dto = new SimulationData.PlaneDTO();
                 dto.code = p.code;
+                dto.id = p.code;
                 dto.direction = p.direction;
                 dto.status = p.status;
                 dto.emergency = p.emergency;
                 dto.etaTicks = p.remainingTicks;
+                dto.assignedRunwayIndex = p.assignedRunwayIndex;
                 current.planes.add(dto);
             }
 
@@ -265,7 +313,7 @@ public class StubSimulationService implements SimulationService {
         Plane p = new Plane(code, SimulationData.PlaneDirection.OUTBOUND);
         p.emergency = false;
         p.diversionPending = false;
-        p.status = SimulationData.PlaneStatus.HOLDING; // or a separate OUTBOUND_QUEUE status if you add it
+        p.status = SimulationData.PlaneStatus.OUTBOUND_QUEUE; // or a separate OUTBOUND_QUEUE status if you add it
 
         planes.put(code, p);
         outboundQueue.addLast(code);
@@ -365,5 +413,17 @@ public class StubSimulationService implements SimulationService {
     @Override
     public boolean isRunning() {
         return running;
+    }
+
+    private int pickTakeoffRunwayIndex() {
+        List<Integer> candidates = new ArrayList<>();
+        for (int idx = 0; idx < current.runways.size(); idx++) {
+            var r = current.runways.get(idx);
+            if (r.status != SimulationData.RunwayStatus.AVAILABLE) continue;
+            if (r.mode == SimulationData.RunwayMode.LANDING) continue;
+            candidates.add(idx);
+        }
+        if (candidates.isEmpty()) return -1;
+        return candidates.get(rng.nextInt(candidates.size()));
     }
 }

@@ -30,6 +30,9 @@ public class SimulationData {
     // ----- Live plane snapshot for UI -----
     public final List<PlaneDTO> planes = new ArrayList<>();
 
+    // Queue order (FIFO) for visuals
+    public final List<String> outboundQueueIds = new ArrayList<>();
+
     // Breakdown counts (UI convenience)
     public int holdingEmergencyCount = 0;
     public int holdingNormalCount = 0;
@@ -94,13 +97,23 @@ public class SimulationData {
 
      // Plane enums + DTO for UI visuals
     public enum PlaneDirection { INBOUND, OUTBOUND }
-    public enum PlaneStatus { HOLDING, LANDING, TAKING_OFF, DIVERTED, COMPLETED }
+    public enum PlaneStatus {
+        HOLDING,            // inbound holding
+        OUTBOUND_QUEUE,     // waiting in takeoff queue
+        TAXI_TO_RUNWAY,     // leaving queue, driving to runway
+        LANDING,
+        TAKING_OFF,
+        DIVERTED,
+        COMPLETED
+    }
     public static class PlaneDTO {
-        public String code;
+        public String id;   // identifier for UI mapping
+        public String code; // display label
         public PlaneDirection direction;
         public PlaneStatus status;
         public boolean emergency;
-        public int etaTicks; // remaining ticks in landing/takeoff/divert (0 otherwise)
+        public int etaTicks; // remaining ticks in landing/takeoff/divert/taxi (0 otherwise)
+        public int assignedRunwayIndex; // -1 if none
     }
     // --- Runway Config Inner Class -----
     public static class RunwayConfig {
@@ -167,15 +180,20 @@ public class SimulationData {
         for (PlaneDTO p : planes) {
             PlaneDTO pp = new PlaneDTO();
             pp.code = p.code;
+            pp.id = p.code;
             pp.direction = p.direction;
             pp.status = p.status;
             pp.emergency = p.emergency;
             pp.etaTicks = p.etaTicks;
+            pp.assignedRunwayIndex = p.assignedRunwayIndex;
             d.planes.add(pp);
         }
 
         // Copy events 
         d.events = new ArrayList<>(events);
+
+        d.outboundQueueIds.clear();
+        d.outboundQueueIds.addAll(outboundQueueIds);
 
         return d;
     }

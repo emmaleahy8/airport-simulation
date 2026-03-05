@@ -16,6 +16,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import javafx.scene.layout.Region;
+import javafx.application.Platform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +43,12 @@ public class RunningPage implements Page {
 
     // Spinner animation (possibly temporary until we do graphics)
     private PathTransition spinnerAnim;
+    
+    // Simulation visual
+    private SimulationPaneVisual visual;
 
+    private final Pane takeoffZone = new Pane();
+    
     // Keep last config for restart
     private SimulationData currentConfig;
 
@@ -92,6 +99,7 @@ public class RunningPage implements Page {
 
         leftColumn.getChildren().addAll(metricsCard, runwayCard);
         
+        /* 
         // Spinner (small, fixed size)
         Node spinner = buildPlaneSpinnerWithTrack(150, 50); // paneSize, radius
 
@@ -99,6 +107,13 @@ public class RunningPage implements Page {
         simulationPane.setAlignment(Pos.CENTER);
         simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
         simulationPane.getChildren().add(spinner);
+        */
+
+        visual = new SimulationPaneVisual();
+        StackPane simulationPane = new StackPane();
+        simulationPane.setAlignment(Pos.CENTER);
+        simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
+        simulationPane.getChildren().add(visual);
 
         HBox.setHgrow(simulationPane, Priority.ALWAYS);
         mainLayout.getChildren().addAll(leftColumn, simulationPane);
@@ -149,6 +164,8 @@ public class RunningPage implements Page {
             holdingVal.setText(String.valueOf(snap.holdingQueue));
             takeoffVal.setText(String.valueOf(snap.takeoffQueue));
             updateRunwayTable(snap);
+
+            visual.update(snap);
         }));
     }
 
