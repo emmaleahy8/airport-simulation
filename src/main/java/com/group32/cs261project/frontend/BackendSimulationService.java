@@ -30,6 +30,8 @@ public class BackendSimulationService implements SimulationService {
     // Private variables
     private volatile boolean running = false;
     private ScheduledExecutorService executor = null;
+    private final int tickMilliSeconds = 200; 
+    private final int numEventsPerTick = 10;
 
     private Consumer<SimulationData> onSnapshot = null;
     private SimulationData initialConfig = null;
@@ -179,13 +181,23 @@ public class BackendSimulationService implements SimulationService {
 
         this.running = true;
         this.executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(this::tick, 0, 200, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(this::tick, 0, this.tickMilliSeconds, TimeUnit.MILLISECONDS);
     }
 
 
+    /**
+     * Tick the simulation by a set amount
+     */
     private void tick() {
-        // TODO implement logic to tick backend
+        if (!this.running)
+            return;
 
+        for (int i = 0; i < this.numEventsPerTick; i++) {
+            this.backendSim.step();
+        }
+
+        SimulationData snap = snapshotFrom(this.backendSim);
+        this.onSnapshot.accept(snap);
     }
 
 
