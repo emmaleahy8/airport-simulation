@@ -1,7 +1,9 @@
 package com.group32.cs261project.backend.model;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -18,6 +20,7 @@ public class Airport {
     private final List<Runway> runways;
     private final HoldingPattern holdingPattern;
     private final TakeOffQueue takeOffQueue;
+    private final Map<Integer, Aircraft> aircraftRunwayMapping;
 
     /**
      * Constructor
@@ -36,6 +39,7 @@ public class Airport {
 
         this.holdingPattern = new HoldingPattern();
         this.takeOffQueue = new TakeOffQueue();
+        this.aircraftRunwayMapping = new HashMap<>();
     }
 
     /**
@@ -115,5 +119,32 @@ public class Airport {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Assign aircraft to a runway
+     * @param runway runway object in the airport
+     * @param aircraft aircraft object
+     */
+    public void assignAircraftToRunway(Runway runway, Aircraft aircraft) {
+        this.aircraftRunwayMapping.put(runway.runwayNumber(), aircraft);
+    }
+
+    /**
+     * Clear aircraft from a runway
+     * @param runway
+     */
+    public void clearRunway(Runway runway) {
+        this.aircraftRunwayMapping.remove(runway.runwayNumber());
+    }
+
+    /**
+     * Get corresponding aircraft on each runway, null if doesnt exist
+     * @return list of <aircraft | null> for each runway
+     */
+    public List<Aircraft> runwayAircraft() {
+        return this.runways.stream()
+            .map(runway -> this.aircraftRunwayMapping.getOrDefault(runway.runwayNumber(), null))
+            .toList();
     }
 }
