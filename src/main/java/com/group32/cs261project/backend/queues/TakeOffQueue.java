@@ -1,7 +1,9 @@
 package com.group32.cs261project.backend.queues;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
@@ -60,6 +62,16 @@ public class TakeOffQueue {
      */
     public boolean isEmpty() {
         return this.queue.isEmpty();
+    }
+
+    /**
+     * Returns the takeoff queue as a list of aircraft in the right order
+     * @return list of aircraft objects
+     */
+    public List<Aircraft> toList() {
+        List<Aircraft> planes = new ArrayList<>();
+        planes.addAll(this.queue);
+        return planes;
     }
 
     /**
