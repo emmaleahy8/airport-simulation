@@ -15,12 +15,16 @@ import com.group32.cs261project.backend.gen.FlightSeeder;
 import com.group32.cs261project.backend.gen.FlightType;
 import com.group32.cs261project.backend.gen.GeneratedFlight;
 import com.group32.cs261project.backend.metrics.SimulationReport;
+import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.frontend.SimulationData.PlaneDTO;
+import com.group32.cs261project.frontend.SimulationData.PlaneDirection;
+import com.group32.cs261project.frontend.SimulationData.PlaneStatus;
 
 
 
@@ -153,6 +157,32 @@ public class BackendSimulationService implements SimulationService {
 
         // pass planes
         snapshot.planes.clear(); // pass empty list for now
+
+        // populate from holding pattern
+        for (Aircraft aircraft: sim.airport().holdingPattern().toList()) {
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = PlaneDirection.INBOUND;
+            uiPlane.status = PlaneStatus.HOLDING;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+        }
+
+        // populate from takeoff queue
+        for (Aircraft aircraft: sim.airport().takeOffQueue().toList()) {
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = PlaneDirection.OUTBOUND;
+            uiPlane.status = PlaneStatus.TAKING_OFF;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+        }
+
+        // populate from runways
         
         return snapshot;
     }
