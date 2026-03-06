@@ -29,6 +29,7 @@ public class BackendSimulationService implements SimulationService {
 
     // Private variables
     private volatile boolean running = false;
+    private volatile boolean paused = false;
     private ScheduledExecutorService executor = null;
     private final int tickMilliSeconds = 200; 
     private final int numEventsPerTick = 1;
@@ -190,7 +191,7 @@ public class BackendSimulationService implements SimulationService {
      * Tick the simulation by a set amount
      */
     private void tick() {
-        if (!this.running)
+        if (!this.running || this.paused)
             return;
 
         for (int i = 0; i < this.numEventsPerTick; i++) {
@@ -226,4 +227,18 @@ public class BackendSimulationService implements SimulationService {
         return this.running;
     }
     
+    @Override
+    public void pause() {
+        this.paused = true;
+    }
+
+    @Override
+    public void resume() {
+        this.paused = false;
+    }
+
+    @Override
+    public boolean isPaused() {
+        return this.paused;
+    }
 }

@@ -28,4 +28,8 @@ public interface SimulationService {
      * @return boolean
      */
     boolean isRunning();
+
+    void pause();
+    void resume();
+    boolean isPaused();
 }
