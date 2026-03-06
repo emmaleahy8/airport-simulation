@@ -11,7 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.sim.SimConfig;
+import com.group32.cs261project.backend.gen.FlightGenerator;
+import com.group32.cs261project.backend.gen.FlightType;
+import com.group32.cs261project.backend.gen.GeneratedFlight;
+import com.group32.cs261project.backend.sim.SimConfig;
 
 class FlightGeneratorTest {
 

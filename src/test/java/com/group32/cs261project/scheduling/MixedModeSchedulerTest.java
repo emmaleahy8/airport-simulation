@@ -9,19 +9,19 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.airport.events.RunwayOperationCompleteEvent;
-import com.group32.cs261project.model.Aircraft;
-import com.group32.cs261project.model.Airport;
-import com.group32.cs261project.model.Runway;
-import com.group32.cs261project.model.enums.AircraftState;
-import com.group32.cs261project.model.enums.EmergencyStatus;
-import com.group32.cs261project.model.enums.RunwayMode;
-import com.group32.cs261project.model.enums.RunwayStatus;
-import com.group32.cs261project.sim.SimConfig;
-import com.group32.cs261project.sim.SimulationContext;
-import com.group32.cs261project.sim.SimulationEngine;
-import com.group32.cs261project.sim.events.Event;
-import com.group32.cs261project.sim.queue.PriorityEventQueue;
+import com.group32.cs261project.backend.AirportSimulation;
+import com.group32.cs261project.backend.events.Event;
+import com.group32.cs261project.backend.events.RunwayOperationCompleteEvent;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.model.enums.RunwayMode;
+import com.group32.cs261project.backend.model.enums.RunwayStatus;
+import com.group32.cs261project.backend.scheduling.Scheduler;
+import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.backend.sim.SimulationContext;
 
 class MixedModeSchedulerTest {
 
@@ -35,13 +35,12 @@ class MixedModeSchedulerTest {
         Instant now = start.plusSeconds(0);
         Instant end = start.plus(Duration.ofHours(1));
 
-        Runway mixed = new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE);
+        RunwayData mixed = new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(mixed));
 
-        SimulationEngine<SimulationContext> engine = new SimulationEngine<>(
-            new SimConfig(start, end, 1L, 15, 15, 60),
-            new SimulationContext(airport, new Scheduler()),
-            new PriorityEventQueue<>()
+        AirportSimulation airportSimulation = new AirportSimulation(
+            new SimConfig(start, end, 1L, 15, 15, 60), 
+            airport
         );
 
         // Add one to each queue
@@ -50,16 +49,16 @@ class MixedModeSchedulerTest {
 
         // Scheduler with alternating policy (adjust ctor)
         Scheduler scheduler = new Scheduler();
-        scheduler.tryScheduleOperations(now, engine);
+        scheduler.tryScheduleOperations(now, airportSimulation.engine());
 
         // Pop completion event 1
-        Event<SimulationContext> e1 = engine.eventQueue().pop();
+        Event<SimulationContext> e1 = airportSimulation.engine().eventQueue().pop();
         assertNotNull(e1);
         assertTrue(e1 instanceof RunwayOperationCompleteEvent);
 
         // Simulate completion to free runway (in your real sim, the completion event does this)
         // Here we just advance time and clear occupancy if needed; adjust to your runway model.
-        mixed.clearOccupancy(); // or clearOccupancy()
+        airport.getRunway(0).clearOccupancy(); // or clearOccupancy()
 
         // Ensure both queues still have at least one item for the next choice:
         // (Depending on which op was chosen first, one queue is now empty; add another)
@@ -71,9 +70,9 @@ class MixedModeSchedulerTest {
         }
 
         // Schedule again at same timestamp
-        scheduler.tryScheduleOperations(now, engine);
+        scheduler.tryScheduleOperations(now, airportSimulation.engine());
 
-        Event<SimulationContext> e2 = engine.eventQueue().pop();
+        Event<SimulationContext> e2 = airportSimulation.engine().eventQueue().pop();
         assertNotNull(e2);
         assertTrue(e2 instanceof RunwayOperationCompleteEvent);
 

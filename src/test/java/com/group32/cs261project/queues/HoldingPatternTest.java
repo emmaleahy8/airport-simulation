@@ -1,15 +1,19 @@
 package com.group32.cs261project.queues;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import com.group32.cs261project.model.Aircraft;
-import com.group32.cs261project.model.enums.AircraftState;
-import com.group32.cs261project.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
+import com.group32.cs261project.backend.queues.HoldingPattern;
 
 class HoldingPatternTest {
 
@@ -77,5 +81,51 @@ class HoldingPatternTest {
 
         assertEquals(AircraftState.HOLDING, a.state());
         assertEquals(t, a.holdingPatternEntryTime());
+    }
+
+    @Test
+    void planesReturnsEmptyListInitially() {
+        HoldingPattern hp = new HoldingPattern();
+        List<Aircraft> planes = hp.toList();
+
+        assertNotNull(planes);
+        assertTrue(planes.isEmpty());
+    }
+
+    @Test
+    void planesContainsEnqueuedAircraftInOrder() {
+        HoldingPattern hp = new HoldingPattern();
+        Instant t = Instant.parse("2026-01-01T00:00:00Z");
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a2 = mkAircraft("A2", EmergencyStatus.NONE);
+
+        hp.enqueue(a1, t);
+        hp.enqueue(a2, t.plusSeconds(1));
+
+        List<Aircraft> planes = hp.toList();
+
+        assertEquals(2, planes.size());
+        assertSame(a1, planes.get(0));
+        assertSame(a2, planes.get(1));
+    }
+
+    @Test
+    void planesReflectsDequeue() {
+        HoldingPattern hp = new HoldingPattern();
+        Instant t = Instant.parse("2026-01-01T00:00:00Z");
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a2 = mkAircraft("A2", EmergencyStatus.NONE);
+
+        hp.enqueue(a1, t);
+        hp.enqueue(a2, t.plusSeconds(1));
+
+        Aircraft removed = hp.dequeueNextLandingCandidate();
+        assertNotNull(removed);
+
+        List<Aircraft> planes = hp.toList();
+        assertEquals(1, planes.size());
+        assertFalse(planes.contains(removed));
     }
 }
