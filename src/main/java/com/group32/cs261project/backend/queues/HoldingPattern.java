@@ -1,7 +1,9 @@
 package com.group32.cs261project.backend.queues;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
@@ -71,6 +73,17 @@ public class HoldingPattern {
         } else {
             return this.normalQueue.poll();
         }
+    }
+
+    /**
+     * Returns the holding pattern as a list of planes in the right order
+     * @return list of aircraft objects
+     */
+    public List<Aircraft> toList() {
+        List<Aircraft> planes = new ArrayList<>();
+        planes.addAll(this.emergencyQueue);
+        planes.addAll(this.normalQueue);
+        return planes;
     }
 
     /**
