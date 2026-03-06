@@ -158,5 +158,15 @@ public class Aircraft {
             this.emergency = EmergencyStatus.FUEL;
         }
     }
+
+    // helper methods if emergencies escalate dynamically - may not be needed with setEmergency status methods
+    // used for when an emergency is triggered
+    public void declareMechanicalEmergency() {
+        this.emergency = EmergencyStatus.MECHANICAL;
+    }
+
+    public void declarePassengerHealthEmergency() {
+        this.emergency = EmergencyStatus.PASSENGER_HEALTH;
+    }
     
 }
