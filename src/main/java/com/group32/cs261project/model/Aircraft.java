@@ -17,7 +17,7 @@ public class Aircraft {
     private final String origin;
     private final String destination;
     private final Instant scheduledTime;
-    private final EmergencyStatus emergency;
+    private EmergencyStatus emergency; // made this non-final - needs to be mutable
     private double fuelMinutesRemaining;
     private AircraftState state;
     private Instant holdingEntryTime;
@@ -86,6 +86,11 @@ public class Aircraft {
         return this.emergency != EmergencyStatus.NONE;
     }
 
+    // set an aircraft to a specific emergency status
+    public void setEmergencyStatus(EmergencyStatus status) {
+        this.emergency = Objects.requireNonNull(status);
+    }
+
     public AircraftState state() {
         return this.state;
     }
@@ -131,13 +136,27 @@ public class Aircraft {
     }
 
     // fuel logic (for later)
+    //CONSUMPTION
     public void consumeFuelMinutes(double minutes) {
-        if (this.fuelMinutesRemaining > minutes)
-            this.fuelMinutesRemaining -= minutes;
+        //if (this.fuelMinutesRemaining > minutes)
+            //this.fuelMinutesRemaining -= minutes;
+        this.fuelMinutesRemaining = Math.max(0, this.fuelMinutesRemaining - minutes); // this allows it to go to 0
+    }
+    
+    public boolean isLowFuel(double thresholdMinutes) {
+        return this.fuelMinutesRemaining <= thresholdMinutes; // 10
     }
 
-    public boolean isLowFuel(double thresholdMinutes) {
-        return this.fuelMinutesRemaining <= thresholdMinutes;
+    // extra may not need
+    public double getFuelMinutesRemaining() {
+        return this.fuelMinutesRemaining;
+    }
+
+    // checks if fuel is low, automatically escalates to FUEL emergency
+    public void updateFuelEmergency(double thresholdMinutes) {
+        if (this.emergency == EmergencyStatus.NONE && isLowFuel(thresholdMinutes)) {
+            this.emergency = EmergencyStatus.FUEL;
+        }
     }
     
 }

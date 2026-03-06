@@ -15,7 +15,7 @@ public class HoldingPattern {
      * Constructor
      */
     public HoldingPattern() {
-        this.emergencyQueue = new LinkedList<>();
+        this.emergencyQueue = new LinkedList<>(); // landing always prefers this queue
         this.normalQueue = new LinkedList<>();
     }
 
@@ -80,4 +80,32 @@ public class HoldingPattern {
     public String toString() {
         return String.format("(%s, %s)", this.emergencyQueue.toString(), this.normalQueue.toString());
     }
+
+
+    /**
+     * consumes fuel for all waiting aircraft
+     * checks fuel
+     * escalates emergency
+     * moves low fuel aircarft to the emergency queue
+     * 
+     */
+    public void updateFuelStates(double thresholdMinutes, double minutesPassed) {
+
+        for (Aircraft aircraft : normalQueue) {
+    
+            aircraft.consumeFuelMinutes(minutesPassed);
+            aircraft.updateFuelEmergency(thresholdMinutes);
+    
+            if (aircraft.isEmergency()) {
+                emergencyQueue.add(aircraft);
+            }
+        }
+    
+        normalQueue.removeIf(Aircraft::isEmergency);
+    
+        for (Aircraft aircraft : emergencyQueue) {
+            aircraft.consumeFuelMinutes(minutesPassed);
+        }
+    }
+
 }

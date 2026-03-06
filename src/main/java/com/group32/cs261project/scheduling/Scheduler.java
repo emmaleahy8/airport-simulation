@@ -36,6 +36,10 @@ public class Scheduler {
     public void tryScheduleOperations(Instant now, SimulationEngine<SimulationContext> engine) {
 
         Airport airport = engine.context().airport();
+
+        airport.holdingPattern().updateFuelStates(10, 1); // reduce the fuel of aircraft in holding pattern by 1 every minute + escalae if necessary
+        // could add '10' here to SimConfig instead of hard coding it but probs not necessary for our purposes 
+
         Instant completionTime = now.plusSeconds(engine.config().runwayOccupancySeconds());
 
         for (Runway runway : airport.runways()) {
