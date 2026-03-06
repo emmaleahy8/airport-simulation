@@ -8,17 +8,18 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import com.group32.cs261project.frontend.AppState;
+import com.group32.cs261project.frontend.BackendSimulationService;
 import com.group32.cs261project.frontend.ConfigurePage;
 import com.group32.cs261project.frontend.Page;
 import com.group32.cs261project.frontend.ResultsPage;
 import com.group32.cs261project.frontend.RunningPage;
 import com.group32.cs261project.frontend.SimulationService;
-import com.group32.cs261project.frontend.StubSimulationService;
+// import com.group32.cs261project.frontend.StubSimulationService;
 
 public class App extends Application {
 
     private Stage stage; // Main window of the application
-    private final SimulationService sim = new StubSimulationService(); // Simulation logic (stubbed for now - replace with real implementation later)
+    private final SimulationService sim = new BackendSimulationService(); // Simulation logic (stubbed for now - replace with real implementation later)
 
     private final Map<AppState, Page> pages = new EnumMap<>(AppState.class); // Stores all app pages for easy switching
     private AppState currentState = null; // Tracks which page is currently active

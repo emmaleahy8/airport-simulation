@@ -31,7 +31,7 @@ public class BackendSimulationService implements SimulationService {
     private volatile boolean running = false;
     private ScheduledExecutorService executor = null;
     private final int tickMilliSeconds = 200; 
-    private final int numEventsPerTick = 10;
+    private final int numEventsPerTick = 1;
 
     private Consumer<SimulationData> onSnapshot = null;
     private SimulationData initialConfig = null;
@@ -95,11 +95,12 @@ public class BackendSimulationService implements SimulationService {
     private static SimConfig mapConfig(SimulationData ui) {
         return new SimConfig(
             Instant.now(),
-            null, // there is no end time???
+            Instant.now().plus(Duration.ofHours(1)), // we just put 1 hour for now to make it not crash
             new Random().nextLong(),
             ui.inboundRatePerHour,
             ui.outboundRatePerHour,
-            60 // no runway occupancy seconds?
+            60, // no runway occupancy seconds?
+            true
         );
     }
 
@@ -129,7 +130,7 @@ public class BackendSimulationService implements SimulationService {
         SimulationData snapshot = new SimulationData();
 
         // pass current sim time
-        snapshot.simMinute = (int) Duration.between(sim.config().startTime(), Instant.now()).toMinutes();
+        snapshot.simMinute = (int) Duration.between(sim.config().startTime(), sim.engine().now()).toMinutes();
 
         // pass queue sizes
         snapshot.holdingQueue = sim.airport().holdingPattern().size();
