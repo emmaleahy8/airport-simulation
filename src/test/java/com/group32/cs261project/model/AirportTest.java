@@ -5,16 +5,33 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
+import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftState;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 
 class AirportTest {
+
+    private static Aircraft mkAircraft(String callsign, EmergencyStatus emergency) {
+        return new Aircraft(
+                callsign,
+                "TestAir",
+                "AAA",
+                "BBB",
+                Instant.parse("2026-01-01T00:00:00Z"),
+                emergency,
+                30.0,
+                AircraftState.OUTSIDE_MODEL
+        );
+    }
 
     @Test
     void findsLandingRunwayWhenAvailable() {
@@ -67,6 +84,7 @@ class AirportTest {
         assertTrue(airport.findAvailableLandingRunway(t0).isEmpty());
         assertTrue(airport.findAvailableLandingRunway(t1).isPresent());
     }
+
     @Test
     void getRunwayReturnsCorrectRunwayAndAllowsUpdates() {
         // Create two runways
@@ -88,5 +106,81 @@ class AirportTest {
         // Test setRunwayMode updates the runway mode
         airport.setRunwayMode(1, RunwayMode.MIXED);
         assertEquals(RunwayMode.MIXED, airport.getRunway(1).mode());
+    }
+
+    @Test
+    void assignAircraftToRunwayAddsAircraftToRunwayAircraftList() {
+        RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        Airport airport = new Airport(List.of(r1));
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+
+        // Precondition
+        assertEquals(airport.runwayAircraft().get(0), null);
+
+        airport.assignAircraftToRunway(airport.getRunway(0), a1);
+
+        List<Aircraft> onRunways = airport.runwayAircraft();
+        assertEquals(1, onRunways.size());
+        assertTrue(onRunways.contains(a1));
+    }
+
+    @Test
+    void clearRunwayRemovesAircraftFromThatRunway() {
+        RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        Airport airport = new Airport(List.of(r1));
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+
+        airport.assignAircraftToRunway(airport.getRunway(0), a1);
+        assertEquals(1, airport.runwayAircraft().size());
+
+        airport.clearRunway(airport.getRunway(0));
+
+        assertEquals(airport.runwayAircraft().get(0), null);
+    }
+
+    @Test
+    void assigningTwoRunwaysTracksBothAircraftAndClearingOneLeavesTheOther() {
+        RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        RunwayData r2 = new RunwayData(3000, 270, RunwayMode.TAKEOFF, RunwayStatus.AVAILABLE);
+        Airport airport = new Airport(List.of(r1, r2));
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a2 = mkAircraft("D1", EmergencyStatus.NONE);
+
+        airport.assignAircraftToRunway(airport.getRunway(0), a1);
+        airport.assignAircraftToRunway(airport.getRunway(1), a2);
+
+        List<Aircraft> onRunways = airport.runwayAircraft();
+        assertEquals(2, onRunways.size());
+        assertTrue(onRunways.containsAll(List.of(a1, a2)));
+
+        airport.clearRunway(airport.getRunway(0));
+
+        List<Aircraft> afterClear = airport.runwayAircraft();
+        assertEquals(airport.runwayAircraft().get(0), null);
+        assertTrue(afterClear.contains(a2));
+        assertFalse(afterClear.contains(a1));
+    }
+
+    @Test
+    void reassigningSameRunwayReplacesAircraft() {
+        RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
+        Airport airport = new Airport(List.of(r1));
+
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a2 = mkAircraft("A2", EmergencyStatus.NONE);
+
+        airport.assignAircraftToRunway(airport.getRunway(0), a1);
+        assertTrue(airport.runwayAircraft().contains(a1));
+
+        // Assign different aircraft to same runway
+        airport.assignAircraftToRunway(airport.getRunway(0), a2);
+
+        List<Aircraft> onRunways = airport.runwayAircraft();
+        assertEquals(1, onRunways.size());
+        assertTrue(onRunways.contains(a2));
+        assertFalse(onRunways.contains(a1));
     }
 }
