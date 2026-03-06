@@ -129,7 +129,7 @@ public class SimulationData {
         }
     }
 
-    // Ensures the runwa list length always matches runway count
+    // Ensures the runway list length always matches runway count
     public void ensureRunwayListSize() {
         while (runways.size() < runwayCount) runways.add(new RunwayConfig(runways.size() + 1)); // If the list is too small: add new RunwayConfig objects 
         while (runways.size() > runwayCount) runways.remove(runways.size() - 1); // If list is too big: remove entries from end 
