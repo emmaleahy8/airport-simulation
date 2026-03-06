@@ -1,5 +1,6 @@
 package com.group32.cs261project.frontend;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Random;
@@ -15,6 +16,7 @@ import com.group32.cs261project.backend.gen.FlightType;
 import com.group32.cs261project.backend.gen.GeneratedFlight;
 import com.group32.cs261project.backend.metrics.SimulationReport;
 import com.group32.cs261project.backend.model.Airport;
+import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
@@ -41,7 +43,7 @@ public class BackendSimulationService implements SimulationService {
      * @param uiMode frontend runway mode
      * @return backend runway mode
      */
-    private static RunwayMode mapMode(SimulationData.RunwayMode uiMode) {
+    private static RunwayMode convertMode(SimulationData.RunwayMode uiMode) {
         return switch (uiMode) {
             case LANDING -> RunwayMode.LANDING;
             case MIXED -> RunwayMode.MIXED;
@@ -49,19 +51,37 @@ public class BackendSimulationService implements SimulationService {
         };
     }
 
-    
+    private static SimulationData.RunwayMode convertMode(RunwayMode mode) {
+        return switch (mode) {
+            case LANDING -> SimulationData.RunwayMode.LANDING;
+            case MIXED -> SimulationData.RunwayMode.MIXED;
+            case TAKEOFF -> SimulationData.RunwayMode.TAKE_OFF;
+        };
+    }
+
+
     /**
      * Helper function to convert UI runway status to backend runway status
      * @param uiStatus frontend runway status
      * @return backend runway status
      */
-    private static RunwayStatus mapStatus(SimulationData.RunwayStatus uiStatus) {
+    private static RunwayStatus convertStatus(SimulationData.RunwayStatus uiStatus) {
         return switch (uiStatus) {
             case AVAILABLE -> RunwayStatus.AVAILABLE;
             case EQUIPMENT_FAILURE -> RunwayStatus.EQUIPMENT_FAILURE;
             case RUNWAY_INSPECTION -> RunwayStatus.INSPECTION;
             case SNOW_CLEARANCE -> RunwayStatus.SNOW_CLEARANCE;
         };
+    }
+
+    private static SimulationData.RunwayStatus convertStatus(RunwayStatus status) {
+        return switch (status) {
+            case AVAILABLE -> SimulationData.RunwayStatus.AVAILABLE;
+            case EQUIPMENT_FAILURE -> SimulationData.RunwayStatus.EQUIPMENT_FAILURE;
+            case INSPECTION -> SimulationData.RunwayStatus.RUNWAY_INSPECTION;
+            case SNOW_CLEARANCE -> SimulationData.RunwayStatus.SNOW_CLEARANCE;
+        };
+    
     }
 
     
@@ -91,8 +111,8 @@ public class BackendSimulationService implements SimulationService {
         return new Airport(ui.runways.stream().map(runway -> new RunwayData(
             3000, 
             90,
-            mapMode(runway.mode),
-            mapStatus(runway.status)
+            convertMode(runway.mode),
+            convertStatus(runway.status)
         )).toList());
     }
 
@@ -103,7 +123,34 @@ public class BackendSimulationService implements SimulationService {
      * @return frontend snapshot
      */
     private static SimulationData snapshotFrom(AirportSimulation sim) {
-        return null;
+
+        SimulationData snapshot = new SimulationData();
+
+        // pass current sim time
+        snapshot.simMinute = (int) Duration.between(sim.config().startTime(), Instant.now()).toMinutes();
+
+        // pass queue sizes
+        snapshot.holdingQueue = sim.airport().holdingPattern().size();
+        snapshot.takeoffQueue = sim.airport().takeOffQueue().size();
+
+        // pass config values
+        snapshot.runwayCount = sim.airport().runways().size();
+        snapshot.inboundRatePerHour = (int) sim.config().inboundRatePerHour();
+        snapshot.outboundRatePerHour = (int) sim.config().outboundRatePerHour();
+
+        // pass runways
+        snapshot.runways.clear();
+        for (Runway runway : sim.airport().runways()) {
+            SimulationData.RunwayConfig uiRunway = new SimulationData.RunwayConfig(runway.runwayNumber());
+            uiRunway.mode = convertMode(runway.mode());
+            uiRunway.status = convertStatus(runway.status());
+            snapshot.runways.add(uiRunway);
+        }
+
+        // pass planes
+        snapshot.planes.clear(); // pass empty list for now
+        
+        return snapshot;
     }
 
 
