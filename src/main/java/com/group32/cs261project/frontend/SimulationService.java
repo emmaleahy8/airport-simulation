@@ -29,7 +29,18 @@ public interface SimulationService {
      */
     boolean isRunning();
 
+    /**
+     * Pause the simulation
+     */
     void pause();
+
+    /**
+     * Resume the simulation
+     */
     void resume();
+
+    /**
+     * Returns whether the simulation is currently paused
+     */
     boolean isPaused();
 }
