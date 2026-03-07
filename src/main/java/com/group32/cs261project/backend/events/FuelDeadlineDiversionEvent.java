@@ -32,6 +32,9 @@ public class FuelDeadlineDiversionEvent implements Event<SimulationContext> {
             // remove aircraft from holding pattern        
             engine.context().airport().holdingPattern().remove(this.aircraft);
 
+            // update aircraft state
+            this.aircraft.markDiverted();
+
             // update metrics for diversions
             engine.context().metrics().onDiverted(this.aircraft, this.time);
         }
