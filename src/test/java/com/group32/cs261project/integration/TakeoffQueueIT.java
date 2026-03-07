@@ -12,6 +12,7 @@ import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -63,7 +64,9 @@ public class TakeoffQueueIT {
                 readyTime,
                 EmergencyStatus.NONE,
                 0.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
+                
         );
 
         Aircraft secondAircraft = new Aircraft(
@@ -74,7 +77,8 @@ public class TakeoffQueueIT {
                 readyTime,
                 EmergencyStatus.NONE,
                 0.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
         );
 
         // -------------------------
