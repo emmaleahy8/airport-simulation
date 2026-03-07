@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import com.group32.cs261project.backend.metrics.MetricsCollector;
 import com.group32.cs261project.backend.metrics.SimulationReport;
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
@@ -20,7 +21,7 @@ import com.group32.cs261project.backend.model.enums.EmergencyStatus;
  */
 class MetricsCollectorTest {
 
-    private static Aircraft mkAircraft(Instant scheduled, Instant holdingEntry, Instant takeoffEntry) {
+    private static Aircraft mkAircraft(Instant scheduled, Instant holdingEntry, Instant takeoffEntry, AircraftDirection direction) {
         // Adapt this if your Aircraft constructor differs.
         // Only the three time getters used by MetricsCollector must be correct.
         Aircraft aircraft = new Aircraft(
@@ -31,7 +32,8 @@ class MetricsCollectorTest {
                 scheduled,
                 EmergencyStatus.NONE,
                 100.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                direction
         );
         aircraft.markHolding(holdingEntry);
         aircraft.markTakeoffQueue(takeoffEntry);
@@ -67,7 +69,7 @@ class MetricsCollectorTest {
         Instant takeoffEntry = t.plusSeconds(120);
         Instant takeoffActual = takeoffEntry.plusSeconds(7 * 60); // +7 min wait
 
-        Aircraft a = mkAircraft(scheduled, holdingEntry, takeoffEntry);
+        Aircraft a = mkAircraft(scheduled, holdingEntry, takeoffEntry, AircraftDirection.INBOUND);
 
         mc.onLandingCompleted(a, landingActual);
         mc.onTakeoffCompleted(a, takeoffActual);
@@ -91,7 +93,7 @@ class MetricsCollectorTest {
         Instant landingActual = t0.plusSeconds(17 * 60);   // lands at +17 min
 
         // Holding time should be 12 minutes; arrival delay should be 17 minutes (if scheduled at t0)
-        Aircraft a = mkAircraft(scheduled, holdingEntry, null);
+        Aircraft a = mkAircraft(scheduled, holdingEntry, null, AircraftDirection.INBOUND);
 
         mc.onHoldingEnqueue(holdingEntry, 1);
         mc.onHoldingDequeue(landingActual, 0);
@@ -120,7 +122,7 @@ class MetricsCollectorTest {
         Instant takeoffActual = t0.plusSeconds(25 * 60);   // takes off at +25 min
 
         // Wait time should be 13 minutes; departure delay should be 15 minutes (25 - 10)
-        Aircraft a = mkAircraft(scheduled, null, takeoffEntry);
+        Aircraft a = mkAircraft(scheduled, null, takeoffEntry, AircraftDirection.OUTBOUND);
 
         mc.onTakeoffEnqueue(takeoffEntry, 1);
         mc.onTakeoffDequeue(takeoffActual, 0);
@@ -144,17 +146,17 @@ class MetricsCollectorTest {
 
         // Two landings with different holding times and delays
         // Landing #1: entry +0m, land +10m => hold 10, delay (scheduled t0) 10
-        Aircraft a1 = mkAircraft(t0, t0, null);
+        Aircraft a1 = mkAircraft(t0, t0, null, AircraftDirection.INBOUND);
         mc.onHoldingEnqueue(t0, 1);
         mc.onLandingCompleted(a1, t0.plusSeconds(10 * 60));
 
         // Landing #2: entry +5m, land +25m => hold 20, delay 25
-        Aircraft a2 = mkAircraft(t0, t0.plusSeconds(5 * 60), null);
+        Aircraft a2 = mkAircraft(t0, t0.plusSeconds(5 * 60), null, AircraftDirection.INBOUND);
         mc.onHoldingEnqueue(t0.plusSeconds(5 * 60), 2);
         mc.onLandingCompleted(a2, t0.plusSeconds(25 * 60));
 
         // One takeoff so buildReport doesn't throw for takeoff collectors:
-        Aircraft d1 = mkAircraft(t0, null, t0);
+        Aircraft d1 = mkAircraft(t0, null, t0, AircraftDirection.OUTBOUND);
         mc.onTakeoffEnqueue(t0, 1);
         mc.onTakeoffCompleted(d1, t0.plusSeconds(5 * 60));
 
