@@ -13,6 +13,7 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -20,7 +21,7 @@ import com.group32.cs261project.backend.model.enums.RunwayStatus;
 
 class AirportTest {
 
-    private static Aircraft mkAircraft(String callsign, EmergencyStatus emergency) {
+    private static Aircraft mkAircraft(String callsign, EmergencyStatus emergency, AircraftDirection direction) {
         return new Aircraft(
                 callsign,
                 "TestAir",
@@ -29,7 +30,8 @@ class AirportTest {
                 Instant.parse("2026-01-01T00:00:00Z"),
                 emergency,
                 30.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                direction
         );
     }
 
@@ -113,7 +115,7 @@ class AirportTest {
         RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(r1));
 
-        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE, AircraftDirection.INBOUND);
 
         // Precondition
         assertEquals(airport.runwayAircraft().get(0), null);
@@ -130,7 +132,7 @@ class AirportTest {
         RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(r1));
 
-        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE, AircraftDirection.INBOUND);
 
         airport.assignAircraftToRunway(airport.getRunway(0), a1);
         assertEquals(1, airport.runwayAircraft().size());
@@ -146,8 +148,8 @@ class AirportTest {
         RunwayData r2 = new RunwayData(3000, 270, RunwayMode.TAKEOFF, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(r1, r2));
 
-        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
-        Aircraft a2 = mkAircraft("D1", EmergencyStatus.NONE);
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE, AircraftDirection.INBOUND);
+        Aircraft a2 = mkAircraft("D1", EmergencyStatus.NONE, AircraftDirection.OUTBOUND);
 
         airport.assignAircraftToRunway(airport.getRunway(0), a1);
         airport.assignAircraftToRunway(airport.getRunway(1), a2);
@@ -169,8 +171,8 @@ class AirportTest {
         RunwayData r1 = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE);
         Airport airport = new Airport(List.of(r1));
 
-        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE);
-        Aircraft a2 = mkAircraft("A2", EmergencyStatus.NONE);
+        Aircraft a1 = mkAircraft("A1", EmergencyStatus.NONE, AircraftDirection.INBOUND);
+        Aircraft a2 = mkAircraft("A2", EmergencyStatus.NONE, AircraftDirection.INBOUND);
 
         airport.assignAircraftToRunway(airport.getRunway(0), a1);
         assertTrue(airport.runwayAircraft().contains(a1));
