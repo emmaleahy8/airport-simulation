@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.gen.GeneratedFlight;
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
@@ -27,7 +28,8 @@ class GeneratedFlightTest {
                 scheduledTime,
                 EmergencyStatus.NONE,
                 120,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         GeneratedFlight flight =

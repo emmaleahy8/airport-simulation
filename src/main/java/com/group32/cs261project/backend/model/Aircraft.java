@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
@@ -19,6 +20,7 @@ public class Aircraft {
     private final Instant scheduledTime;
     private final EmergencyStatus emergency;
     private double fuelMinutesRemaining;
+    private final AircraftDirection direction;
     private AircraftState state;
     private Instant holdingEntryTime;
     private Instant takeOffQueueEntryTime;
@@ -37,7 +39,8 @@ public class Aircraft {
      * @param takeOffQueueEntryTime
      */
     public Aircraft(String callsign, String operator, String origin, String destination, 
-                    Instant scheduledTime, EmergencyStatus emergency, double fuelMinutesRemaining, AircraftState state
+                    Instant scheduledTime, EmergencyStatus emergency, double fuelMinutesRemaining,
+                    AircraftState state, AircraftDirection direction
     ) {
         this.callsign = Objects.requireNonNull(callsign);
         this.operator = Objects.requireNonNull(operator);
@@ -47,6 +50,7 @@ public class Aircraft {
         this.emergency = Objects.requireNonNull(emergency);
         this.fuelMinutesRemaining = fuelMinutesRemaining;
         this.state = Objects.requireNonNull(state);
+        this.direction = Objects.requireNonNull(direction);
         this.holdingEntryTime = null;
         this.takeOffQueueEntryTime = null;
 
@@ -80,6 +84,10 @@ public class Aircraft {
 
     public EmergencyStatus emergencyStatus() {
         return this.emergency;
+    }
+    
+    public AircraftDirection direction() {
+        return this.direction;
     }
 
     public boolean isEmergency() {

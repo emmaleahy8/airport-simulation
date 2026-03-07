@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.queues.TakeOffQueue;
@@ -26,7 +27,8 @@ class TakeOffQueueTest {
                 Instant.parse("2026-01-01T00:00:00Z"),
                 EmergencyStatus.NONE,
                 30.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
         );
     }
 
