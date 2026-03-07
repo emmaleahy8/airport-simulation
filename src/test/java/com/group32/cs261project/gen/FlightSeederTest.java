@@ -26,7 +26,7 @@ class FlightSeederTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg = new SimConfig(start, end, 123L, 15.0, 15.0, 60);
+        SimConfig cfg = new SimConfig(start, end, 123L, 15.0, 15.0, 60, -120, -120);
 
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)

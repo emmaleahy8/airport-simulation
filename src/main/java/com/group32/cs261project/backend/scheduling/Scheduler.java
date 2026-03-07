@@ -86,7 +86,8 @@ public class Scheduler {
 
         Airport airport = engine.context().airport();
 
-        airport.holdingPattern().updateFuelStates(10, engine.config().runwayOccupancySeconds() / 60.0); // convert to mins
+        // airport.holdingPattern().updateFuelStates(10, engine.config().runwayOccupancySeconds() / 60.0); // convert to mins
+        // System.out.format("%s %s\n", now.toString(), airport.holdingPattern().toList());
 
         // add on runway occupancy seconds to the current time
         Instant completionTime = now.plusSeconds(engine.config().runwayOccupancySeconds());
