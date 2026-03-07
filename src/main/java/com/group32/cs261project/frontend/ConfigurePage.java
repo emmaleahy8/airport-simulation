@@ -32,11 +32,15 @@ public class ConfigurePage implements Page {
     private final Slider runwaySlider = new Slider(1, 10, 2);
     private final Slider inboundSlider = new Slider(0, 30, 30);
     private final Slider outboundSlider = new Slider(0, 30, 30);
+    private final Slider passengerEmergencySlider = new Slider(0, 100, 0);
+    private final Slider mechanicalEmergencySlider = new Slider(0, 100, 0);
 
     // Labels showing current slider values
     private final Label runwayValue = new Label();
     private final Label inboundValue = new Label();
     private final Label outboundValue = new Label();
+    private final Label passengerEmergencyValue = new Label();
+    private final Label mechanicalEmergencyValue = new Label();
 
     private final Label errorLabel = new Label();
 
@@ -197,6 +201,8 @@ public class ConfigurePage implements Page {
         runwaySlider.setOnMousePressed(e -> pushUndoSnapshot());
         inboundSlider.setOnMousePressed(e -> pushUndoSnapshot());
         outboundSlider.setOnMousePressed(e -> pushUndoSnapshot());
+        passengerEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
+        mechanicalEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
     }
 
     // ----- Page Interface Methods -----
@@ -212,13 +218,13 @@ public class ConfigurePage implements Page {
 
     // ----- UI Builder for left side content -----
     private VBox buildLeftSidebar() {
-        VBox left = new VBox(16); // Vertical box with spacing of 16px between sections
+        VBox left = new VBox(14); // Vertical box with spacing of 16px between sections
         left.setPrefWidth(330);
         left.setAlignment(Pos.BOTTOM_LEFT);
         VBox.setVgrow(left, Priority.ALWAYS);
 
-        // Simulation Control panel
-        VBox simPanel = new VBox(14); // Vertical box with spacing of 14px between controls
+        // ----- Simulation Control panel -----
+        VBox simPanel = new VBox(12); // Vertical box with spacing of 14px between controls
         simPanel.setStyle(PANEL); // Apply panel styling (white background, border, padding)
 
         Label simTitle = new Label("Simulation Control");
@@ -276,8 +282,8 @@ public class ConfigurePage implements Page {
 
         simPanel.getChildren().addAll(simTitle, runwayRow, runBtn, undoRedoReset);
 
-        // Aircraft Generation panel
-        VBox aircraftPanel = new VBox(14); // Vertical box with spacing of 14px between controls
+        // ----- Aircraft Generation panel -----
+        VBox aircraftPanel = new VBox(12); // Vertical box with spacing of 14px between controls
         aircraftPanel.setStyle(PANEL);
 
         Label aircraftTitle = new Label("Aircraft Generation");
@@ -285,14 +291,14 @@ public class ConfigurePage implements Page {
         aircraftTitle.setStyle(TITLE_TEXT);
 
         // Inbound flow rate slider + label
-        VBox inboundBox = new VBox(6);
-        HBox inboundLine = new HBox(6, new Label("Arrival Rate:"), inboundValue, new Label("/hour"));
+        VBox inboundBox = new VBox(5);
+        HBox inboundLine = new HBox(5, new Label("Arrival Rate:"), inboundValue, new Label("/hour"));
         inboundLine.setAlignment(Pos.CENTER_LEFT);
         inboundBox.getChildren().addAll(inboundLine, inboundSlider);
 
         // Outbound flow rate slider + label
-        VBox outboundBox = new VBox(6);
-        HBox outboundLine = new HBox(6, new Label("Departure Rate:"), outboundValue, new Label("/hour"));
+        VBox outboundBox = new VBox(5);
+        HBox outboundLine = new HBox(5, new Label("Departure Rate:"), outboundValue, new Label("/hour"));
         outboundLine.setAlignment(Pos.CENTER_LEFT);
         outboundBox.getChildren().addAll(outboundLine, outboundSlider);
 
@@ -305,14 +311,43 @@ public class ConfigurePage implements Page {
         ((Label) outboundLine.getChildren().get(2)).setStyle(SMALL_TEXT);
         outboundValue.setStyle(MONITOR_TITLE);
 
-        aircraftTitle.setStyle(TITLE_TEXT);
-
         aircraftPanel.getChildren().addAll(aircraftTitle, inboundBox, outboundBox);
+
+        // ----- Emergency Generation panel -----
+        VBox emergencyPanel = new VBox(12); // Vertical box with spacing of 14px between controls
+        emergencyPanel.setStyle(PANEL);
+
+        Label emergencyTitle = new Label("Emergency Generation");
+        emergencyTitle.setFont(Font.font(20));
+        emergencyTitle.setStyle(TITLE_TEXT);
+
+        // Passenger Emergency slider + label
+        VBox passengerEmergencyBox = new VBox(5);
+        HBox passengerEmergencyLine = new HBox(5, new Label("Passenger Health Emergencies:"), passengerEmergencyValue, new Label("%"));
+        passengerEmergencyLine.setAlignment(Pos.CENTER_LEFT);
+        passengerEmergencyBox.getChildren().addAll(passengerEmergencyLine, passengerEmergencySlider);
+
+        // Mechanical Emergency slider + label
+        VBox mechanicalEmergencyBox = new VBox(5);
+        HBox mechanicalEmergencyLine = new HBox(5, new Label("Mechanical Emergencies:"), mechanicalEmergencyValue, new Label("%"));
+        mechanicalEmergencyLine.setAlignment(Pos.CENTER_LEFT);
+        mechanicalEmergencyBox.getChildren().addAll(mechanicalEmergencyLine, mechanicalEmergencySlider);
+
+        // Emergency Generation Styling
+        ((Label) passengerEmergencyLine.getChildren().get(0)).setStyle(LABEL_TEXT);
+        ((Label) passengerEmergencyLine.getChildren().get(2)).setStyle(SMALL_TEXT);
+        passengerEmergencyValue.setStyle(MONITOR_TITLE);
+
+        ((Label) mechanicalEmergencyLine.getChildren().get(0)).setStyle(LABEL_TEXT);
+        ((Label) mechanicalEmergencyLine.getChildren().get(2)).setStyle(SMALL_TEXT);
+        mechanicalEmergencyValue.setStyle(MONITOR_TITLE);
+
+        emergencyPanel.getChildren().addAll(emergencyTitle, passengerEmergencyBox, mechanicalEmergencyBox);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
-        left.getChildren().addAll(spacer, simPanel, aircraftPanel);
+        left.getChildren().addAll(spacer, simPanel, aircraftPanel, emergencyPanel);
         
         return left;
     }
@@ -393,6 +428,12 @@ public class ConfigurePage implements Page {
             data.outboundRatePerHour = (int) Math.round(n.doubleValue());
             outboundValue.setText(String.valueOf(data.outboundRatePerHour));
         });
+
+        passengerEmergencySlider.valueProperty().addListener((obs, o, n) -> {
+            if (applyingSnapshot) return;
+            data.passengerEmergencyPercentage = (int) Math.round(n.doubleValue());
+            passengerEmergencyValue.setText(String.valueOf(data.passengerEmergencyPercentage));
+        });
     }
 
     // ----- Runway Cards -----
@@ -446,11 +487,15 @@ public class ConfigurePage implements Page {
         runwaySlider.setValue(d.runwayCount);
         inboundSlider.setValue(d.inboundRatePerHour);
         outboundSlider.setValue(d.outboundRatePerHour);
+        passengerEmergencySlider.setValue(d.passengerEmergencyPercentage);
+        mechanicalEmergencySlider.setValue(d.mechanicalEmergencyPercentage);
 
         // Set numeric labels accordingly
         runwayValue.setText(String.valueOf(d.runwayCount));
         inboundValue.setText(String.valueOf(d.inboundRatePerHour));
         outboundValue.setText(String.valueOf(d.outboundRatePerHour));
+        passengerEmergencyValue.setText(String.valueOf(d.passengerEmergencyPercentage));
+        mechanicalEmergencyValue.setText(String.valueOf(d.mechanicalEmergencyPercentage));
     }
 
     // ----- Run Simulation Button Handler -----
@@ -622,7 +667,7 @@ public class ConfigurePage implements Page {
 
     // ----- Atc "Window" View -----
     private StackPane buildAtcView() {
-        double windowHeight = 320;
+        double windowHeight = 310;
 
         // Build window
         StackPane airportWindow = new StackPane();
@@ -679,7 +724,7 @@ public class ConfigurePage implements Page {
 
     // ----- Create window panes and add 3D effect -----
     private Pane buildWindowOverlay() {
-        double windowHeight = 320;
+        double windowHeight = 310;
         double frameThickness = 4;
         double dividerThickness = 4;
         double middleCut = 18;

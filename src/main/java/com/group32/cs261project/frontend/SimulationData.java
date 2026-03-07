@@ -19,6 +19,8 @@ public class SimulationData {
     public int inboundRatePerHour = 10;     // 0-30
     public int outboundRatePerHour = 10;    // 0-30
     public int maxWaitMinutes = 30;         // default 30
+    public int passengerEmergencyPercentage = 5; // 0-100
+    public int mechanicalEmergencyPercentage = 5; // 0-100
 
     public final List<RunwayConfig> runways = new ArrayList<>();
 
@@ -142,6 +144,8 @@ public class SimulationData {
         d.inboundRatePerHour = inboundRatePerHour;
         d.outboundRatePerHour = outboundRatePerHour;
         d.maxWaitMinutes = maxWaitMinutes;
+        d.passengerEmergencyPercentage = passengerEmergencyPercentage;
+        d.mechanicalEmergencyPercentage = mechanicalEmergencyPercentage;
 
         d.simMinute = simMinute;
         d.holdingQueue = holdingQueue;
