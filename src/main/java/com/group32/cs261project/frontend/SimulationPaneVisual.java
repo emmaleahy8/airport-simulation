@@ -26,7 +26,7 @@ import javafx.scene.layout.Region;
 
 public class SimulationPaneVisual extends VBox {
 
-    private final Label title = new Label("Airfield Visual");
+    private final Label title = new Label("Live Simulation");
     private final StackPane canvasWrap = new StackPane(); // border + centering
     private final HBox runwayRow = new HBox(18);
 

@@ -16,7 +16,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
-import javafx.scene.layout.Region;
 import javafx.application.Platform;
 
 import java.util.ArrayList;
@@ -53,20 +52,50 @@ public class RunningPage implements Page {
     private SimulationData currentConfig;
 
     // ----- Styles -----
-    private static final String PAGE_BG = "-fx-background-color: white;";
+    private static final String PAGE_BG = "-fx-background-color: rgb(14, 26, 40);";
+    
     private static final String CARD =
-            "-fx-background-color: white;" +
-            "-fx-border-color: #111;" +
-            "-fx-border-width: 1;" +
-            "-fx-border-radius: 10;" +
-            "-fx-background-radius: 10;" +
-            "-fx-padding: 18;";
+        "-fx-background-color: rgba(8, 18, 28, 0.96);" + 
+        "-fx-border-color: #1f3b52;" +
+        "-fx-border-width: 1.5;" +
+        "-fx-border-radius: 14;" +
+        "-fx-background-radius: 14;" +
+        "-fx-padding: 16;" +
+        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.2, 0, 3);";
 
     private static final String BTN_PRIMARY =
-            "-fx-background-color: #111; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;";
-
+            "-fx-background-color: linear-gradient(to bottom, #03418be6, #1a6eff);" +
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: 700;" +
+            "-fx-padding: 10 14;" +
+            "-fx-background-radius: 8;" +
+            "-fx-border-radius: 8;" +
+            "-fx-border-color: #2a4658;";
     private static final String BTN_SOFT =
-            "-fx-background-color: #2f6dff; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;";
+            "-fx-background-color: linear-gradient(to bottom, #1b4fff, #163fc7);" +
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: 700;" +
+            "-fx-padding: 8 12;" +
+            "-fx-background-radius: 8;";
+
+    private static final String TITLE_TEXT =
+        "-fx-text-fill: #eaf6ff;";
+
+    private static final String SUBTITLE_TEXT =
+            "-fx-text-fill: #cccccc;";
+
+    private static final String LABEL_TEXT =
+            "-fx-text-fill: #dcebf5;";
+
+    private static final String SMALL_TEXT =
+            "-fx-text-fill: #b8cad6;";
+
+    private static final String MONITOR_TITLE =
+            "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
+
+    private static final String MONITOR_LABEL =
+            "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+
 
     public RunningPage(App app, SimulationService sim) {
         this.app = app;
@@ -78,7 +107,8 @@ public class RunningPage implements Page {
 
         // Title
         Label title = new Label("Running Simulation");
-        title.setFont(Font.font(28));
+        title.setFont(Font.font(30));
+        title.setStyle(TITLE_TEXT);
         BorderPane.setMargin(title, new Insets(18, 18, 14, 18));
         root.setTop(title);
 
@@ -185,7 +215,7 @@ public class RunningPage implements Page {
         // Heading 
         Label header = new Label("Live Status");
         header.setFont(Font.font(18));
-        header.setStyle("-fx-font-weight: 800;");
+        header.setStyle(MONITOR_LABEL);
 
         // Grid layout for metrics
         GridPane gp = new GridPane();
@@ -211,7 +241,7 @@ public class RunningPage implements Page {
         // Header
         Label header = new Label("Runway Configuration");
         header.setFont(Font.font(18));
-        header.setStyle("-fx-font-weight: 800;");
+        header.setStyle(MONITOR_LABEL);
 
         // Spacing between columns and rows
         runwayTable.setHgap(12);
@@ -295,9 +325,10 @@ public class RunningPage implements Page {
     // ----- Helper to Add a Row to the Metrics Grid -----
     private void addRow(GridPane gp, int row, String labelText, Label valueLabel, String suffix) {
         Label l = new Label(labelText); // Left-hand label
+        l.setStyle(LABEL_TEXT);
 
         // Format labels
-        valueLabel.setStyle("-fx-font-weight: 800;");
+        valueLabel.setStyle(MONITOR_TITLE);
         valueLabel.setMaxWidth(Double.MAX_VALUE);
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
 
@@ -308,7 +339,7 @@ public class RunningPage implements Page {
 
         if (suffix != null && !suffix.isBlank()) {
             Label s = new Label(suffix);
-            s.setStyle("-fx-text-fill: #444;");
+            s.setStyle(SMALL_TEXT);
             valueBox.getChildren().add(s);
         }
 
@@ -337,9 +368,9 @@ public class RunningPage implements Page {
         Label h0 = new Label("Runway");
         Label h1 = new Label("Operating Mode");
         Label h2 = new Label("Operational Status");
-        h0.setStyle("-fx-font-weight: 800;");
-        h1.setStyle("-fx-font-weight: 800;");
-        h2.setStyle("-fx-font-weight: 800;");
+        h0.setStyle(MONITOR_LABEL);
+        h1.setStyle(MONITOR_LABEL);
+        h2.setStyle(MONITOR_LABEL);
 
         // Add header row at grid row 0
         runwayTable.add(h0, 0, 0);
@@ -355,8 +386,9 @@ public class RunningPage implements Page {
             Label mode = new Label("-");
             Label status = new Label("-");
 
-            mode.setStyle("-fx-font-weight: 700;");
-            status.setStyle("-fx-font-weight: 700;");
+            name.setStyle(LABEL_TEXT);
+            mode.setStyle(LABEL_TEXT);
+            status.setStyle(LABEL_TEXT);
 
             // Store references so they can be updated later without searching the grid
             runwayModeVals.add(mode);

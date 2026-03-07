@@ -99,7 +99,7 @@ public class ConfigurePage implements Page {
             "-fx-padding: 14;" +
             "-fx-opacity: 0.72;";
     
-    // Test styles
+    // Text styles
     private static final String TITLE_TEXT =
         "-fx-text-fill: #eaf6ff;";
 
@@ -127,20 +127,20 @@ public class ConfigurePage implements Page {
             "-fx-background-radius: 8;" +
             "-fx-border-radius: 8;" +
             "-fx-border-color: #2a4658;";
-    private static final String BTN_DANGER =
-            "-fx-background-color: #f48484; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;";
+
     private static final String BTN_SUCCESS =
-            "-fx-background-color: #0aa84f; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;";
-    private static final String BTN_SOFT =
+            "-fx-background-color: #0aa84f;" +
+            "-fx-text-fill: white;" +
+            "-fx-font-weight: 700;" +
+            "-fx-padding: 10 14;";
+    
+            private static final String BTN_SOFT =
             "-fx-background-color: linear-gradient(to bottom, #1b4fff, #163fc7);" +
             "-fx-text-fill: white;" +
             "-fx-font-weight: 700;" +
             "-fx-padding: 8 12;" +
             "-fx-background-radius: 8;";
-    private static final String BTN_SOFT_2 =
-            "-fx-background-color: #2f6dff; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 8 12;";
-    private static final String BTN_SOFT_3 =
-            "-fx-background-color: #2f6dff; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 8 12;";
+    
     private static final String COMBO_STYLE =
             "-fx-background-color: #0d1d29;" +
             "-fx-text-fill: white;" +
@@ -225,7 +225,7 @@ public class ConfigurePage implements Page {
 
         // ----- Simulation Control panel -----
         VBox simPanel = new VBox(12); // Vertical box with spacing of 14px between controls
-        simPanel.setStyle(PANEL); // Apply panel styling (white background, border, padding)
+        simPanel.setStyle(PANEL); // Apply panel styling 
 
         Label simTitle = new Label("Simulation Control");
         simTitle.setFont(Font.font(20));
