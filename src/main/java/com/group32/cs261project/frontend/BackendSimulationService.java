@@ -19,6 +19,7 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.sim.SimConfig;
@@ -91,6 +92,13 @@ public class BackendSimulationService implements SimulationService {
     
     }
 
+    private static SimulationData.PlaneDirection convertDirection(AircraftDirection direction) {
+        return switch (direction) {
+            case INBOUND -> SimulationData.PlaneDirection.INBOUND;
+            case OUTBOUND -> SimulationData.PlaneDirection.OUTBOUND;
+        };
+    }
+
     
     /**
      * get backend config from frontend snapshot (helper method)
@@ -160,6 +168,7 @@ public class BackendSimulationService implements SimulationService {
 
         // populate from holding pattern
         for (Aircraft aircraft: sim.airport().holdingPattern().toList()) {
+
             PlaneDTO uiPlane = new PlaneDTO();
             uiPlane.id = aircraft.callsign();
             uiPlane.code = aircraft.callsign();
@@ -168,21 +177,41 @@ public class BackendSimulationService implements SimulationService {
             uiPlane.emergency = aircraft.isEmergency();
             uiPlane.etaTicks = 0; // i dont know what to do here
             uiPlane.assignedRunwayIndex = -1;
+
+            snapshot.planes.add(uiPlane);
         }
 
         // populate from takeoff queue
         for (Aircraft aircraft: sim.airport().takeOffQueue().toList()) {
+
             PlaneDTO uiPlane = new PlaneDTO();
             uiPlane.id = aircraft.callsign();
             uiPlane.code = aircraft.callsign();
             uiPlane.direction = PlaneDirection.OUTBOUND;
-            uiPlane.status = PlaneStatus.TAKING_OFF;
+            uiPlane.status = PlaneStatus.OUTBOUND_QUEUE;
             uiPlane.emergency = aircraft.isEmergency();
             uiPlane.etaTicks = 0; // i dont know what to do here
             uiPlane.assignedRunwayIndex = -1;
+
+            snapshot.planes.add(uiPlane);
         }
 
         // populate from runways
+        for (int i = 0; i < sim.airport().runwayAircraft().size(); i++) {
+            Aircraft aircraft = sim.airport().runwayAircraft().get(i);
+            if (aircraft == null) continue;
+
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = convertDirection(aircraft.direction());
+            uiPlane.status = (uiPlane.direction == PlaneDirection.INBOUND) ? PlaneStatus.LANDING : PlaneStatus.TAKING_OFF;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+
+            snapshot.planes.add(uiPlane);
+        }
         
         return snapshot;
     }
