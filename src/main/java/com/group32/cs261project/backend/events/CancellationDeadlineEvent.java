@@ -58,6 +58,9 @@ public class CancellationDeadlineEvent implements Event<SimulationContext> {
             return;
         }
 
+        if (engine.config().isVerbose())
+            System.out.printf("%s: %s cancelled due to wait time\n", this.time, this.aircraft);
+
         // Mark as cancelled and record in metrics.
         this.aircraft.markCancelled();
         engine.context().metrics().onCancelled(this.aircraft, this.time);

@@ -23,7 +23,7 @@ public class Main {
         SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, true);
 
         Airport airport = new Airport(List.of(
-                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
+                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
         ));
 
         AirportSimulation airportSimulation = new AirportSimulation(config, airport);
