@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.sim.SimConfig;
@@ -79,7 +80,8 @@ public class FlightGenerator {
                 scheduledTime,
                 EmergencyStatus.NONE,
                 randomFuelMinutes(),
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
     }
 
@@ -98,7 +100,8 @@ public class FlightGenerator {
                 scheduledTime,
                 EmergencyStatus.NONE,
                 randomFuelMinutes(),
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
         );
     }
     

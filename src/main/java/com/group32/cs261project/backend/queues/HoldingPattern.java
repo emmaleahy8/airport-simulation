@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 
 public class HoldingPattern {
 
@@ -25,6 +26,10 @@ public class HoldingPattern {
      * Enqueue an aircraft to the holding pattern given its time
      */
     public void enqueue(Aircraft aircraft, Instant time) {
+
+        // quick check
+        if (aircraft.direction() != AircraftDirection.INBOUND)
+            throw new UnsupportedOperationException();
         
         aircraft.markHolding(time);
 

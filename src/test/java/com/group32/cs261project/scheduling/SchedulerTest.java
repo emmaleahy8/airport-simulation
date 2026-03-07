@@ -18,6 +18,7 @@ import com.group32.cs261project.backend.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -28,7 +29,7 @@ import com.group32.cs261project.backend.sim.SimulationContext;
 
 class SchedulerTest {
 
-    private static Aircraft mkAircraft(String callsign, EmergencyStatus emergency, Instant scheduledTime) {
+    private static Aircraft mkAircraft(String callsign, EmergencyStatus emergency, Instant scheduledTime, AircraftDirection direction) {
         return new Aircraft(
                 callsign,
                 "TestAir",
@@ -37,19 +38,10 @@ class SchedulerTest {
                 scheduledTime,
                 emergency,
                 40.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                direction
         );
     }
-
-    // private static SimulationairportSimulation.engine()<SimulationContext> mkEngine(Instant start, Instant end, long seed) {
-    //     // Adjust constructor to your SimConfig signature.
-    //     // If your SimConfig includes flows, pass them; otherwise keep the 3-arg version.
-    //     SimConfig cfg = new SimConfig(start, end, seed, 15, 15, 60);
-    //     Airport dummyAirport = new Airport(List.of(
-    //             new Runway(1, 3000, 90, RunwayMode.MIXED, RunwayStatus.AVAILABLE)
-    //     ));
-    //     return new SimulationairportSimulation.engine()<>(cfg, new SimulationContext(dummyAirport, new Scheduler()), new PriorityEventQueue<>());
-    // }
 
     @Test
     void schedulesLandingOnAvailableLandingRunway() {
@@ -69,7 +61,7 @@ class SchedulerTest {
         );
 
         // Put one aircraft in holding
-        Aircraft a = mkAircraft("A1", EmergencyStatus.NONE, start.plusSeconds(100));
+        Aircraft a = mkAircraft("A1", EmergencyStatus.NONE, start.plusSeconds(100), AircraftDirection.INBOUND);
         airport.holdingPattern().enqueue(a, now);
 
         int occupancySeconds = 60;
@@ -105,7 +97,7 @@ class SchedulerTest {
             airport
         );
 
-        Aircraft a = mkAircraft("D1", EmergencyStatus.NONE, start.plusSeconds(200));
+        Aircraft a = mkAircraft("D1", EmergencyStatus.NONE, start.plusSeconds(200), AircraftDirection.OUTBOUND);
         airport.takeOffQueue().enqueue(a, now);
 
         int occupancySeconds = 60;
@@ -161,8 +153,8 @@ class SchedulerTest {
             airport
         );
 
-        Aircraft normal = mkAircraft("N1", EmergencyStatus.NONE, start.plusSeconds(100));
-        Aircraft emerg  = mkAircraft("E1", EmergencyStatus.FUEL, start.plusSeconds(110));
+        Aircraft normal = mkAircraft("N1", EmergencyStatus.NONE, start.plusSeconds(100), AircraftDirection.INBOUND);
+        Aircraft emerg  = mkAircraft("E1", EmergencyStatus.FUEL, start.plusSeconds(110), AircraftDirection.INBOUND);
 
         airport.holdingPattern().enqueue(normal, now);
         airport.holdingPattern().enqueue(emerg, now.plusSeconds(1));

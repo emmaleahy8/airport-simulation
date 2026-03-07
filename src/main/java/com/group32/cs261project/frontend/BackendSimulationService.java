@@ -3,6 +3,7 @@ package com.group32.cs261project.frontend;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,12 +16,17 @@ import com.group32.cs261project.backend.gen.FlightSeeder;
 import com.group32.cs261project.backend.gen.FlightType;
 import com.group32.cs261project.backend.gen.GeneratedFlight;
 import com.group32.cs261project.backend.metrics.SimulationReport;
+import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
 import com.group32.cs261project.backend.model.enums.RunwayStatus;
 import com.group32.cs261project.backend.sim.SimConfig;
+import com.group32.cs261project.frontend.SimulationData.PlaneDTO;
+import com.group32.cs261project.frontend.SimulationData.PlaneDirection;
+import com.group32.cs261project.frontend.SimulationData.PlaneStatus;
 
 
 
@@ -38,7 +44,6 @@ public class BackendSimulationService implements SimulationService {
     private SimulationData initialConfig = null;
     private AirportSimulation backendSim = null;
     private Instant startTime = null, endTime = null;
-    private SimulationReport lastReport = null;
 
 
     /**
@@ -87,6 +92,13 @@ public class BackendSimulationService implements SimulationService {
     
     }
 
+    private static SimulationData.PlaneDirection convertDirection(AircraftDirection direction) {
+        return switch (direction) {
+            case INBOUND -> SimulationData.PlaneDirection.INBOUND;
+            case OUTBOUND -> SimulationData.PlaneDirection.OUTBOUND;
+        };
+    }
+
     
     /**
      * get backend config from frontend snapshot (helper method)
@@ -100,7 +112,7 @@ public class BackendSimulationService implements SimulationService {
             new Random().nextLong(),
             ui.inboundRatePerHour,
             ui.outboundRatePerHour,
-            60, // no runway occupancy seconds?
+            120, // no runway occupancy seconds?
             true
         );
     }
@@ -153,6 +165,58 @@ public class BackendSimulationService implements SimulationService {
 
         // pass planes
         snapshot.planes.clear(); // pass empty list for now
+
+        // populate from holding pattern
+        for (Aircraft aircraft: sim.airport().holdingPattern().toList()) {
+
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = PlaneDirection.INBOUND;
+            uiPlane.status = PlaneStatus.HOLDING;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+
+            snapshot.planes.add(uiPlane);
+        }
+
+        // populate from takeoff queue
+        snapshot.outboundQueueIds.clear();
+
+        for (Aircraft aircraft: sim.airport().takeOffQueue().toList()) {
+
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = PlaneDirection.OUTBOUND;
+            uiPlane.status = PlaneStatus.LANDING;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+
+            // queue order visuals
+            snapshot.outboundQueueIds.add(uiPlane.id);
+            snapshot.planes.add(uiPlane);
+        }
+
+        // populate from runways
+        for (int i = 0; i < sim.airport().runwayAircraft().size(); i++) {
+
+            Aircraft aircraft = sim.airport().runwayAircraft().get(i);
+            if (aircraft == null) continue;
+
+            PlaneDTO uiPlane = new PlaneDTO();
+            uiPlane.id = aircraft.callsign();
+            uiPlane.code = aircraft.callsign();
+            uiPlane.direction = convertDirection(aircraft.direction());
+            uiPlane.status = (uiPlane.direction == PlaneDirection.INBOUND) ? PlaneStatus.LANDING : PlaneStatus.TAKING_OFF;
+            uiPlane.emergency = aircraft.isEmergency();
+            uiPlane.etaTicks = 0; // i dont know what to do here
+            uiPlane.assignedRunwayIndex = -1;
+
+            snapshot.planes.add(uiPlane);
+        }
         
         return snapshot;
     }
@@ -205,19 +269,33 @@ public class BackendSimulationService implements SimulationService {
 
     @Override
     public void updateConfig(SimulationData newConfig) {
-
-
-
+        // TODO: not implemented yet
+        throw new UnsupportedOperationException();
     }
-
 
 
     @Override
     public SimulationData stop() {
+
         this.running = false;
         this.executor.shutdownNow(); this.executor = null;
-        this.lastReport = this.backendSim.buildReport();
+        SimulationReport report = this.backendSim.buildReport();
         SimulationData snap = snapshotFrom(this.backendSim);
+
+        // populate snapshot with metrics data
+        snap.maxHoldingQueue = Objects.requireNonNullElse(report.maxHoldingSize(), 0);
+        snap.maxTakeoffQueue = Objects.requireNonNullElse(report.maxTakeoffQueueSize(), 0);
+        snap.avgHoldingQueue = Objects.requireNonNullElse(report.avgHoldingTimeMinutes(), 0.0);
+        snap.avgTakeoffQueue = Objects.requireNonNullElse(report.avgTakeoffWaitMinutes(), 0.0);
+
+        snap.cancelledCount = Objects.requireNonNullElse(report.numCancellations(), 0);
+        snap.divertedCount = Objects.requireNonNullElse(report.numDiverted(), 0);
+
+        snap.avgInboundDelayMin = Objects.requireNonNullElse(report.avgArrivalDelayMinutes(), 0.0);
+        snap.avgOutboundDelayMin = Objects.requireNonNullElse(report.avgDepartureDelayMinutes(), 0.0);
+        snap.maxInboundDelayMin = Objects.requireNonNullElse(report.maxArrivalDelayMinutes(), 0L).intValue();
+        snap.maxOutboundDelayMin = Objects.requireNonNullElse(report.maxDepartureDelayMinutes(), 0L).intValue();
+
         return snap;
     }
 
@@ -226,19 +304,23 @@ public class BackendSimulationService implements SimulationService {
     public boolean isRunning() {
         return this.running;
     }
+
     
     @Override
     public void pause() {
         this.paused = true;
     }
 
+
     @Override
     public void resume() {
         this.paused = false;
     }
 
+
     @Override
     public boolean isPaused() {
         return this.paused;
     }
+
 }

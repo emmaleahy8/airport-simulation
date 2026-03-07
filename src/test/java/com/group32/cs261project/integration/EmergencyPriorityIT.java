@@ -12,6 +12,7 @@ import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -66,7 +67,8 @@ public class EmergencyPriorityIT {
                 start.plusSeconds(300),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         Aircraft emergencyAircraft = new Aircraft(
@@ -77,7 +79,8 @@ public class EmergencyPriorityIT {
                 start.plusSeconds(301),
                 EmergencyStatus.FUEL,
                 10.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         // -------------------------

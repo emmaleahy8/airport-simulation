@@ -41,8 +41,11 @@ public class Scheduler {
         // occupy runway
         runway.occupyUntil(completionTime);
 
+        // update aircraft runway mapping
+        engine.context().airport().assignAircraftToRunway(runway, aircraft);
+
         // schedule new runway operation completion event for when it completes
-        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway, OperationType.LANDING));
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway));
     }
 
 
@@ -65,8 +68,11 @@ public class Scheduler {
         // occupy runway
         runway.occupyUntil(completionTime);
 
+        // update aircraft runway mapping
+        engine.context().airport().assignAircraftToRunway(runway, aircraft);
+
         // schedule new runway operation completion event for when it completes
-        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway, OperationType.TAKEOFF));
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway));
 
     }
 
@@ -109,8 +115,8 @@ public class Scheduler {
                 case MIXED -> {
                     if ((hasArrivals || hasDepartures) && runway.isAvailable(now)) {
                         switch (this.mixedModePolicy.chooseNextOp(hasArrivals, hasDepartures, runway)) {
-                            case LANDING -> this.scheduleLandingOperation(completionTime, runway, engine);
-                            case TAKEOFF -> this.scheduleTakeoffOperation(completionTime, runway, engine);
+                            case INBOUND -> this.scheduleLandingOperation(completionTime, runway, engine);
+                            case OUTBOUND -> this.scheduleTakeoffOperation(completionTime, runway, engine);
                         }
                     }
                 }

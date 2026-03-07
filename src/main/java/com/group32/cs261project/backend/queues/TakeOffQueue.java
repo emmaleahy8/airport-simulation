@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 
 /**
  * Class for take off queue
@@ -28,6 +29,11 @@ public class TakeOffQueue {
      * @param time time added
      */
     public void enqueue(Aircraft aircraft, Instant time) {
+
+        // quick check
+        if (aircraft.direction() != AircraftDirection.OUTBOUND)
+            throw new UnsupportedOperationException();
+
         aircraft.markTakeoffQueue(time);
         this.queue.add(aircraft);
     }

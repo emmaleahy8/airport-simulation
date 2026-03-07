@@ -13,6 +13,7 @@ import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -67,7 +68,8 @@ public class SimulationEndToEndIT {
                 start.plusSeconds(300),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         Aircraft outboundAircraft = new Aircraft(
@@ -78,8 +80,8 @@ public class SimulationEndToEndIT {
                 start.plusSeconds(600),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
-        );
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND);
 
         // -------------------------
         // 5. Schedule events
