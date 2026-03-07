@@ -1,9 +1,11 @@
 package com.group32.cs261project.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.model.Aircraft;
@@ -150,31 +152,31 @@ class AircraftTest {
         assertEquals(AircraftState.CANCELLED, aircraft.state());
     }
 
-    // ---------------------------
-    // Fuel Logic
-    // ---------------------------
+    // // ---------------------------
+    // // Fuel Logic
+    // // ---------------------------
 
-    @Test
-    void consumeFuelReducesFuelButNotBelowZeroCondition() {
-        Aircraft aircraft = makeAircraft(EmergencyStatus.NONE, 50, AircraftDirection.INBOUND);
+    // @Test
+    // void consumeFuelReducesFuelButNotBelowZeroCondition() {
+    //     Aircraft aircraft = makeAircraft(EmergencyStatus.NONE, 50, AircraftDirection.INBOUND);
 
-        aircraft.consumeFuelMinutes(10);
-        assertFalse(aircraft.isLowFuel(30)); // 40 remaining
+    //     aircraft.consumeFuelMinutes(10);
+    //     assertFalse(aircraft.isLowFuel(30)); // 40 remaining
 
-        aircraft.consumeFuelMinutes(35);
-        assertTrue(aircraft.isLowFuel(10));  // 5 remaining
+    //     aircraft.consumeFuelMinutes(35);
+    //     assertTrue(aircraft.isLowFuel(10));  // 5 remaining
 
-        // Consuming more than remaining should NOT reduce further
-        aircraft.consumeFuelMinutes(10);
-        assertTrue(aircraft.isLowFuel(10));  // still <= threshold
-    }
+    //     // Consuming more than remaining should NOT reduce further
+    //     aircraft.consumeFuelMinutes(10);
+    //     assertTrue(aircraft.isLowFuel(10));  // still <= threshold
+    // }
 
-    @Test
-    void isLowFuelRespectsThreshold() {
-        Aircraft aircraft = makeAircraft(EmergencyStatus.NONE, 15, AircraftDirection.INBOUND);
+    // @Test
+    // void isLowFuelRespectsThreshold() {
+    //     Aircraft aircraft = makeAircraft(EmergencyStatus.NONE, 15, AircraftDirection.INBOUND);
 
-        assertFalse(aircraft.isLowFuel(10));
-        assertTrue(aircraft.isLowFuel(15));
-        assertTrue(aircraft.isLowFuel(20));
-    }
+    //     assertFalse(aircraft.isLowFuel(10));
+    //     assertTrue(aircraft.isLowFuel(15));
+    //     assertTrue(aircraft.isLowFuel(20));
+    // }
 }

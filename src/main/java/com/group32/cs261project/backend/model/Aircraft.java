@@ -18,8 +18,8 @@ public class Aircraft {
     private final String origin;
     private final String destination;
     private final Instant scheduledTime;
-    private final EmergencyStatus emergency;
-    private double fuelMinutesRemaining;
+    private EmergencyStatus emergency; // made this non-final - needs to be mutable
+    private final double fuelMinutesRemaining;
     private final AircraftDirection direction;
     private AircraftState state;
     private Instant holdingEntryTime;
@@ -58,7 +58,7 @@ public class Aircraft {
 
     @Override
     public String toString() {
-        return String.format("Aircraft(%s, %s)", this.callsign, this.state.toString());
+        return String.format("Aircraft(%s, %s, %f)", this.callsign, this.state.toString(), this.fuelMinutesRemaining);
     }
 
     // getters
@@ -92,6 +92,11 @@ public class Aircraft {
 
     public boolean isEmergency() {
         return this.emergency != EmergencyStatus.NONE;
+    }
+
+    // set an aircraft to a specific emergency status
+    public void setEmergencyStatus(EmergencyStatus status) {
+        this.emergency = Objects.requireNonNull(status);
     }
 
     public AircraftState state() {
@@ -138,14 +143,46 @@ public class Aircraft {
         this.state = AircraftState.CANCELLED;
     }
 
-    // fuel logic (for later)
-    public void consumeFuelMinutes(double minutes) {
-        if (this.fuelMinutesRemaining > minutes)
-            this.fuelMinutesRemaining -= minutes;
+    /**
+     * check whether an aircraft has been handled by the airport already
+     * @return true if it is not in holding and not in takeoff
+     */
+    public boolean isCompleted() {
+        return this.state != AircraftState.HOLDING && this.state != AircraftState.TAKEOFF_QUEUE;
     }
 
-    public boolean isLowFuel(double thresholdMinutes) {
-        return this.fuelMinutesRemaining <= thresholdMinutes;
+    // // fuel logic (for later)
+    // //CONSUMPTION
+    // public void consumeFuelMinutes(double minutes) {
+    //     //if (this.fuelMinutesRemaining > minutes)
+    //         //this.fuelMinutesRemaining -= minutes;
+    //     this.fuelMinutesRemaining = Math.max(0, this.fuelMinutesRemaining - minutes); // this allows it to go to 0
+    // }
+    
+    // public boolean isLowFuel(double thresholdMinutes) {
+    //     return this.fuelMinutesRemaining <= thresholdMinutes; // 10
+    // }
+
+    // extra may not need
+    public double fuelMinutesRemaining() {
+        return this.fuelMinutesRemaining;
+    }
+
+    // // checks if fuel is low, automatically escalates to FUEL emergency
+    // public void updateFuelEmergency(double thresholdMinutes) {
+    //     if (this.emergency == EmergencyStatus.NONE && isLowFuel(thresholdMinutes)) {
+    //         this.emergency = EmergencyStatus.FUEL;
+    //     }
+    // }
+
+    // helper methods if emergencies escalate dynamically - may not be needed with setEmergency status methods
+    // used for when an emergency is triggered
+    public void declareMechanicalEmergency() {
+        this.emergency = EmergencyStatus.MECHANICAL;
+    }
+
+    public void declarePassengerHealthEmergency() {
+        this.emergency = EmergencyStatus.PASSENGER_HEALTH;
     }
     
 }
