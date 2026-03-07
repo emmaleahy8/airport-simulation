@@ -45,8 +45,15 @@ class FlightSeederTest {
         // Run the simulation to end: all entry events should have executed.
         airportSimulation.engine().runUntil(end);
 
+        // Inbound: runway is closed so none can land; all remain in holding.
         assertEquals(inbound.size(), airport.holdingPattern().size());
-        assertEquals(outbound.size(), airport.takeOffQueue().size());
+
+        // Outbound: runway is closed so none can take off. Some will be cancelled after
+        // exceeding max wait time (30 min), so at end: still in queue + cancelled = all outbound.
+        int stillInQueue = airport.takeOffQueue().size();
+        int cancelled = airportSimulation.buildReport().numCancellations();
+        assertEquals(outbound.size(), stillInQueue + cancelled,
+                "Every outbound flight should be either still in take-off queue or cancelled");
     }
 
     @Test

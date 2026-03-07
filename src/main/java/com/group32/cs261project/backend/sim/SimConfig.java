@@ -14,6 +14,7 @@ public final class SimConfig {
     private final double inboundRatePerHour;
     private final double outboundRatePerHour;
     private final int runwayOccupancySeconds;
+    private final long maxTakeoffWaitMinutes;
     private boolean verbose = false;
 
 
@@ -27,6 +28,7 @@ public final class SimConfig {
         this.inboundRatePerHour = inboundRatePerHour;
         this.outboundRatePerHour = outboundRatePerHour;
         this.runwayOccupancySeconds = runwayOccupancySeconds;
+        this.maxTakeoffWaitMinutes = 30L;
     }
 
     public SimConfig(Instant startTime, Instant endTime, long randomSeed, 
@@ -41,6 +43,7 @@ public final class SimConfig {
         this.inboundRatePerHour = inboundRatePerHour;
         this.outboundRatePerHour = outboundRatePerHour;
         this.runwayOccupancySeconds = runwayOccupancySeconds;
+        this.maxTakeoffWaitMinutes = 30L;
         this.verbose = verbose;
     }
 
@@ -70,5 +73,9 @@ public final class SimConfig {
 
     public int runwayOccupancySeconds() {
         return this.runwayOccupancySeconds;
+    }
+
+    public long maxTakeoffWaitMinutes() {
+        return this.maxTakeoffWaitMinutes;
     }
 }
