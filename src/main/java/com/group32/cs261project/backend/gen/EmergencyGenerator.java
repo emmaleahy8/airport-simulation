@@ -18,10 +18,9 @@ public class EmergencyGenerator {
      * @param config simulation config
      * @return one of NONE, MECHANICAL_FAILURE, PASSENGER_HEALTH
      */
-    public static RandomEmergencyType generateEmergencyType(SimConfig config) {
+    public static RandomEmergencyType generateEmergencyType(SimConfig config, Random rng) {
 
-        Random random = new Random(config.randomSeed());
-        double u = random.nextDouble();
+        double u = rng.nextDouble();
 
         double pMechanical = config.mechanicalEmergencyProbability();
         double pHealth = config.passengerHealthEmergencyProbability();
@@ -69,21 +68,24 @@ public class EmergencyGenerator {
      */
     public static void scheduleEmergency(SimulationEngine<SimulationContext> engine, Aircraft aircraft, Instant time) {
         
-        RandomEmergencyType emergencyType = EmergencyGenerator.generateEmergencyType(engine.config());
+        RandomEmergencyType emergencyType = EmergencyGenerator.generateEmergencyType(engine.config(), engine.rng());
         if (emergencyType != RandomEmergencyType.NONE) {
 
             double emergencyMinutes = EmergencyGenerator.timeToEmergency(engine.config(), emergencyType);
             Instant emergencyTime = time.plus(Duration.ofSeconds((long) (emergencyMinutes * 60.0)));
 
             switch (emergencyType) {
+
                 case MECHANICAL_FAILURE:
                     System.out.printf("**** mechanical failure emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new MechanicalFailureEmergencyEvent(aircraft, emergencyTime));
                     break;
+
                 case PASSENGER_HEALTH:
                     System.out.printf("**** passenger health emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new PassengerHealthEmergencyEvent(aircraft, emergencyTime));
                     break;
+
                 default:
                     break;
             }

@@ -17,7 +17,7 @@ import com.group32.cs261project.backend.sim.SimConfig;
 public class Main {
     public static void main(String[] args) {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        Instant end = start.plus(Duration.ofHours(20));
+        Instant end = start.plus(Duration.ofHours(2));
 
         // If your SimConfig has more fields, set them accordingly.
         SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, 20, 10, true);
