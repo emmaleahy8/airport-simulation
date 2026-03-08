@@ -23,6 +23,7 @@ public class Main {
             .startTime(start)
             .endTime(end)
             .randomSeed(123L)
+            .verbose(true)
             .build();
 
         Airport airport = new Airport(List.of(
