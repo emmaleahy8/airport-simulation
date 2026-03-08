@@ -6,8 +6,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 
@@ -15,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.function.Consumer;
 
-public class ConfigurePageTest extends ApplicationTest {
+public class ConfigurePageIT extends ApplicationTest {
 
     private ConfigurePage page;
     private TestApp app;
@@ -34,6 +36,12 @@ public class ConfigurePageTest extends ApplicationTest {
 
     @BeforeEach
     void setup() {
+    }
+
+    @AfterEach
+    void cleanup() throws Exception {
+        FxToolkit.cleanupStages();
+        FxToolkit.hideStage();
     }
 
     @Test

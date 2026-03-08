@@ -6,14 +6,16 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.function.Consumer;
 
-public class RunningPageTest extends ApplicationTest {
+public class RunningPageIT extends ApplicationTest {
 
     private RunningPage page;
     private TestApp app;
@@ -29,6 +31,12 @@ public class RunningPageTest extends ApplicationTest {
 
         stage.setScene(new Scene(page.getView(), 1000, 700));
         stage.show();
+    }
+
+    @AfterEach
+    void cleanup() throws Exception {
+        FxToolkit.cleanupStages();
+        FxToolkit.hideStage();
     }
 
     @Test

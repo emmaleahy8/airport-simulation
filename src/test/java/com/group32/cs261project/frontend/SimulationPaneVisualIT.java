@@ -4,11 +4,14 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import org.junit.jupiter.api.Test;
+import org.testfx.api.FxToolkit;
 import org.testfx.framework.junit5.ApplicationTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class SimulationPaneVisualTest extends ApplicationTest {
+import org.junit.jupiter.api.AfterEach;
+
+public class SimulationPaneVisualIT extends ApplicationTest {
 
     private SimulationPaneVisual visual;
 
@@ -19,6 +22,12 @@ public class SimulationPaneVisualTest extends ApplicationTest {
 
         stage.setScene(new Scene(visual, 900, 600));
         stage.show();
+    }
+
+    @AfterEach
+    void cleanup() throws Exception {
+        FxToolkit.cleanupStages();
+        FxToolkit.hideStage();
     }
 
     @Test
