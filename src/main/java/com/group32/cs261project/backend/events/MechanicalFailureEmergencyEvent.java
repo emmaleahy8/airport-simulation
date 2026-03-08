@@ -26,7 +26,7 @@ public class MechanicalFailureEmergencyEvent implements Event<SimulationContext>
 
         if (!this.aircraft.isCompleted()) { // aircraft not completed yet
 
-            if (engine.config().isVerbose())
+            if (engine.config().verbose())
                 System.out.format("%s: %s promoted to emergency due to mechanical failure\n", time.toString(), aircraft.toString());
 
             engine.context().airport().holdingPattern().promoteToEmergency(this.aircraft, this.time);

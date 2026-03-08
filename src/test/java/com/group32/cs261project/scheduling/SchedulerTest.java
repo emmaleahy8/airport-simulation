@@ -56,7 +56,11 @@ class SchedulerTest {
         
 
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig( start, end, 123L, 15, 15, 60), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(123L)
+                .build(),
             airport
         );
 
@@ -93,7 +97,11 @@ class SchedulerTest {
         Airport airport = new Airport(List.of(takeoffRunway));
 
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig( start, end, 123L, 15, 15, 60), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(123L)
+                .build(),
             airport
         );
 
@@ -122,9 +130,12 @@ class SchedulerTest {
         RunwayData landingRunway = new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.INSPECTION);
         Airport airport = new Airport(List.of(landingRunway));
 
-        int occupancySeconds = 60;
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig( start, end, 123L, 15, 15, occupancySeconds), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(123L)
+                .build(),
             airport
         );
 
@@ -149,7 +160,11 @@ class SchedulerTest {
         Airport airport = new Airport(List.of(landingRunway));
 
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig( start, end, 123L, 15, 15, 60), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(123L)
+                .build(),
             airport
         );
 

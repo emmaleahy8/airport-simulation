@@ -58,7 +58,7 @@ public class CancellationDeadlineEvent implements Event<SimulationContext> {
             return;
         }
 
-        if (engine.config().isVerbose())
+        if (engine.config().verbose())
             System.out.printf("%s: %s cancelled as wait time exceeded %s mins\n", this.time, this.aircraft, engine.config().maxTakeoffWaitMinutes());
 
         // Mark as cancelled and record in metrics.

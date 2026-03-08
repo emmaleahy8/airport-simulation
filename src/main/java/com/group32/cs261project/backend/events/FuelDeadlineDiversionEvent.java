@@ -26,7 +26,7 @@ public class FuelDeadlineDiversionEvent implements Event<SimulationContext> {
 
         if (!this.aircraft.isCompleted()) { // aircraft not completed yet
 
-            if (engine.config().isVerbose())
+            if (engine.config().verbose())
                 System.out.format("%s: %s diverted due to low fuel\n", time.toString(), aircraft.toString());
 
             // remove aircraft from holding pattern        

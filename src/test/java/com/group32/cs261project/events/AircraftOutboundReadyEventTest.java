@@ -49,14 +49,11 @@ class AircraftOutboundReadyEventTest {
 
         Instant time = Instant.parse("2026-01-01T00:20:00Z");
 
-        SimConfig cfg = new SimConfig(
-                time.minusSeconds(600),
-                time.plusSeconds(3600),
-                42L,
-                15.0,
-                15.0,
-                60
-        );
+        SimConfig cfg = SimConfig.builder()
+                .startTime(time.minusSeconds(600))
+                .endTime(time.plusSeconds(3600))
+                .randomSeed(42L)
+                .build();
 
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.TAKEOFF, RunwayStatus.INSPECTION)

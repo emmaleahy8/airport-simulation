@@ -26,7 +26,7 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
 
-        if (engine.config().isVerbose())
+        if (engine.config().verbose())
             System.out.format("%s: %s enqueued to holding pattern\n", time.toString(), aircraft.toString());
 
 

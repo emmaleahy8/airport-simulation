@@ -24,16 +24,11 @@ class FlightGeneratorTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        // Assumes SimConfig includes inbound/outbound flow rates.
-        // If your SimConfig doesn’t yet include these, you can pass them via generator params instead.
-        SimConfig cfg = new SimConfig(
-                start,
-                end,
-                123L,
-                15.0,  // inboundFlowPerHour
-                15.0,   // outboundFlowPerHour
-                60
-        );
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(123L)
+            .build();
 
         FlightGenerator gen = new FlightGenerator(cfg, new Random(cfg.randomSeed()));
         List<GeneratedFlight> inbound = gen.generateFlights(FlightType.INBOUND);
@@ -61,8 +56,17 @@ class FlightGeneratorTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg1 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
-        SimConfig cfg2 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
+        SimConfig cfg1 = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(42L)
+            .build();
+
+        SimConfig cfg2 = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(42L)
+            .build();
 
         FlightGenerator g1 = new FlightGenerator(cfg1, new Random(cfg1.randomSeed()));
         FlightGenerator g2 = new FlightGenerator(cfg2, new Random(cfg2.randomSeed()));
@@ -84,7 +88,11 @@ class FlightGeneratorTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg = new SimConfig(start, end, 999L, 15.0, 15.0, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(999L)
+            .build();
 
         FlightGenerator gen = new FlightGenerator(cfg, new Random(cfg.randomSeed()));
         List<GeneratedFlight> flights = gen.generateFlights(FlightType.INBOUND);
