@@ -3,6 +3,7 @@ package com.group32.cs261project.gen;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,7 +35,7 @@ class FlightGeneratorTest {
                 60
         );
 
-        FlightGenerator gen = new FlightGenerator(cfg);
+        FlightGenerator gen = new FlightGenerator(cfg, new Random(cfg.randomSeed()));
         List<GeneratedFlight> inbound = gen.generateFlights(FlightType.INBOUND);
 
         // For 15 per hour → spacing = 4 minutes
@@ -63,8 +64,8 @@ class FlightGeneratorTest {
         SimConfig cfg1 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
         SimConfig cfg2 = new SimConfig(start, end, 42L, 15.0, 15.0, 60);
 
-        FlightGenerator g1 = new FlightGenerator(cfg1);
-        FlightGenerator g2 = new FlightGenerator(cfg2);
+        FlightGenerator g1 = new FlightGenerator(cfg1, new Random(cfg1.randomSeed()));
+        FlightGenerator g2 = new FlightGenerator(cfg2, new Random(cfg2.randomSeed()));
 
         List<GeneratedFlight> a = g1.generateFlights(FlightType.INBOUND);
         List<GeneratedFlight> b = g2.generateFlights(FlightType.INBOUND);
@@ -85,7 +86,7 @@ class FlightGeneratorTest {
 
         SimConfig cfg = new SimConfig(start, end, 999L, 15.0, 15.0, 60);
 
-        FlightGenerator gen = new FlightGenerator(cfg);
+        FlightGenerator gen = new FlightGenerator(cfg, new Random(cfg.randomSeed()));
         List<GeneratedFlight> flights = gen.generateFlights(FlightType.INBOUND);
 
         assertFalse(flights.isEmpty());

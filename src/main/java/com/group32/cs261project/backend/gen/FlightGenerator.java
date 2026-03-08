@@ -30,12 +30,14 @@ public class FlightGenerator {
     );
     private static final String HOME_AIRPORT = "LHR";
 
+
+    
     /**
      * Constructor
-     * @param config simulation config object
+     * @param engine instance of simulation engine
      */
-    public FlightGenerator(SimConfig config) {
-        this.rng = new Random(config.randomSeed());
+    public FlightGenerator(SimConfig config, Random rng) {
+        this.rng = rng;
         this.startTime = config.startTime();
         this.endTime = config.endTime();
         this.inboundRatePerHour = config.inboundRatePerHour();
@@ -43,7 +45,7 @@ public class FlightGenerator {
     }
 
     private String randomOperator() {
-        return OPERATORS.get(rng.nextInt(OPERATORS.size()));
+        return OPERATORS.get(this.rng.nextInt(OPERATORS.size()));
     }
 
     private String randomOtherAirport() {

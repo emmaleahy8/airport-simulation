@@ -34,7 +34,7 @@ class FlightSeederTest {
 
         AirportSimulation airportSimulation = new AirportSimulation(cfg, airport);
 
-        FlightGenerator generator = new FlightGenerator(cfg);
+        FlightGenerator generator = new FlightGenerator(cfg, airportSimulation.engine().rng());
         List<GeneratedFlight> inbound = generator.generateFlights(FlightType.INBOUND);
         List<GeneratedFlight> outbound;
         outbound = generator.generateFlights(FlightType.OUTBOUND);
