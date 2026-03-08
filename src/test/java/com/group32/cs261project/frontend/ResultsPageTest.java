@@ -2,6 +2,8 @@ package com.group32.cs261project.frontend;
 
 import com.group32.cs261project.App;
 
+import javafx.scene.control.Labeled;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -55,7 +57,11 @@ public class ResultsPageTest extends ApplicationTest {
 
         interact(() -> page.onEnter(data));
 
-        assertTrue(lookup("Runway 1").tryQuery().isPresent());
+        assertTrue(
+            lookup((Node n) ->
+                (n instanceof Labeled l) && l.getText() != null && l.getText().contains("Runway 1")
+            ).tryQuery().isPresent()
+        );
     }
 
     @Test
