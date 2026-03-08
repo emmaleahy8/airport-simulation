@@ -113,6 +113,8 @@ public class BackendSimulationService implements SimulationService {
             ui.inboundRatePerHour,
             ui.outboundRatePerHour,
             120, // no runway occupancy seconds?
+            20,
+            10,
             true
         );
     }

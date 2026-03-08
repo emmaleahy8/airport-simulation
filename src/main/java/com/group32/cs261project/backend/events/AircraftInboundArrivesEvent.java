@@ -1,5 +1,6 @@
 package com.group32.cs261project.backend.events;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import com.group32.cs261project.backend.model.Aircraft;
@@ -29,6 +30,18 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
 
         // enqueue to holding pattern
         engine.context().airport().holdingPattern().enqueue(aircraft, time);
+
+        // schedule fuel emergency event
+        Instant fuelEmergencyTime = time.plus(
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.fuelMinutesRemaining() - engine.config().lowFuelMinutes()), 0.0))
+        );
+        engine.schedule(new FuelEmergencyEvent(this.aircraft, fuelEmergencyTime));
+
+        // schedule fuel deadline event
+        Instant fuelDiversionTime = time.plus(
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.fuelMinutesRemaining() - engine.config().fuelDiversionMinutes()), 0.0))
+        );
+        engine.schedule(new FuelDeadlineDiversionEvent(aircraft, fuelDiversionTime));
 
         // try to schedule runway operations immediately
         engine.context().scheduler().tryScheduleOperations(time, engine);

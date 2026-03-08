@@ -1,10 +1,9 @@
 package com.group32.cs261project.integration;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.AirportSimulation;
@@ -36,7 +35,9 @@ public class EmergencyPriorityIT {
                 42L,
                 0.0,
                 0.0,
-                60
+                60,
+                -120,
+                -120
         );
 
         // -------------------------
