@@ -23,13 +23,13 @@ public class Main {
         SimConfig config = new SimConfig(start, end, 123L, 15.0, 15.0, 60, 20, 10, true);
 
         Airport airport = new Airport(List.of(
-                new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
+            new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
         ));
 
         AirportSimulation airportSimulation = new AirportSimulation(config, airport);
 
 
-        FlightGenerator generator = new FlightGenerator(config);
+        FlightGenerator generator = new FlightGenerator(config, airportSimulation.engine().rng());
 
         var inbound = generator.generateFlights(FlightType.INBOUND);
         var outbound = generator.generateFlights(FlightType.OUTBOUND);

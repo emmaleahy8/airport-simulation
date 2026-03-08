@@ -238,7 +238,7 @@ public class BackendSimulationService implements SimulationService {
 
         this.backendSim = new AirportSimulation(cfg, airport);
 
-        FlightGenerator gen = new FlightGenerator(cfg);
+        FlightGenerator gen = new FlightGenerator(cfg, this.backendSim.engine().rng());
         List<GeneratedFlight> in = gen.generateFlights(FlightType.INBOUND);
         List<GeneratedFlight> out = gen.generateFlights(FlightType.OUTBOUND);
         FlightSeeder.seedInbound(this.backendSim.engine(), in);
