@@ -43,14 +43,12 @@ public class CancellationIT {
         // Run long enough to go past the 30-minute default cancellation window.
         Instant end = start.plusSeconds(7200); // 2 hours
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                0.0,
-                0.0,
-                300 // runway occupancy (doesn't matter because runway is closed)
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .runwayOccupancySeconds(300)
+                .build();
 
         // One runway that is permanently unavailable (INSPECTION),
         // so no take-off operations can actually run.
@@ -117,14 +115,14 @@ public class CancellationIT {
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
         Instant end = start.plusSeconds(7200);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                43L,
-                0.0,
-                0.0,
-                60 // 1-minute runway occupancy to keep things simple
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(43L)
+                .inboundRatePerHour(0.0)
+                .outboundRatePerHour(0.0)
+                .runwayOccupancySeconds(60)
+                .build();
 
         // One available take-off runway; aircraft can use it immediately.
         RunwayData runwayData = new RunwayData(

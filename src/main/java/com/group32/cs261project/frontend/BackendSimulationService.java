@@ -106,17 +106,20 @@ public class BackendSimulationService implements SimulationService {
      * @return backend simulation config
      */
     private static SimConfig mapConfig(SimulationData ui) {
-        return new SimConfig(
-            Instant.now(),
-            Instant.now().plus(Duration.ofHours(1)), // we just put 1 hour for now to make it not crash
-            new Random().nextLong(),
-            ui.inboundRatePerHour,
-            ui.outboundRatePerHour,
-            120, // no runway occupancy seconds?
-            20,
-            10,
-            true
-        );
+        return SimConfig.builder()
+            .startTime(Instant.now())
+            .endTime(Instant.now().plus(Duration.ofHours(1)))
+            .randomSeed(new Random().nextLong())
+            .inboundRatePerHour(ui.inboundRatePerHour)
+            .outboundRatePerHour(ui.outboundRatePerHour)
+            .runwayOccupancySeconds(60)
+            .maxTakeoffWaitMinutes(30)
+            .lowFuelMinutes(20)
+            .fuelDiversionMinutes(10)
+            .mechanicalEmergencyProbability(0.10)
+            .passengerHealthEmergencyProbability(0.10)
+            .verbose(true)
+            .build();
     }
 
 

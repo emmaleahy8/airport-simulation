@@ -30,14 +30,13 @@ public class FIFOQueueIT {
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
         Instant end = start.plusSeconds(3600);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                0.0,
-                0.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .inboundRatePerHour(0.0)
+                .outboundRatePerHour(0.0)
+                .build();
 
         RunwayData runway = new RunwayData(
                 3000,

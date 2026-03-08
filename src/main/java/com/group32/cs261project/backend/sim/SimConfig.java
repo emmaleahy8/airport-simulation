@@ -3,137 +3,88 @@ package com.group32.cs261project.backend.sim;
 import java.time.Instant;
 import java.util.Objects;
 
+
 /**
  * Configuration class for the simulation
  */
-public final class SimConfig {
+public record SimConfig(
+    Instant startTime,
+    Instant endTime,
+    long randomSeed,
+    double inboundRatePerHour,
+    double outboundRatePerHour,
+    int runwayOccupancySeconds,
+    long maxTakeoffWaitMinutes,
+    int lowFuelMinutes,
+    int fuelDiversionMinutes,
+    double mechanicalEmergencyProbability,
+    double passengerHealthEmergencyProbability,
+    boolean verbose
+) {
+    public SimConfig {
 
-    private final Instant startTime;
-    private final Instant endTime;
-    private final long randomSeed;
+        Objects.requireNonNull(startTime, "startTime");
+        Objects.requireNonNull(endTime, "endTime");
 
-    private final double inboundRatePerHour;
-    private final double outboundRatePerHour;
-    private final int runwayOccupancySeconds;
-    private final long maxTakeoffWaitMinutes = 30L;
-
-    private int lowFuelMinutes = 20;
-    private int fuelDiversionMinutes = 10; 
-
-    public final double mechanicalEmergencyProbability = 0.10; // 0-100 (%)
-    public final double passengerHealthEmergencyProbability = 0.10; // 0-100 (%)
-
-    private boolean verbose = false;
-
-    public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, 
-                     double outboundRatePerHour, int runwayOccupancySeconds 
-    ) {
-        this.startTime = Objects.requireNonNull(startTime, "startTime");
-        this.endTime = Objects.requireNonNull(endTime, "endTime");
         if (endTime.isBefore(startTime)) {
-            throw new IllegalArgumentException("endTime must be >= startTime");
+            throw new IllegalArgumentException("endTime must be equal or after startTime");
         }
-        this.randomSeed = randomSeed;
-        this.inboundRatePerHour = inboundRatePerHour;
-        this.outboundRatePerHour = outboundRatePerHour;
-        this.runwayOccupancySeconds = runwayOccupancySeconds;
+
     }
 
-    public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, 
-                     double outboundRatePerHour, int runwayOccupancySeconds, int lowFuelMinutes
-    ) {
-        this.startTime = Objects.requireNonNull(startTime, "startTime");
-        this.endTime = Objects.requireNonNull(endTime, "endTime");
-        if (endTime.isBefore(startTime)) {
-            throw new IllegalArgumentException("endTime must be >= startTime");
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+
+        // defaults
+        private Instant startTime = Instant.parse("2026-01-01T00:00:00Z");
+        private Instant endTime = Instant.parse("2026-01-01T02:00:00Z");
+        private long randomSeed = 42L;
+        private double inboundRatePerHour = 15.0;
+        private double outboundRatePerHour = 15.0;
+        private int runwayOccupancySeconds = 60;
+        private long maxTakeoffWaitMinutes = 30;
+        private int lowFuelMinutes = 20;
+        private int fuelDiversionMinutes = 10;
+        private double mechanicalEmergencyProbability = 0.10;
+        private double passengerHealthEmergencyProbability = 0.10;
+        private boolean verbose = false;
+
+        private Builder() {}
+
+        public Builder startTime(Instant v) { this.startTime = Objects.requireNonNull(v); return this; }
+        public Builder endTime(Instant v) { this.endTime = Objects.requireNonNull(v); return this; }
+        public Builder randomSeed(long v) { this.randomSeed = v; return this; }
+        public Builder inboundRatePerHour(double v) { this.inboundRatePerHour = v; return this; }
+        public Builder outboundRatePerHour(double v) { this.outboundRatePerHour = v; return this; }
+        public Builder runwayOccupancySeconds(int v) { this.runwayOccupancySeconds = v; return this; }
+        public Builder maxTakeoffWaitMinutes(long v) { this.maxTakeoffWaitMinutes = v; return this; }
+        public Builder lowFuelMinutes(int v) { this.lowFuelMinutes = v; return this; }
+        public Builder fuelDiversionMinutes(int v) { this.fuelDiversionMinutes = v; return this; }
+        public Builder mechanicalEmergencyProbability(double v) { this.mechanicalEmergencyProbability = v; return this; }
+        public Builder passengerHealthEmergencyProbability(double v) { this.passengerHealthEmergencyProbability = v; return this; }
+        public Builder verbose(boolean v) { this.verbose = v; return this; }
+
+        public SimConfig build() {
+            return new SimConfig(
+                this.startTime,
+                this.endTime,
+                this.randomSeed,
+                this.inboundRatePerHour,
+                this.outboundRatePerHour,
+                this.runwayOccupancySeconds,
+                this.maxTakeoffWaitMinutes,
+                this.lowFuelMinutes,
+                this.fuelDiversionMinutes,
+                this.mechanicalEmergencyProbability,
+                this.passengerHealthEmergencyProbability,
+                this.verbose
+            );
+
         }
-        this.randomSeed = randomSeed;
-        this.inboundRatePerHour = inboundRatePerHour;
-        this.outboundRatePerHour = outboundRatePerHour;
-        this.runwayOccupancySeconds = runwayOccupancySeconds;
-        this.lowFuelMinutes = lowFuelMinutes;
+    
     }
 
-    public SimConfig(Instant startTime, Instant endTime, long randomSeed, 
-        double inboundRatePerHour, double outboundRatePerHour, int runwayOccupancySeconds, 
-        int lowFuelMinutes, int fuelDiversionMinutes
-    ) {
-        this.startTime = Objects.requireNonNull(startTime, "startTime");
-        this.endTime = Objects.requireNonNull(endTime, "endTime");
-        if (endTime.isBefore(startTime)) {
-            throw new IllegalArgumentException("endTime must be >= startTime");
-        }
-        this.randomSeed = randomSeed;
-        this.inboundRatePerHour = inboundRatePerHour;
-        this.outboundRatePerHour = outboundRatePerHour;
-        this.runwayOccupancySeconds = runwayOccupancySeconds;
-        this.lowFuelMinutes = lowFuelMinutes;
-        this.fuelDiversionMinutes = fuelDiversionMinutes;
-    }
-
-    public SimConfig(Instant startTime, Instant endTime, long randomSeed, 
-        double inboundRatePerHour, double outboundRatePerHour, int runwayOccupancySeconds, 
-        int lowFuelMinutes, int fuelDiversionMinutes, boolean verbose
-    ) {
-        this.startTime = Objects.requireNonNull(startTime, "startTime");
-        this.endTime = Objects.requireNonNull(endTime, "endTime");
-        if (endTime.isBefore(startTime)) {
-            throw new IllegalArgumentException("endTime must be >= startTime");
-        }
-        this.randomSeed = randomSeed;
-        this.inboundRatePerHour = inboundRatePerHour;
-        this.outboundRatePerHour = outboundRatePerHour;
-        this.runwayOccupancySeconds = runwayOccupancySeconds;
-        this.lowFuelMinutes = lowFuelMinutes;
-        this.fuelDiversionMinutes = fuelDiversionMinutes;
-        this.verbose = verbose;
-    }
-
-    public boolean isVerbose() {
-        return this.verbose;
-    }
-
-    public Instant startTime() {
-        return this.startTime;
-    }
-
-    public Instant endTime() {
-        return this.endTime;
-    }
-
-    public long randomSeed() {
-        return this.randomSeed;
-    }
-
-    public double inboundRatePerHour() {
-        return this.inboundRatePerHour;
-    }
-
-    public double outboundRatePerHour() {
-        return this.outboundRatePerHour;
-    }
-
-    public int runwayOccupancySeconds() {
-        return this.runwayOccupancySeconds;
-    }
-
-    public long maxTakeoffWaitMinutes() {
-        return this.maxTakeoffWaitMinutes;
-    }
-
-    public int lowFuelMinutes() {
-        return this.lowFuelMinutes;
-    }
-
-    public int fuelDiversionMinutes() {
-        return this.fuelDiversionMinutes;
-    }
-
-    public double passengerHealthEmergencyProbability() {
-        return this.passengerHealthEmergencyProbability;
-    }
-
-    public double mechanicalEmergencyProbability() {
-        return this.mechanicalEmergencyProbability;
-    }
 }

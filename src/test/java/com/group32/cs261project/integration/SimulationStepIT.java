@@ -53,14 +53,13 @@ public class SimulationStepIT {
         Instant t1 = start.plusSeconds(60);
         Instant t2 = start.plusSeconds(120);
 
-        SimConfig config = new SimConfig(
-                start,
-                start.plusSeconds(3600),
-                123L,
-                0.0,
-                0.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .inboundRatePerHour(0.0)
+            .outboundRatePerHour(0.0)
+            .build();
 
         TestContext context = new TestContext();
 
@@ -116,14 +115,14 @@ public class SimulationStepIT {
 
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
 
-        SimConfig config = new SimConfig(
-                start,
-                start.plusSeconds(3600),
-                123L,
-                0.0,
-                0.0,
-                60
-        );
+
+        SimConfig config = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .inboundRatePerHour(0.0)
+            .outboundRatePerHour(0.0)
+            .build();
 
         TestContext context = new TestContext();
 

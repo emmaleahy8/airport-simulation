@@ -26,7 +26,7 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
 
-        if (engine.config().isVerbose())
+        if (engine.config().verbose())
             System.out.format("%s: %s enqueued to holding pattern\n", time.toString(), aircraft.toString());
 
 
@@ -36,14 +36,14 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
 
         // schedule fuel emergency event
         Instant fuelEmergencyTime = time.plus(
-            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.fuelMinutesRemaining() - engine.config().lowFuelMinutes()), 0.0))
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.initialFuelMinutesRemaining() - engine.config().lowFuelMinutes()), 0.0))
         );
         engine.schedule(new FuelEmergencyEvent(this.aircraft, fuelEmergencyTime));
 
 
         // schedule fuel deadline event
         Instant fuelDiversionTime = time.plus(
-            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.fuelMinutesRemaining() - engine.config().fuelDiversionMinutes()), 0.0))
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.initialFuelMinutesRemaining() - engine.config().fuelDiversionMinutes()), 0.0))
         );
         engine.schedule(new FuelDeadlineDiversionEvent(aircraft, fuelDiversionTime));
 

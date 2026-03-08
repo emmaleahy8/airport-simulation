@@ -32,7 +32,12 @@ class FuelEmergencyIT {
         Instant t1 = t0.plus(Duration.ofHours(1));
 
         // Build minimal backend context
-        SimConfig config = new SimConfig(t0, t1, 123L, 15, 15, 60);
+        SimConfig config = SimConfig.builder()
+            .startTime(t0)
+            .endTime(t1)
+            .randomSeed(123L)
+            .build();
+            
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
         ));

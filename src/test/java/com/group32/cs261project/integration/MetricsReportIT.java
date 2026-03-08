@@ -43,14 +43,15 @@ public class MetricsReportIT {
 
         // Runway occupancy long enough that first aircraft holds the runway past
         // the second's 30 min cancellation (second ready at 120s, cancelled at 1920s).
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                99L,
-                0.0,
-                0.0,
-                3600
-        );
+
+        SimConfig config = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(99L)
+            .inboundRatePerHour(0.0)
+            .outboundRatePerHour(0.0)
+            .runwayOccupancySeconds(3600)
+            .build();
 
         // Two runways:
         // - Runway 0: AVAILABLE take-off runway so first aircraft can depart (and hold it).

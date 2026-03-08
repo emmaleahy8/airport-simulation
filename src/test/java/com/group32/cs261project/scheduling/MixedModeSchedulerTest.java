@@ -40,7 +40,11 @@ class MixedModeSchedulerTest {
         Airport airport = new Airport(List.of(mixed));
 
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig(start, end, 1L, 15, 15, 60), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(1L)
+                .build(),
             airport
         );
 

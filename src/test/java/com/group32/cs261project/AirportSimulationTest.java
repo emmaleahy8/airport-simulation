@@ -55,7 +55,11 @@ class AirportSimulationTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plusSeconds(3600);
 
-        SimConfig cfg = new SimConfig(start, end, 123, 15, 15, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(123L)
+            .build();
 
         // Airport must be constructible. Adjust to match your Airport constructor.
         // This uses a single runway as a simple default.
@@ -85,7 +89,12 @@ class AirportSimulationTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plusSeconds(3600);
 
-        SimConfig cfg = new SimConfig(start, end, 123, 15, 15, 60);
+
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(123L)
+            .build();
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.LANDING, RunwayStatus.AVAILABLE)
         ));

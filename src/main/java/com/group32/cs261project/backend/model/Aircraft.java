@@ -19,27 +19,14 @@ public class Aircraft {
     private final String destination;
     private final Instant scheduledTime;
     private EmergencyStatus emergency; // made this non-final - needs to be mutable
-    private final double fuelMinutesRemaining;
+    private final double initialFuelMinutesRemaining;
     private final AircraftDirection direction;
     private AircraftState state;
     private Instant holdingEntryTime;
     private Instant takeOffQueueEntryTime;
 
-    /**
-     * Constructor
-     * @param callsign
-     * @param operator
-     * @param origin
-     * @param destination
-     * @param scheduledTime
-     * @param emergency
-     * @param fuelMinutesRemaining
-     * @param state
-     * @param holdingEntryTime
-     * @param takeOffQueueEntryTime
-     */
     public Aircraft(String callsign, String operator, String origin, String destination, 
-                    Instant scheduledTime, EmergencyStatus emergency, double fuelMinutesRemaining,
+                    Instant scheduledTime, EmergencyStatus emergency, double initialFuelMinutesRemaining,
                     AircraftState state, AircraftDirection direction
     ) {
         this.callsign = Objects.requireNonNull(callsign);
@@ -48,7 +35,7 @@ public class Aircraft {
         this.destination = Objects.requireNonNull(destination);
         this.scheduledTime = Objects.requireNonNull(scheduledTime);
         this.emergency = Objects.requireNonNull(emergency);
-        this.fuelMinutesRemaining = fuelMinutesRemaining;
+        this.initialFuelMinutesRemaining = initialFuelMinutesRemaining;
         this.state = Objects.requireNonNull(state);
         this.direction = Objects.requireNonNull(direction);
         this.holdingEntryTime = null;
@@ -58,122 +45,46 @@ public class Aircraft {
 
     @Override
     public String toString() {
-        return String.format("Aircraft(%s, %s, %f)", this.callsign, this.state.toString(), this.fuelMinutesRemaining);
+        return String.format("Aircraft(%s, %s, %f)", this.callsign, this.state.toString(), this.initialFuelMinutesRemaining);
     }
 
-    // getters
-    public String callsign() {
-        return this.callsign;
-    }
+    /* getters */
+    public String callsign() { return this.callsign; }
+    public String operator() { return this.operator; }
+    public String origin() { return this.origin; }
+    public String destination() { return this.destination; }
+    public Instant scheduledTime() { return this.scheduledTime; }
+    public EmergencyStatus emergencyStatus() { return this.emergency; }
+    public AircraftDirection direction() { return this.direction; }
+    public AircraftState state() { return this.state; }
+    public Instant holdingPatternEntryTime() { return this.holdingEntryTime; }
+    public Instant takeOffQueueEntryTime() { return this.takeOffQueueEntryTime; }
+    public double initialFuelMinutesRemaining() { return this.initialFuelMinutesRemaining; }
 
-    public String operator() {
-        return this.operator;
-    }
-
-    public String origin() {
-        return this.origin;
-    }
-
-    public String destination() {
-        return this.destination;
-    }
-
-    public Instant scheduledTime() {
-        return this.scheduledTime;
-    }
-
-    public EmergencyStatus emergencyStatus() {
-        return this.emergency;
-    }
     
-    public AircraftDirection direction() {
-        return this.direction;
-    }
+    /* emergency setters and helper methods */
+    public boolean isEmergency() { return this.emergency != EmergencyStatus.NONE; }
+    public void setEmergencyStatus(EmergencyStatus status) { this.emergency = Objects.requireNonNull(status); }
 
-    public boolean isEmergency() {
-        return this.emergency != EmergencyStatus.NONE;
-    }
+    
+    /* state transitions */
+    public void markHolding(Instant t) { this.state = AircraftState.HOLDING; this.holdingEntryTime = t; }
+    public void markTakeoffQueue(Instant t) { this.state = AircraftState.TAKEOFF_QUEUE; this.takeOffQueueEntryTime = t; }
+    public void markRunwayZone() { this.state = AircraftState.RUNWAY_ZONE; }
+    public void markCompleted() { this.state = AircraftState.COMPLETED; }
+    public void markDiverted() { this.state = AircraftState.DIVERTED; }
+    public void markCancelled() { this.state = AircraftState.CANCELLED; }
 
-    // set an aircraft to a specific emergency status
-    public void setEmergencyStatus(EmergencyStatus status) {
-        this.emergency = Objects.requireNonNull(status);
-    }
-
-    public AircraftState state() {
-        return this.state;
-    }
-
-    public Instant holdingPatternEntryTime() {
-        return this.holdingEntryTime;
-    }
-
-    public Instant takeOffQueueEntryTime() {
-        return this.takeOffQueueEntryTime;
+    
+    // check whether an aircraft has been handled by the airport already
+    public boolean isCompleted() {
+        return this.state != AircraftState.HOLDING && this.state != AircraftState.TAKEOFF_QUEUE;
     }
 
     // extra function
     public double delayMinutes(Instant actualTime) {
         return Duration.between(actualTime, this.scheduledTime).toMinutes();
     }
-
-    // state transition
-    public void markHolding(Instant entryTime) {
-        this.state = AircraftState.HOLDING;
-        this.holdingEntryTime = entryTime;
-    }
-
-    public void markTakeoffQueue(Instant entryTime) {
-        this.state = AircraftState.TAKEOFF_QUEUE;
-        this.takeOffQueueEntryTime = entryTime;
-    }
-
-    public void markRunwayZone() {
-        this.state = AircraftState.RUNWAY_ZONE;
-    }
-
-    public void markCompleted() {
-        this.state = AircraftState.COMPLETED;
-    }
-
-    public void markDiverted() {
-        this.state = AircraftState.DIVERTED;
-    }
-
-    public void markCancelled() {
-        this.state = AircraftState.CANCELLED;
-    }
-
-    /**
-     * check whether an aircraft has been handled by the airport already
-     * @return true if it is not in holding and not in takeoff
-     */
-    public boolean isCompleted() {
-        return this.state != AircraftState.HOLDING && this.state != AircraftState.TAKEOFF_QUEUE;
-    }
-
-    // // fuel logic (for later)
-    // //CONSUMPTION
-    // public void consumeFuelMinutes(double minutes) {
-    //     //if (this.fuelMinutesRemaining > minutes)
-    //         //this.fuelMinutesRemaining -= minutes;
-    //     this.fuelMinutesRemaining = Math.max(0, this.fuelMinutesRemaining - minutes); // this allows it to go to 0
-    // }
-    
-    // public boolean isLowFuel(double thresholdMinutes) {
-    //     return this.fuelMinutesRemaining <= thresholdMinutes; // 10
-    // }
-
-    // extra may not need
-    public double fuelMinutesRemaining() {
-        return this.fuelMinutesRemaining;
-    }
-
-    // // checks if fuel is low, automatically escalates to FUEL emergency
-    // public void updateFuelEmergency(double thresholdMinutes) {
-    //     if (this.emergency == EmergencyStatus.NONE && isLowFuel(thresholdMinutes)) {
-    //         this.emergency = EmergencyStatus.FUEL;
-    //     }
-    // }
 
     // helper methods if emergencies escalate dynamically - may not be needed with setEmergency status methods
     // used for when an emergency is triggered

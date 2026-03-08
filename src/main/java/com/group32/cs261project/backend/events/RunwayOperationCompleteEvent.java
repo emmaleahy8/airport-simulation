@@ -27,7 +27,7 @@ public class RunwayOperationCompleteEvent implements Event<SimulationContext> {
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
 
-        if (engine.config().isVerbose())
+        if (engine.config().verbose())
             System.out.format("%s: Operation on %s complete\n", time.toString(), runway.toString());
 
         // clear the runway

@@ -32,14 +32,13 @@ public class SimulationEndToEndIT {
         // End before 30 min so outbound (ready at 10 min) is not cancelled and remains in queue
         Instant end = start.plusSeconds(1800);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                5.0,
-                5.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .inboundRatePerHour(5.0)
+                .outboundRatePerHour(5.0)
+                .build();
 
         // -------------------------
         // 2. Create runway + airport
