@@ -116,8 +116,8 @@ public class BackendSimulationService implements SimulationService {
             .maxTakeoffWaitMinutes(30)
             .lowFuelMinutes(20)
             .fuelDiversionMinutes(10)
-            .mechanicalEmergencyProbability(0.10)
-            .passengerHealthEmergencyProbability(0.10)
+            .mechanicalEmergencyProbability(ui.mechanicalEmergencyProbability)
+            .passengerHealthEmergencyProbability(ui.passengerHealthEmergencyProbability)
             .verbose(true)
             .build();
     }
@@ -158,6 +158,8 @@ public class BackendSimulationService implements SimulationService {
         snapshot.runwayCount = sim.airport().runways().size();
         snapshot.inboundRatePerHour = (int) sim.config().inboundRatePerHour();
         snapshot.outboundRatePerHour = (int) sim.config().outboundRatePerHour();
+        snapshot.mechanicalEmergencyProbability = sim.config().mechanicalEmergencyProbability();
+        snapshot.passengerHealthEmergencyProbability = sim.config().passengerHealthEmergencyProbability();
 
         // pass runways
         snapshot.runways.clear();

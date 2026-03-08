@@ -11,10 +11,10 @@ public class SimulationData {
     public int inboundRatePerHour = 10;     // 0-30
     public int outboundRatePerHour = 10;    // 0-30
     public int maxWaitMinutes = 30;         // default 30
-    /*
+    
     public double mechanicalEmergencyProbability = 0.0; // 0-100 (%)
     public double passengerHealthEmergencyProbability = 0.0; // 0-100 (%)
-     */
+    
 
     public final List<RunwayConfig> runways = new ArrayList<>();
 
