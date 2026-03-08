@@ -11,12 +11,18 @@ public final class SimConfig {
     private final Instant startTime;
     private final Instant endTime;
     private final long randomSeed;
+
     private final double inboundRatePerHour;
     private final double outboundRatePerHour;
     private final int runwayOccupancySeconds;
     private final long maxTakeoffWaitMinutes = 30L;
+
     private int lowFuelMinutes = 20;
     private int fuelDiversionMinutes = 10; 
+
+    public final double mechanicalEmergencyProbability = 0.10; // 0-100 (%)
+    public final double passengerHealthEmergencyProbability = 0.10; // 0-100 (%)
+
     private boolean verbose = false;
 
     public SimConfig(Instant startTime, Instant endTime, long randomSeed, double inboundRatePerHour, 
@@ -121,5 +127,13 @@ public final class SimConfig {
 
     public int fuelDiversionMinutes() {
         return this.fuelDiversionMinutes;
+    }
+
+    public double passengerHealthEmergencyProbability() {
+        return this.passengerHealthEmergencyProbability;
+    }
+
+    public double mechanicalEmergencyProbability() {
+        return this.mechanicalEmergencyProbability;
     }
 }
