@@ -24,11 +24,11 @@ jobs:
       - name: Install Xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
-      - name: Integration tests only (Failsafe + TestFX)
+
+      - name: Integration tests (Failsafe + TestFX)
         run: |
           xvfb-run -a mvn -B failsafe:integration-test failsafe:verify \
             -Dtestfx.robot=glass \
-            -Dtestfx.headless=true \
             -Dprism.order=sw \
-            -Djava.awt.headless=true
+            -Djava.awt.headless=false
 
