@@ -29,7 +29,8 @@ public class SimulationEndToEndIT {
         // 1. Simulation configuration
         // -------------------------
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
-        Instant end = start.plusSeconds(3600);
+        // End before 30 min so outbound (ready at 10 min) is not cancelled and remains in queue
+        Instant end = start.plusSeconds(1800);
 
         SimConfig config = new SimConfig(
                 start,

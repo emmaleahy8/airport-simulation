@@ -63,6 +63,15 @@ public class TakeOffQueue {
     }
 
     /**
+     * Removes a specific aircraft from the takeoff queue if present.
+     * @param aircraft aircraft to remove
+     * @return true if the aircraft was in the queue and removed
+     */
+    public boolean remove(Aircraft aircraft) {
+        return this.queue.remove(aircraft);
+    }
+
+    /**
      * Checks if takeoff queue is empty
      * @return True if no aircraft is in the queue
      */

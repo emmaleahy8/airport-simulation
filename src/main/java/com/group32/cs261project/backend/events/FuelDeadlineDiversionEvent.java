@@ -24,10 +24,10 @@ public class FuelDeadlineDiversionEvent implements Event<SimulationContext> {
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
 
-        if (engine.config().isVerbose())
-            System.out.format("%s: %s diverted due to low fuel\n", time.toString(), aircraft.toString());
-
         if (!this.aircraft.isCompleted()) { // aircraft not completed yet
+
+            if (engine.config().isVerbose())
+                System.out.format("%s: %s diverted due to low fuel\n", time.toString(), aircraft.toString());
 
             // remove aircraft from holding pattern        
             engine.context().airport().holdingPattern().remove(this.aircraft);

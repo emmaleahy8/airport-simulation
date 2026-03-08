@@ -14,6 +14,7 @@ public final class SimConfig {
     private final double inboundRatePerHour;
     private final double outboundRatePerHour;
     private final int runwayOccupancySeconds;
+    private final long maxTakeoffWaitMinutes = 30L;
     private int lowFuelMinutes = 20;
     private int fuelDiversionMinutes = 10; 
     private boolean verbose = false;
@@ -108,6 +109,10 @@ public final class SimConfig {
 
     public int runwayOccupancySeconds() {
         return this.runwayOccupancySeconds;
+    }
+
+    public long maxTakeoffWaitMinutes() {
+        return this.maxTakeoffWaitMinutes;
     }
 
     public int lowFuelMinutes() {

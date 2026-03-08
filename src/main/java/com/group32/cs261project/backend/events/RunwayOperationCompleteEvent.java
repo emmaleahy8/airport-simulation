@@ -34,6 +34,9 @@ public class RunwayOperationCompleteEvent implements Event<SimulationContext> {
         this.runway.clearOccupancy();
         engine.context().airport().clearRunway(runway);
 
+        // mark aircraft as having completed the operation (landed or departed)
+        this.aircraft.markCompleted();
+
         // try to schedule next runway operation now the runway is clear
         engine.context().scheduler().tryScheduleOperations(this.time, engine);
 

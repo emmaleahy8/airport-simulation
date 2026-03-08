@@ -28,7 +28,8 @@ public class TakeoffQueueIT {
         // 1. Simulation setup
         // -------------------------
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
-        Instant end = start.plusSeconds(3600);
+        // End before 30 min so outbound aircraft (ready at 10 min) are not cancelled
+        Instant end = start.plusSeconds(1800);
 
         SimConfig config = new SimConfig(
                 start,
