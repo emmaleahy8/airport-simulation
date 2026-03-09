@@ -71,7 +71,8 @@ public class ConfigurePage implements Page {
         "-fx-background-radius: 14;" +
         "-fx-padding: 16;" +
         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.2, 0, 3);";
-    // "Wall"
+    
+        // "Wall"
     private static final String SCREEN_WALL =
         "-fx-background-color: rgba(5, 12, 20, 0.97);" +
         "-fx-border-color: #24445b;" +
@@ -80,74 +81,70 @@ public class ConfigurePage implements Page {
         "-fx-background-radius: 16;" +
         "-fx-padding: 18;" +
         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.40), 18, 0.22, 0, 5);";
-    // Runway cards (active)
+    
+        // Runway cards (active)
     private static final String CARD =
-            "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
-            "-fx-border-color: #1dd6ff;" +
-            "-fx-border-width: 1.6;" +
-            "-fx-border-radius: 12;" +
-            "-fx-background-radius: 14;" +
-            "-fx-padding: 14;" +
-            "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.22), 14, 0.25, 0, 0);";
-    // Runway cards (disabled)
+        "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
+        "-fx-border-color: #1dd6ff;" +
+        "-fx-border-width: 1.6;" +
+        "-fx-border-radius: 12;" +
+        "-fx-background-radius: 14;" +
+        "-fx-padding: 14;" +
+        "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.22), 14, 0.25, 0, 0);";
+    
+        // Runway cards (disabled)
     private static final String CARD_DISABLED =
-            "-fx-background-color:  linear-gradient(to bottom, #1a232b 0%, #182028 100%);" +
-            "-fx-border-color: #46535e;" +
-            "-fx-border-width: 1.2;" +
-            "-fx-border-radius: 12;" +
-            "-fx-background-radius: 12;" +
-            "-fx-padding: 14;" +
-            "-fx-opacity: 0.72;";
+        "-fx-background-color:  linear-gradient(to bottom, #1a232b 0%, #182028 100%);" +
+        "-fx-border-color: #46535e;" +
+        "-fx-border-width: 1.2;" +
+        "-fx-border-radius: 12;" +
+        "-fx-background-radius: 12;" +
+        "-fx-padding: 14;" +
+        "-fx-opacity: 0.72;";
     
     // Text styles
     private static final String TITLE_TEXT =
         "-fx-text-fill: #eaf6ff;";
 
     private static final String SUBTITLE_TEXT =
-            "-fx-text-fill: #cccccc;";
+        "-fx-text-fill: #cccccc;";
 
     private static final String LABEL_TEXT =
-            "-fx-text-fill: #dcebf5;";
+        "-fx-text-fill: #dcebf5;";
 
     private static final String SMALL_TEXT =
-            "-fx-text-fill: #b8cad6;";
+        "-fx-text-fill: #b8cad6;";
 
     private static final String MONITOR_TITLE =
-            "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
 
     private static final String MONITOR_LABEL =
-            "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
 
     // Button styles
     private static final String BTN_PRIMARY =
-            "-fx-background-color: linear-gradient(to bottom, #03418be6, #1a6eff);" +
-            "-fx-text-fill: white;" +
-            "-fx-font-weight: 700;" +
-            "-fx-padding: 10 14;" +
-            "-fx-background-radius: 8;" +
-            "-fx-border-radius: 8;" +
-            "-fx-border-color: #2a4658;";
+        "-fx-background-color: linear-gradient(to bottom, #03418be6, #1a6eff);" +
+        "-fx-text-fill: white;" +
+        "-fx-font-weight: 700;" +
+        "-fx-padding: 10 14;" +
+        "-fx-background-radius: 8;" +
+        "-fx-border-radius: 8;" +
+        "-fx-border-color: #2a4658;";
 
-    private static final String BTN_SUCCESS =
-            "-fx-background-color: #0aa84f;" +
-            "-fx-text-fill: white;" +
-            "-fx-font-weight: 700;" +
-            "-fx-padding: 10 14;";
-    
-            private static final String BTN_SOFT =
-            "-fx-background-color: linear-gradient(to bottom, #1b4fff, #163fc7);" +
-            "-fx-text-fill: white;" +
-            "-fx-font-weight: 700;" +
-            "-fx-padding: 8 12;" +
-            "-fx-background-radius: 8;";
+    private static final String BTN_SOFT =
+        "-fx-background-color: linear-gradient(to bottom, #1b4fff, #163fc7);" +
+        "-fx-text-fill: white;" +
+        "-fx-font-weight: 700;" +
+        "-fx-padding: 8 12;" +
+        "-fx-background-radius: 8;";
     
     private static final String COMBO_STYLE =
-            "-fx-background-color: #0d1d29;" +
-            "-fx-text-fill: white;" +
-            "-fx-prompt-text-fill: white;" +
-            "-fx-border-color: #2d6678;" +
-            "-fx-border-radius: 6;" +
-            "-fx-background-radius: 6;";
+        "-fx-background-color: #0d1d29;" +
+        "-fx-text-fill: white;" +
+        "-fx-prompt-text-fill: white;" +
+        "-fx-border-color: #2d6678;" +
+        "-fx-border-radius: 6;" +
+        "-fx-background-radius: 6;";
 
     public ConfigurePage(App app, SimulationService sim) {
         this.app = app;
@@ -229,7 +226,7 @@ public class ConfigurePage implements Page {
 
         Label simTitle = new Label("Simulation Control");
         simTitle.setFont(Font.font(20));
-        simTitle.setStyle(TITLE_TEXT);
+        simTitle.setStyle(MONITOR_LABEL);
 
         // Number of runways
         VBox runwayRow = new VBox(6); // Vertical box with spacing of 6px between label and slider
@@ -288,7 +285,7 @@ public class ConfigurePage implements Page {
 
         Label aircraftTitle = new Label("Aircraft Generation");
         aircraftTitle.setFont(Font.font(20));
-        aircraftTitle.setStyle(TITLE_TEXT);
+        aircraftTitle.setStyle(MONITOR_LABEL);
 
         // Inbound flow rate slider + label
         VBox inboundBox = new VBox(5);
@@ -319,7 +316,7 @@ public class ConfigurePage implements Page {
 
         Label emergencyTitle = new Label("Emergency Generation");
         emergencyTitle.setFont(Font.font(20));
-        emergencyTitle.setStyle(TITLE_TEXT);
+        emergencyTitle.setStyle(MONITOR_TITLE);
 
         // Passenger Emergency slider + label
         VBox passengerEmergencyBox = new VBox(5);
@@ -364,8 +361,8 @@ public class ConfigurePage implements Page {
         monitorWall.setStyle(SCREEN_WALL);
 
         Label runwayTitle = new Label("Runway Configuration Screens");
-        runwayTitle.setFont(Font.font(22));
-        runwayTitle.setStyle(TITLE_TEXT);
+        runwayTitle.setFont(Font.font(20));
+        runwayTitle.setStyle(MONITOR_LABEL);
 
         runwayGrid.setHgap(18);
         runwayGrid.setVgap(18);

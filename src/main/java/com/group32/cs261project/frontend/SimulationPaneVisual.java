@@ -1,396 +1,700 @@
 package com.group32.cs261project.frontend;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.RotateTransition;
-import javafx.animation.SequentialTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ParallelTransition;
 import javafx.animation.TranslateTransition;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
 import javafx.application.Platform;
-
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
+import javafx.geometry.Point2D;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.util.Duration;
+import javafx.animation.*;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
+import javafx.scene.text.FontWeight;
+import javafx.scene.layout.StackPane;
 
-public class SimulationPaneVisual extends VBox {
+import java.util.*;
+import java.util.stream.Collectors;
 
-    private final Label title = new Label("Live Simulation");
-    private final StackPane canvasWrap = new StackPane(); // border + centering
-    private final HBox runwayRow = new HBox(18);
+public class SimulationPaneVisual extends Pane {
 
-    // Runway image
-    private final Image runwayImg = new Image(
-            Objects.requireNonNull(getClass().getResourceAsStream("/com/group32/cs261project/ui/assets/runway_new.png"))
-    );
+    // ---------- Styling ----------
+    private static final Color BG = Color.web("#000000");
+    private static final Color GREEN = Color.web("#39e75f");
+    private static final Color GREEN_DIM = Color.web("#1f6f2c");
+    private static final Color RUNWAY_FILL = Color.web("#0a2a10");
+    private static final Color RADAR_FILL = Color.web("#071407");
 
-    private final List<ImageView> runwayViews = new ArrayList<>();
-    private final List<Rectangle> statusTints = new ArrayList<>();
-    private final List<Label> numberLabels = new ArrayList<>();
+    private static final double PREF_W = 1200;
+    private static final double PREF_H = 760;
 
-    // Take-off zone
-    private final Pane takeoffZone = new Pane();
+    private static final String HEADING = "-fx-text-fill: #51ed73; -fx-font-weight: 700;";
+    private static final String RUNWAY_TITLE = "-fx-text-fill: #51ed73; -fx-font-weight: 700;";
 
-    // Plane image
-    private final Image planeImg = new Image(
-        Objects.requireNonNull(getClass().getResource("/com/group32/cs261project/ui/assets/plane_image.png")).toExternalForm()
-    );
+    // ---------- Main layers ----------
+    private final Pane backgroundLayer = new Pane();
+    private final Pane queueLayer = new Pane();
+    private final Pane actionLayer = new Pane();
 
-    private ImageView makePlaneNode() {
-        ImageView plane_iv = new ImageView(planeImg);
+    // ---------- Titles ----------
+    private final Label holdingTitle = makeTitle("Holding Queue:");
+    private final Label takeoffTitle = makeTitle("Take-off Queue:");
 
-        plane_iv.setPreserveRatio(true);
-        plane_iv.setFitWidth(32);          
-        plane_iv.setRotate(0);  // facing right
+    // ---------- Radar ----------
+    private final Circle radarOuter = new Circle();
+    private final List<Circle> radarMainRings = new ArrayList<>();
+    private final List<Circle> radarSubtleRings = new ArrayList<>();
+    private final Line radarGuideLine = new Line();
+    private final Circle radarCentreDot = new Circle();
+    private double radarCx;
+    private double radarCy;
+    private double radarRadius;
+    private double radarSweepAngleDeg = -45;
+    private double holdingRotationDeg = 0;
 
-        return plane_iv;
-    }
+    // ---------- Runways ----------
+    private final List<Rectangle> runwayRects = new ArrayList<>();
+    private final List<Label> runwayLabels = new ArrayList<>();
+    private final List<Line> runwayTopLines = new ArrayList<>();
+    private final List<Line> runwayBottomLines = new ArrayList<>();
 
-    private SimulationData lastSnap;
+    // ---------- Slot positions ----------
+    private final List<Point2D> holdingSlots = new ArrayList<>();
+    private final List<Point2D> takeoffSlots = new ArrayList<>();
+    private final List<Point2D> runwayLeftEntryPoints = new ArrayList<>();
+    private final List<Point2D> runwayCentres = new ArrayList<>();
+    private final List<Point2D> runwayRightExitPoints = new ArrayList<>();
 
-    // Plane nodes + last-known state
-    private final Map<String, ImageView> planeNodes = new HashMap<>();
-    private final Map<String, SimulationData.PlaneStatus> lastStatus = new HashMap<>(); 
+    // ---------- Queue visuals ----------
+    private final Map<String, PlaneVisual> queuePlaneNodes = new HashMap<>();
+
+    // ---------- State tracking ----------
+    private SimulationData previousSnapshot;
+    private int processedEventCount = 0;
 
     public SimulationPaneVisual() {
-        setPadding(new Insets(18));
-        setSpacing(12);
-        setAlignment(Pos.TOP_CENTER);
+        setPrefSize(PREF_W, PREF_H);
+        setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        title.setStyle("-fx-font-size: 18px; -fx-font-weight: 800;");
+        getChildren().addAll(backgroundLayer, queueLayer, actionLayer);
 
-        canvasWrap.setStyle(
-                "-fx-background-color: white;" +
-                "-fx-border-color: #111;" +
-                "-fx-border-width: 1;" +
-                "-fx-border-radius: 10;" +
-                "-fx-background-radius: 10;"
-        );
-        canvasWrap.setPadding(new Insets(18));
-        VBox.setVgrow(canvasWrap, Priority.ALWAYS);
+        backgroundLayer.getChildren().addAll(holdingTitle, takeoffTitle, radarOuter, radarGuideLine, radarCentreDot);        
+        backgroundLayer.setStyle("""
+            -fx-background-color: #001107;
+            -fx-background-radius: 16;
+            -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0.2, 0, 4);
+        """);
+        queueLayer.setPickOnBounds(false);
+        actionLayer.setPickOnBounds(false);
 
-        runwayRow.setAlignment(Pos.CENTER);
-        
-        // ----- Layout container -----
-        VBox layout = new VBox();
-        layout.setFillWidth(true);
-
-        // Spacer pushes runways downward
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        // Takeoff area placeholder (reserved space at bottom)
-        takeoffZone.setPrefHeight(120);
-        takeoffZone.setMinHeight(120);
-        takeoffZone.setMaxHeight(120);
-        takeoffZone.setMaxWidth(Double.MAX_VALUE);
-        takeoffZone.prefWidthProperty().bind(canvasWrap.widthProperty().subtract(36)); // 18px padding * 2
-        // takeoffZone.setStyle("-fx-background-color: transparent;");
-        takeoffZone.setStyle("-fx-background-color: rgba(255,0,0,0.08);"); // debug checl
-
-        // Add everything in order
-        layout.getChildren().addAll(spacer, runwayRow, takeoffZone);
-
-        // Align properly
-        runwayRow.setAlignment(Pos.CENTER);
-        layout.setAlignment(Pos.BOTTOM_CENTER);
-
-        // Make VBox layout stretch its children
-        layout.setMaxWidth(Double.MAX_VALUE);
-        runwayRow.setMaxWidth(Double.MAX_VALUE);
-        takeoffZone.setMaxWidth(Double.MAX_VALUE);
-
-        // Add layout to canvas
-        canvasWrap.getChildren().clear();
-        canvasWrap.getChildren().add(layout);
-
-        getChildren().addAll(title, canvasWrap);
-
-        // redraw when resized (keeps scaling nice)
-        widthProperty().addListener((o, a, b) -> redraw());
-        heightProperty().addListener((o, a, b) -> redraw());
-    }
-
-    public void update(SimulationData snap) {
-        if (takeoffZone.getWidth() <= 1) {
-            Platform.runLater(() -> update(snap));
-            return;
+        // create radar rings 
+        for (int i = 0; i < 4; i++) {
+            Circle ring = new Circle();
+            ring.setFill(null);
+            ring.setStroke(GREEN);
+            ring.setOpacity(0.75);
+            radarMainRings.add(ring);
+            backgroundLayer.getChildren().add(ring);
         }
 
-        long out = snap.planes.stream()
-                .filter(p -> p.direction == SimulationData.PlaneDirection.OUTBOUND)
-                .count();
+        for (int i = 0; i < 4; i++) {
+            Circle ring = new Circle();
+            ring.setFill(null);
+            ring.setStroke(GREEN);
+            ring.setOpacity(0.20); // subtler
+            radarSubtleRings.add(ring);
+            backgroundLayer.getChildren().add(ring);
+        }
 
-        System.out.println(
-            "takeoffQueue=" + snap.takeoffQueue +
-            " outboundQueueIds=" + snap.outboundQueueIds +
-            " planes=" + snap.planes.size() +
-            " OUTBOUND=" + out
-        );
+        radarOuter.setFill(RADAR_FILL);
+        radarOuter.setStroke(GREEN);
 
-        lastSnap = snap;
-        redraw();
+        DropShadow radarGlow = new DropShadow();
+        radarGlow.setColor(GREEN);
+        radarGlow.setRadius(10);
+        radarGlow.setSpread(0.32);
 
-        // Build lookup table
-        Map<String, SimulationData.PlaneDTO> byId = new HashMap<>();
-        for (var p : snap.planes) byId.put(p.code, p);
+        radarOuter.setEffect(radarGlow);
+ 
+        radarGuideLine.setStroke(GREEN);
+        radarGuideLine.setStrokeWidth(1.2);
+        radarGuideLine.setEffect(radarGlow);
 
-        // ----- Ensure FIFO queue planes exist and are positioned -----
-        for (int slot = 0; slot < snap.outboundQueueIds.size(); slot++) {
-            String code = snap.outboundQueueIds.get(slot);
-            var dto = byId.get(code);
-            if (dto == null) continue;
+        for (Circle ring : radarMainRings) {
+            ring.setEffect(radarGlow);
+        }
 
-            ImageView node = planeNodes.get(code);
-            if (node == null) {
-                node = makePlaneNode();
-                planeNodes.put(code, node);
-                takeoffZone.getChildren().add(node);
+        for (Circle ring : radarSubtleRings) {
+            ring.setEffect(radarGlow);
+        }
 
-                // Mark as entering so it doesn't get snapped mid-animation
-                node.getProperties().put("entering", true);
-
-                // Animate entering from left into correct slot
-                animateEnterQueue(node, slot);
-            } else {
-                Boolean entering = (Boolean) node.getProperties().get("entering");
-                if (entering == null || !entering) {
-                    placeInQueueSlot(node, slot);  
+        // Radar sweep animation
+        Timeline sweepTimeline = new Timeline(
+            new KeyFrame(Duration.millis(40), e -> {
+                radarSweepAngleDeg += 2;
+                if (radarSweepAngleDeg >= 360) {
+                    radarSweepAngleDeg -= 360;
                 }
-            }
-        }
+                updateRadarSweepLine();
+            })
+        );
+        sweepTimeline.setCycleCount(Timeline.INDEFINITE);
+        sweepTimeline.play();
 
-        // ----- Animate planes that leave the queue -----
-        for (var dto : snap.planes) {
-            if (dto.direction != SimulationData.PlaneDirection.OUTBOUND) continue;
+        radarCentreDot.setFill(GREEN);
 
-            ImageView node = planeNodes.get(dto.code);
-            if (node == null) continue; // could be mid-remove
+        widthProperty().addListener((obs, o, n) -> relayout(previousSnapshot != null ? previousSnapshot : new SimulationData()));
+        heightProperty().addListener((obs, o, n) -> relayout(previousSnapshot != null ? previousSnapshot : new SimulationData()));
 
-            SimulationData.PlaneStatus prev = lastStatus.get(dto.code);
-            SimulationData.PlaneStatus curr = dto.status;
+        relayout(new SimulationData());
+    }
 
-            // Transition: OUTBOUND_QUEUE -> TAXI_TO_RUNWAY (start moving toward runway)
-            if (prev == SimulationData.PlaneStatus.OUTBOUND_QUEUE && curr == SimulationData.PlaneStatus.TAXI_TO_RUNWAY) {
+    /**
+     * Call this whenever a new snapshot arrives from SimulationService.
+     */
+    public void update(SimulationData snapshot) {
+        if (snapshot == null) return;
 
-                int runwayIDx = Math.max(0, dto.assignedRunwayIndex);
+        Platform.runLater(() -> {
+            relayout(snapshot);
+            playNewEvents(snapshot);
+            renderQueues(snapshot);
+            previousSnapshot = snapshot.copy();
+        });
+    }
 
-                //Move to front then pivot and go to runway
-                slideToFrontThenTakeoff(node, runwayIDx, snap);
-            }
+    // =========================================================
+    // Layout
+    // =========================================================
 
-            lastStatus.put(dto.code, curr);
-        }
+    private void relayout(SimulationData snapshot) {
+        double w = Math.max(getWidth(), getPrefWidth());
+        double h = Math.max(getHeight(), getPrefHeight());
 
-        // ----- Remove nodes for planes no longer present -----
-        var alive = byId.keySet();
-        List<String> dead = new ArrayList<>();
-        for (String code : planeNodes.keySet()) {
-            if (!alive.contains(code)) dead.add(code);
-        }
-        for (String code : dead) {
-            ImageView n = planeNodes.remove(code);
-            lastStatus.remove(code);
-            if (n != null) takeoffZone.getChildren().remove(n);
-        }
+        backgroundLayer.setPrefSize(w, h);
+        queueLayer.setPrefSize(w, h);
+        actionLayer.setPrefSize(w, h);
 
-        // Update lastStatus for all planes present in snapshot
-        for (var dto : snap.planes) {
-            lastStatus.put(dto.code, dto.status);
+        backgroundLayer.setStyle("""
+            -fx-background-color: #001107;
+            -fx-background-radius: 16;
+            -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 12, 0.2, 0, 4);
+        """);
+
+        layoutTitles(w, h);
+        layoutRadar(w, h);
+        layoutHoldingSlots();
+        layoutTakeoffSlots(w, h);
+        layoutRunways(snapshot.runwayCount, w, h);
+
+        // If planes already exist, snap them to their current slot positions after relayout
+        if (previousSnapshot != null) {
+            snapExistingQueuePlanesToCurrentSnapshot(previousSnapshot);
         }
     }
 
-    private void redraw() {
-        if (lastSnap == null) return;
-        lastSnap.ensureRunwayListSize();
+    private void layoutTitles(double w, double h) {
+        holdingTitle.setLayoutX(250);
+        holdingTitle.setLayoutY(25);
 
-        if (runwayViews.size() != lastSnap.runwayCount) {
-            rebuild(lastSnap.runwayCount);
+        takeoffTitle.setLayoutX(260);
+        takeoffTitle.setLayoutY(h - 250);
+    }
+
+    private void layoutRadar(double w, double h) {
+        radarCx = 320;
+        radarCy = 310;
+        radarRadius = Math.min(210, h * 0.28);
+
+        radarOuter.setCenterX(radarCx);
+        radarOuter.setCenterY(radarCy);
+        radarOuter.setRadius(radarRadius);
+        radarOuter.setStrokeWidth(0.8);
+
+        // 4 main rings
+        List<Double> mainRadii = new ArrayList<>();
+        for (int i = 0; i < radarMainRings.size(); i++) {
+            double rr = radarRadius * ((i + 1.0) / (radarMainRings.size() + 1.0));
+            mainRadii.add(rr);
+
+            Circle ring = radarMainRings.get(i);
+            ring.setCenterX(radarCx);
+            ring.setCenterY(radarCy);
+            ring.setRadius(rr);
+            ring.setStrokeWidth(0.6);
         }
 
-        // Decide runway image size based on available width
-        double availableW = Math.max(300, canvasWrap.getWidth() - 40);
-        if (availableW <= 1) availableW = 900; // fallback early layout
+        // 4 subtle rings: between outer edge + main1, main1 + main2, main2 + main3, main3 + main4
+        List<Double> subtleRadii = new ArrayList<>();
+        subtleRadii.add((radarRadius + mainRadii.get(3)) / 2.0); // between outer edge and outermost main ring
+        subtleRadii.add((mainRadii.get(3) + mainRadii.get(2)) / 2.0);
+        subtleRadii.add((mainRadii.get(2) + mainRadii.get(1)) / 2.0);
+        subtleRadii.add((mainRadii.get(1) + mainRadii.get(0)) / 2.0);
 
-        int n = lastSnap.runwayCount;
-        double gap = runwayRow.getSpacing();
-        double per = (availableW - gap * (n - 1)) / n;
+        for (int i = 0; i < radarSubtleRings.size(); i++) {
+            Circle ring = radarSubtleRings.get(i);
+            ring.setCenterX(radarCx);
+            ring.setCenterY(radarCy);
+            ring.setRadius(subtleRadii.get(i));
+            ring.setStrokeWidth(0.5);
+        }
 
-        // Clamp sizes 
-        double imgW = Math.max(50, Math.min(120, per));
-        double imgH = imgW * 1.4; 
+        radarCentreDot.setCenterX(radarCx);
+        radarCentreDot.setCenterY(radarCy);
+        radarCentreDot.setRadius(8);
 
-        for (int i = 0; i < n; i++) {
-            var rc = lastSnap.runways.get(i);
+        updateRadarSweepLine();
+    }
 
-            ImageView iv = runwayViews.get(i);
-            iv.setFitWidth(imgW);
-            iv.setFitHeight(imgH);
+    private void layoutHoldingSlots() {
+        holdingSlots.clear();
 
-            Rectangle tint = statusTints.get(i);
-            tint.setWidth(imgW);
-            tint.setHeight(imgH);
-            tint.setArcWidth(10);
-            tint.setArcHeight(10);
-            tint.setFill(statusColor(rc.status));
-            tint.setOpacity(tintOpacity(rc.status));
+        double cx = radarOuter.getCenterX();
+        double cy = radarOuter.getCenterY();
 
-            numberLabels.get(i).setText(String.valueOf(rc.id));
+        double r1 = radarRadius * (1.0 / 5.0);
+        double r2 = radarRadius * (2.0 / 5.0);
+        double r3 = radarRadius * (3.0 / 5.0);
+        double r4 = radarRadius * (4.0 / 5.0);
+
+        double s1 = (r1 + r2) / 2.0;
+        double s2 = (r2 + r3) / 2.0;
+        double s3 = (r3 + r4) / 2.0;
+        double s4 = (r4 + radarRadius) / 2.0;
+
+        // outside first in queue
+        double[] holdingRadii = { s4, r4, s3, r3, s2, r2, s1, r1 };
+
+        // deliberately scattered, not spiral-like
+        double[] anglesDeg = { -35, 62, 150, 255, 18, 205, 118, 310 };
+
+        for (int i = 0; i < holdingRadii.length; i++) {
+            double angle = Math.toRadians(anglesDeg[i]);
+            double r = holdingRadii[i];
+
+            double x = cx + Math.cos(angle) * r;
+            double y = cy + Math.sin(angle) * r;
+
+            holdingSlots.add(new Point2D(x, y));
         }
     }
 
-    private void rebuild(int runwayCount) {
-        runwayRow.getChildren().clear();
-        runwayViews.clear();
-        statusTints.clear();
-        numberLabels.clear();
+    private void layoutTakeoffSlots(double w, double h) {
+        takeoffSlots.clear();
+
+        int cols = 5;
+        int rows = 3;
+
+        double rightX = 530;   // move whole queue block left/right
+        double gapX = 120;     // spacing between columns
+        double topY = h - 180; // top row y
+        double gapY = 48;      // spacing between rows
+
+        for (int col = 0; col < cols; col++) {
+            double x = rightX - col * gapX;   // right to left
+
+            for (int row = 0; row < rows; row++) {
+                double y = topY + row * gapY; // top, middle, bottom
+                takeoffSlots.add(new Point2D(x, y));
+            }
+        }
+    }   
+
+    private void layoutRunways(int runwayCount, double w, double h) {
+        runwayCount = Math.max(1, Math.min(10, runwayCount));
+
+        // clear old runway nodes
+        backgroundLayer.getChildren().removeAll(runwayRects);
+        backgroundLayer.getChildren().removeAll(runwayLabels);
+        backgroundLayer.getChildren().removeAll(runwayTopLines);
+        backgroundLayer.getChildren().removeAll(runwayBottomLines);
+
+        runwayRects.clear();
+        runwayLabels.clear();
+        runwayTopLines.clear();
+        runwayBottomLines.clear();
+
+        runwayLeftEntryPoints.clear();
+        runwayCentres.clear();
+        runwayRightExitPoints.clear();
+
+        double columnX = w * 0.69;
+        double runwayWidth = Math.min(290, w * 0.23);
+        double top = 70;
+        double bottom = h - 70;
+        double totalHeight = bottom - top;
+        double band = totalHeight / runwayCount;
+        double runwayHeight = Math.min(40, band * 0.46);
 
         for (int i = 0; i < runwayCount; i++) {
+            double bandY = top + i * band;
+            double runwayY = bandY + (band - runwayHeight) / 2.0;
 
-            ImageView iv = new ImageView(runwayImg);
-            iv.setPreserveRatio(true);
-            iv.setSmooth(true);
+            Rectangle rect = new Rectangle(columnX, runwayY, runwayWidth, runwayHeight);
+            rect.setFill(RUNWAY_FILL);
+            rect.setStroke(null);
 
-            Rectangle tint = new Rectangle();
-            tint.setMouseTransparent(true);
+            Line topLine = new Line(
+                columnX,
+                runwayY,
+                columnX + runwayWidth,
+                runwayY
+            );
+            topLine.setStroke(GREEN);
+            topLine.setStrokeWidth(2);
 
-            StackPane imageLayer = new StackPane(iv, tint);
-            imageLayer.setAlignment(Pos.CENTER);
+            Line bottomLine = new Line(
+                columnX,
+                runwayY + runwayHeight,
+                columnX + runwayWidth,
+                runwayY + runwayHeight
+            );
+            bottomLine.setStroke(GREEN);
+            bottomLine.setStrokeWidth(2);
 
-            Label num = new Label(String.valueOf(i + 1));
-            num.setStyle("-fx-font-weight: 800; -fx-text-fill: #111;");
+            runwayTopLines.add(topLine);
+            runwayBottomLines.add(bottomLine);
 
-            VBox tile = new VBox(8, imageLayer, num);
-            tile.setAlignment(Pos.TOP_CENTER);
+            DropShadow runwayGlow = new DropShadow();
+            runwayGlow.setColor(GREEN);
+            runwayGlow.setRadius(10);
+            runwayGlow.setSpread(0.3);
 
-            runwayViews.add(iv);
-            statusTints.add(tint);
-            numberLabels.add(num);
+            topLine.setEffect(runwayGlow);
+            bottomLine.setEffect(runwayGlow);
 
-            runwayRow.getChildren().add(tile);
+            Label label = new Label("Runway " + (i + 1));
+            label.setFont(Font.font(16));
+            label.setStyle(RUNWAY_TITLE);
+            label.setLayoutX(columnX + runwayWidth / 2.0 - 40);
+            label.setLayoutY(runwayY - 28);
+
+            runwayLabels.add(label);
+            runwayRects.add(rect);
+
+            backgroundLayer.getChildren().addAll(rect, topLine, bottomLine, label);
+
+            double midY = runwayY + runwayHeight / 2.0;
+            runwayLeftEntryPoints.add(new Point2D(columnX - 110, midY));
+            runwayCentres.add(new Point2D(columnX + runwayWidth / 2.0, midY));
+            runwayRightExitPoints.add(new Point2D(columnX + runwayWidth + 90, midY));
         }
     }
 
-    private Color statusColor(SimulationData.RunwayStatus status) {
-        return switch (status) {
-            case AVAILABLE -> Color.TRANSPARENT;
-            case RUNWAY_INSPECTION -> Color.GOLD;
-            case SNOW_CLEARANCE -> Color.DODGERBLUE;
-            case EQUIPMENT_FAILURE -> Color.RED;
-        };
+    // =========================================================
+    // Queue rendering
+    // =========================================================
+
+    private void renderQueues(SimulationData snapshot) {
+        List<String> desiredIds = new ArrayList<>();
+
+        // holding queue - assumes snapshot.planes order is queue order for HOLDING planes
+        List<SimulationData.PlaneDTO> holdingPlanes = snapshot.planes.stream()
+                .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < Math.min(holdingPlanes.size(), holdingSlots.size()); i++) {
+            SimulationData.PlaneDTO p = holdingPlanes.get(i);
+            desiredIds.add(p.id);
+            Point2D pos = holdingSlots.get(i);
+            upsertQueuePlane(p.id, safeCode(p), pos, true);
+        }
+
+        // takeoff queue - use outboundQueueIds for exact order
+        Map<String, SimulationData.PlaneDTO> planeById = snapshot.planes.stream()
+                .collect(Collectors.toMap(p -> p.id, p -> p, (a, b) -> a));
+
+        for (int i = 0; i < Math.min(snapshot.outboundQueueIds.size(), takeoffSlots.size()); i++) {
+            String id = snapshot.outboundQueueIds.get(i);
+            SimulationData.PlaneDTO p = planeById.get(id);
+            if (p == null) continue;
+
+            desiredIds.add(p.id);
+            Point2D pos = takeoffSlots.get(i);
+            upsertQueuePlane(p.id, safeCode(p), pos, false);
+        }
+
+        // remove any queue nodes no longer needed
+        Set<String> desiredSet = new HashSet<>(desiredIds);
+        List<String> toRemove = queuePlaneNodes.keySet().stream()
+                .filter(id -> !desiredSet.contains(id))
+                .toList();
+
+        for (String id : toRemove) {
+            PlaneVisual pv = queuePlaneNodes.remove(id);
+            if (pv != null) queueLayer.getChildren().remove(pv.root);
+        }
     }
 
-    private double tintOpacity(SimulationData.RunwayStatus status) {
-        return switch (status) {
-            case AVAILABLE -> 0.0;
-            default -> 0.18;
-        };
+    private void upsertQueuePlane(String planeId, String code, Point2D target, boolean holding) {
+        PlaneVisual pv = queuePlaneNodes.get(planeId);
+
+        boolean isNew = false;
+        if (pv == null) {
+            pv = new PlaneVisual(code);
+            queuePlaneNodes.put(planeId, pv);
+            queueLayer.getChildren().add(pv.root);
+            isNew = true;
+        } else {
+            pv.setCode(code);
+        }
+
+        double x = target.getX() - pv.getAnchorOffsetX();
+        double y = target.getY() - pv.getAnchorOffsetY();
+
+        // position / movement
+        if (holding || isNew) {
+            // Holding planes snap into place.
+            // New takeoff planes also appear directly in place.
+            pv.root.setLayoutX(x);
+            pv.root.setLayoutY(y);
+            pv.root.setTranslateX(0);
+            pv.root.setTranslateY(0);
+        } else {
+            // Existing takeoff queue planes animate between slots
+            double currentX = pv.root.getLayoutX() + pv.root.getTranslateX();
+            double currentY = pv.root.getLayoutY() + pv.root.getTranslateY();
+
+            if (Math.abs(currentX - x) > 1 || Math.abs(currentY - y) > 1) {
+                animateNodeTo(pv.root, x, y, Duration.millis(250));
+            }
+        }
+
+        pv.setHoldingStyle(holding);
+
+        // label placement
+        if (holding) {
+            pv.setLabelPosition(34, -2);
+        } else {
+            pv.setLabelPosition(40, -2);
+        }
     }
 
-    private double slotX(int slotIndex) {
-        double rightPadding = 30;
-        double spacing = 40;
-        double w = takeoffZone.getWidth() > 1 ? takeoffZone.getWidth() : takeoffZone.getPrefWidth();
-        double frontX = w - rightPadding;
-        return frontX - slotIndex * spacing;
+    private void snapExistingQueuePlanesToCurrentSnapshot(SimulationData snapshot) {
+        if (snapshot == null || snapshot.planes == null) return;
+
+        List<SimulationData.PlaneDTO> holdingPlanes = snapshot.planes.stream()
+                .filter(Objects::nonNull)
+                .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < Math.min(holdingPlanes.size(), holdingSlots.size()); i++) {
+            SimulationData.PlaneDTO p = holdingPlanes.get(i);
+            if (p == null || p.id == null) continue;
+
+            PlaneVisual pv = queuePlaneNodes.get(p.id);
+            if (pv != null) {
+                Point2D pos = holdingSlots.get(i);
+                pv.root.setLayoutX(pos.getX() - pv.getAnchorOffsetX());
+                pv.root.setLayoutY(pos.getY() - pv.getAnchorOffsetY());
+                pv.root.setTranslateX(0);
+                pv.root.setTranslateY(0);
+            }
+        }
+    }    
+
+    // =========================================================
+    // Event animations
+    // =========================================================
+
+    private void playNewEvents(SimulationData snapshot) {
+        if (snapshot.events == null) return;
+        if (processedEventCount > snapshot.events.size()) processedEventCount = 0;
+
+        for (int i = processedEventCount; i < snapshot.events.size(); i++) {
+            SimulationData.SimEvent ev = snapshot.events.get(i);
+
+            if (ev instanceof SimulationData.PlaneLanded landed) {
+                animateLandingEvent(landed);
+            } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
+                animateTakeoffEvent(tookOff);
+            }
+        }
+
+        processedEventCount = snapshot.events.size();
     }
 
-    private double slotY() {
-        return 60; // within takeoffZone
+    private void animateLandingEvent(SimulationData.PlaneLanded landed) {
+        int runwayIdx = landed.runwayIndex();
+        if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size()) return;
+
+        Point2D start = runwayLeftEntryPoints.get(runwayIdx);
+        Point2D end = runwayCentres.get(runwayIdx);
+
+        PlaneVisual moving = new PlaneVisual(landed.planeId());
+        moving.root.setLayoutX(start.getX());
+        moving.root.setLayoutY(start.getY());
+        actionLayer.getChildren().add(moving.root);
+
+        TranslateTransition move = new TranslateTransition(Duration.millis(700), moving.root);
+        move.setToX(end.getX() - start.getX());
+        move.setToY(end.getY() - start.getY());
+        move.setInterpolator(Interpolator.EASE_BOTH);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(220), moving.root);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+        fade.setDelay(Duration.millis(520));
+
+        ParallelTransition pt = new ParallelTransition(move, fade);
+        pt.setOnFinished(e -> actionLayer.getChildren().remove(moving.root));
+        pt.play();
     }
 
-    private void animateEnterQueue(ImageView plane, int slotIndex) {
-        double startX = -50;    // offscreen left
-        double startY = slotY();
+    private void animateTakeoffEvent(SimulationData.PlaneTookOff tookOff) {
+        int runwayIdx = tookOff.runwayIndex();
+        if (runwayIdx < 0 || runwayIdx >= runwayCentres.size()) return;
 
-        plane.setLayoutX(startX);
-        plane.setLayoutY(startY);
-        plane.setRotate(0);    // facing right
+        Point2D start = runwayCentres.get(runwayIdx);
+        Point2D end = runwayRightExitPoints.get(runwayIdx);
 
-        TranslateTransition drive = new TranslateTransition(Duration.seconds(3.0), plane); // CHANGE**
-        drive.setToX(slotX(slotIndex) - startX);
-        drive.setToY(0);
+        PlaneVisual moving = new PlaneVisual(tookOff.planeId());
+        moving.root.setLayoutX(start.getX());
+        moving.root.setLayoutY(start.getY());
+        actionLayer.getChildren().add(moving.root);
 
-        drive.setOnFinished(e -> plane.getProperties().put("entering", false));
+        TranslateTransition move = new TranslateTransition(Duration.millis(850), moving.root);
+        move.setToX(end.getX() - start.getX());
+        move.setToY(end.getY() - start.getY());
+        move.setInterpolator(Interpolator.EASE_OUT);
 
-        drive.play();
+        FadeTransition fade = new FadeTransition(Duration.millis(260), moving.root);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+        fade.setDelay(Duration.millis(620));
+
+        ParallelTransition pt = new ParallelTransition(move, fade);
+        pt.setOnFinished(e -> actionLayer.getChildren().remove(moving.root));
+        pt.play();
     }
 
-    private double runwayTargetX(int runwayIndex, int runwayCount) {
-        double w = canvasWrap.getWidth() > 1 ? canvasWrap.getWidth() : 900;
-        double leftPad = 80, rightPad = 80;
-        double span = w - leftPad - rightPad;
-        double step = (runwayCount <= 1) ? 0 : span / (runwayCount - 1);
+    // =========================================================
+    // Helpers
+    // =========================================================
 
-        return leftPad + runwayIndex * step;
+    private static Label makeTitle(String text) {
+        Label l = new Label(text);
+        l.setFont(Font.font(20));
+        l.setStyle(HEADING);
+        return l;
     }
 
-    private void placeInQueueSlot(ImageView plane, int slotIndex) {
-        // We use layoutX/layoutY for absolute positioning inside takeoffZone
-        plane.setTranslateX(0);
-        plane.setTranslateY(0);
-
-        plane.setLayoutX(slotX(slotIndex));
-        plane.setLayoutY(slotY());
-        plane.setRotate(0); // facing right while queued
-        plane.setOpacity(1.0);
+    private static String safeCode(SimulationData.PlaneDTO p) {
+        if (p.code != null && !p.code.isBlank()) return p.code;
+        if (p.id != null && !p.id.isBlank()) return p.id;
+        return "?";
     }
 
-    private void animateToRunway(ImageView plane, int runwayIndex, SimulationData snap) {
-        // Ensure at front
-        plane.setRotate(0);
+    private void animateNodeTo(Pane node, double targetX, double targetY, Duration duration) {
+        double currentX = node.getLayoutX() + node.getTranslateX();
+        double currentY = node.getLayoutY() + node.getTranslateY();
 
-        RotateTransition pivot = new RotateTransition(Duration.seconds(5.0), plane);
-        pivot.setToAngle(-90); // up
+        node.setLayoutX(currentX);
+        node.setLayoutY(currentY);
+        node.setTranslateX(0);
+        node.setTranslateY(0);
 
-        // drive up + adjust x a bit toward runway
-        double currentX = plane.getLayoutX() + plane.getTranslateX();
-        double targetX = runwayTargetX(runwayIndex, snap.runwayCount);
-
-        TranslateTransition driveUp = new TranslateTransition(Duration.seconds(5.0), plane);
-        driveUp.setToX(plane.getTranslateX() + (targetX - currentX));
-        driveUp.setToY(plane.getTranslateY() - 220); // go upward
-
-        FadeTransition fade = new FadeTransition(Duration.seconds(5.0), plane);
-        fade.setToValue(0);
-
-        /*
-        SequentialTransition seq = new SequentialTransition(pivot, driveUp, fade); 
-        */
-        SequentialTransition seq = new SequentialTransition(pivot, driveUp); // temporarily removed fade
-        seq.setOnFinished(e -> takeoffZone.getChildren().remove(plane));
-        seq.play();
+        TranslateTransition tt = new TranslateTransition(duration, node);
+        tt.setToX(targetX - currentX);
+        tt.setToY(targetY - currentY);
+        tt.setInterpolator(Interpolator.EASE_BOTH);
+        tt.setOnFinished(e -> {
+            node.setLayoutX(targetX);
+            node.setLayoutY(targetY);
+            node.setTranslateX(0);
+            node.setTranslateY(0);
+        });
+        tt.play();
     }
 
-    private void slideToFrontThenTakeoff(ImageView plane, int runwayIDx, SimulationData snap) {
-        // Slide to slot 0 then pivot and go to runway
-        double targetX = slotX(0);
+    // =========================================================
+    // Plane visual node
+    // =========================================================
 
-        TranslateTransition slide = new TranslateTransition(Duration.seconds(0.8), plane);
-        slide.setToX(0);
-        slide.setToY(0);
+    private static class PlaneVisual {
+        final Pane root = new Pane();
+        final StackPane iconWrap = new StackPane();
+        final Label planeIcon = new Label("✈");
+        final Label codeLabel = new Label();
 
-        // Convert layout movement into translate for nice animation
-        double dx = targetX - plane.getLayoutX();
-        plane.setLayoutX(targetX);
-        plane.setTranslateX(-dx);
+        static final double ROOT_W = 170;
+        static final double ROOT_H = 60;
 
-        TranslateTransition slideIn = new TranslateTransition(Duration.seconds(0.8), plane);
-        slideIn.setToX(0);
+        // true anchor point for the aircraft position
+        static final double ANCHOR_X = 24;
+        static final double ANCHOR_Y = 24;
 
-        slideIn.setOnFinished(e -> animateToRunway(plane, runwayIDx, snap));
-        slideIn.play();
+        PlaneVisual(String code) {
+            root.setPrefSize(ROOT_W, ROOT_H);
+            root.setMinSize(ROOT_W, ROOT_H);
+            root.setMaxSize(ROOT_W, ROOT_H);
+            root.setPickOnBounds(false);
+
+            planeIcon.setTextFill(GREEN);
+            planeIcon.setFont(Font.font(26));
+            planeIcon.setEffect(new Glow(0.8));
+
+            codeLabel.setTextFill(Color.web("#7CFF95"));
+            codeLabel.setFont(Font.font("Consolas", FontWeight.BOLD, 13));
+            codeLabel.setEffect(new Glow(0.85));
+
+            iconWrap.setPrefSize(28, 28);
+            iconWrap.setMinSize(28, 28);
+            iconWrap.setMaxSize(28, 28);
+            iconWrap.getChildren().add(planeIcon);
+
+            // centre the plane icon on the anchor point
+            iconWrap.setLayoutX(ANCHOR_X - 14);
+            iconWrap.setLayoutY(ANCHOR_Y - 14);
+
+            root.getChildren().addAll(iconWrap, codeLabel);
+
+            setCode(code);
+
+            // default label position
+            codeLabel.setLayoutX(40);
+            codeLabel.setLayoutY(16);
+        }
+
+        void setCode(String code) {
+            codeLabel.setText(code);
+        }
+
+        void setHoldingStyle(boolean holding) {
+            planeIcon.setRotate(holding ? -20 : 0);
+        }
+
+        void setLabelPosition(double x, double y) {
+            codeLabel.setLayoutX(x);
+            codeLabel.setLayoutY(y);
+        }
+
+        double getAnchorOffsetX() {
+            return ANCHOR_X;
+        }
+
+        double getAnchorOffsetY() {
+            return ANCHOR_Y;
+        }
     }
 
+    private void updateRadarSweepLine() {
+        double angle = Math.toRadians(radarSweepAngleDeg);
+
+        double x2 = radarCx + Math.cos(angle) * radarRadius;
+        double y2 = radarCy + Math.sin(angle) * radarRadius;
+
+        radarGuideLine.setStartX(radarCx);
+        radarGuideLine.setStartY(radarCy);
+        radarGuideLine.setEndX(x2);
+        radarGuideLine.setEndY(y2);
+    }
 }

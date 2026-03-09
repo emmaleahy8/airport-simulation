@@ -149,7 +149,7 @@ public class ResultsPage implements Page {
 
         // Card header label (bold and larger font)
         Label header = new Label("General Information");
-        header.setFont(Font.font(18));
+        header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
         // Grid for summary stats
@@ -232,7 +232,7 @@ public class ResultsPage implements Page {
 
         // Card title
         Label header = new Label(titleText);
-        header.setFont(Font.font(18));
+        header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
         // Build a 2-row grid
