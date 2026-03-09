@@ -5,11 +5,22 @@ import com.group32.cs261project.App;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 public class ResultsPage implements Page {
 
@@ -22,26 +33,32 @@ public class ResultsPage implements Page {
     private final Label title = new Label("End-of-Run Summary");
 
     // Left card dynamic labels - initially set to "-" until populated with real data onEnter()
-    private final Label inboundRateVal = new Label("-");
+    private final Label inboundRateVal  = new Label("-");
     private final Label outboundRateVal = new Label("-");
-    private final Label runwayCountVal = new Label("-");
-    private final Label maxWaitVal = new Label("-");
+    private final Label runwayCountVal  = new Label("-");
+    private final Label maxWaitVal      = new Label("-");
 
-    private final Label runwayModesVal = new Label("-");
+    private final Label runwayModesVal  = new Label("-");
     private final Label runwayStatusVal = new Label("-");
 
     // Right card dynamic labels - initially set to "-" until populated with real data onEnter()
-    private final Label maxTakeoffQueueVal = new Label("-");
-    private final Label avgTakeoffWaitVal = new Label("-");
+    private final Label maxTakeoffQueueVal  = new Label("-");
+    private final Label avgTakeoffWaitVal   = new Label("-");
 
-    private final Label maxHoldingVal = new Label("-");
-    private final Label avgHoldingVal = new Label("-");
+    private final Label maxHoldingVal  = new Label("-");
+    private final Label avgHoldingVal  = new Label("-");
 
-    private final Label maxInboundDelayVal = new Label("-");
-    private final Label avgInboundDelayVal = new Label("-");
+    private final Label maxInboundDelayVal  = new Label("-");
+    private final Label avgInboundDelayVal  = new Label("-");
 
     private final Label cancelledVal = new Label("-");
-    private final Label divertedVal = new Label("-");
+    private final Label divertedVal  = new Label("-");
+
+    // Canvas for bar charts
+    private static final int CHART_W = 860;
+    private static final int CHART_H = 220;
+    private final Canvas countChart = new Canvas(CHART_W, CHART_H);
+    private final Canvas timeChart  = new Canvas(CHART_W, CHART_H);
 
     // ----- Styles -----
     private static final String PAGE_BG = "-fx-background-color: white;";
@@ -53,12 +70,19 @@ public class ResultsPage implements Page {
             "-fx-background-radius: 10;" +
             "-fx-padding: 18;";
 
+    // Chart colour palette (one per bar)
+    private static final Color[] PALETTE = {
+        Color.web("#4C6EF5"),
+        Color.web("#F76707"),
+        Color.web("#2F9E44"),
+        Color.web("#E03131")
+    };
+
     // ----- Constructor: Builds UI Layout -----
     public ResultsPage(App app, SimulationService sim) {
         this.app = app;
         this.sim = sim;
 
-        // Set background and padding for the whole page
         root.setStyle(PAGE_BG);
         root.setPadding(new Insets(18));
 
@@ -67,27 +91,35 @@ public class ResultsPage implements Page {
         BorderPane.setMargin(title, new Insets(0, 0, 14, 0));
         root.setTop(title);
 
-        // ----- Main Content (two columns) -----
-        HBox main = new HBox(22);
+        // ----- Scrollable centre content -----
+        VBox content = new VBox(22);
 
-        // Build left and right columns with helper methods
-        VBox left = buildGeneralInfoCard();
+        // Row 1: stats cards (left + right)
+        HBox statsRow = new HBox(22);
+        VBox left  = buildGeneralInfoCard();
         VBox right = buildRightCards();
-
-        // Allow both columns to expand as the window grows
-        HBox.setHgrow(left, Priority.ALWAYS);
+        HBox.setHgrow(left,  Priority.ALWAYS);
         HBox.setHgrow(right, Priority.ALWAYS);
-
-        // Suggested widths so left column is larger tha right
         left.setPrefWidth(520);
         right.setPrefWidth(420);
+        statsRow.getChildren().addAll(left, right);
 
-        main.getChildren().addAll(left, right);
-        root.setCenter(main);
+        // Row 2: Count chart
+        VBox countCard = buildChartCard("Count Metrics", countChart);
+
+        // Row 3: Time chart
+        VBox timeCard = buildChartCard("Time Metrics  (minutes)", timeChart);
+
+        content.getChildren().addAll(statsRow, countCard, timeCard);
+
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background-color: white; -fx-background: white;");
+        root.setCenter(scroll);
 
         // ----- Back Button -----
         Button back = new Button("Back to Configure");
-        back.setOnAction(e -> app.switchTo(AppState.CONFIGURE, null)); // When clicked, navigate to Configure Page
+        back.setOnAction(e -> app.switchTo(AppState.CONFIGURE, null));
         back.setStyle("-fx-background-color: #111; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;");
         BorderPane.setMargin(back, new Insets(14, 0, 0, 0));
         root.setBottom(back);
@@ -95,9 +127,7 @@ public class ResultsPage implements Page {
 
     // ----- Page Interface Methods -----
     @Override
-    public Parent getView() {
-        return root;
-    }
+    public Parent getView() { return root; }
 
     @Override
     public void onEnter(Object data) {
@@ -105,82 +135,80 @@ public class ResultsPage implements Page {
         fillFrom(d);
     }
 
-    // ----- UI Builder: Left Card (General Information) -----
-    private VBox buildGeneralInfoCard() {
-        VBox card = new VBox(14); // Creates a card with vertical spacing of 14 between elements
+    // ----- UI Builder: Chart wrapper card -----
+    private VBox buildChartCard(String heading, Canvas canvas) {
+        VBox card = new VBox(10);
         card.setStyle(CARD);
 
-        // Card header label (bold and larger font)
+        Label h = new Label(heading);
+        h.setFont(Font.font(null, FontWeight.BOLD, 16));
+
+        card.getChildren().addAll(h, canvas);
+        return card;
+    }
+
+    // ----- UI Builder: Left Card (General Information) -----
+    private VBox buildGeneralInfoCard() {
+        VBox card = new VBox(14);
+        card.setStyle(CARD);
+
         Label header = new Label("General Information");
         header.setFont(Font.font(18));
         header.setStyle("-fx-font-weight: 800;");
 
-        // Grid for summary stats
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
 
-        addRow(grid, 0, "Inbound flow rate:", inboundRateVal);
-        addRow(grid, 1, "Outbound flow rate:", outboundRateVal);
-        addRow(grid, 2, "Number of runways:", runwayCountVal);
-        addRow(grid, 3, "Maximum wait time:", maxWaitVal);
+        addRow(grid, 0, "Inbound flow rate:",   inboundRateVal);
+        addRow(grid, 1, "Outbound flow rate:",  outboundRateVal);
+        addRow(grid, 2, "Number of runways:",   runwayCountVal);
+        addRow(grid, 3, "Maximum wait time:",   maxWaitVal);
 
-        // Separator between summary stats and runway lists
         Separator sep = new Separator();
         sep.setPadding(new Insets(8, 0, 8, 0));
 
-        VBox runwayInfo = new VBox(10); // Container for runway lists
+        VBox runwayInfo = new VBox(10);
 
-        // Header for runway modes list
         Label modesHeader = new Label("Runway operating modes:");
         modesHeader.setStyle("-fx-font-weight: 800;");
-
         runwayModesVal.setWrapText(true);
 
-        // Header for runway statuses list
         Label statusHeader = new Label("Runway operational statuses:");
         statusHeader.setStyle("-fx-font-weight: 800;");
-
         runwayStatusVal.setWrapText(true);
 
         runwayInfo.getChildren().addAll(
                 modesHeader, runwayModesVal,
                 statusHeader, runwayStatusVal
         );
-
         VBox.setVgrow(runwayInfo, Priority.ALWAYS);
 
-        // ----- Assemble and return card -----
+        //
         card.getChildren().addAll(header, grid, sep, runwayInfo);
         VBox.setVgrow(runwayInfo, Priority.ALWAYS);
-
         return card;
     }
 
     // ----- UI Builder: Right Column -----
     private VBox buildRightCards() {
-        VBox right = new VBox(16); // Vertical stack of cards with spacing of 16 between them
-
-        // Add cards: Take-off Queue, Holding Pattern, Delays, Cancellations/Diversions
+        VBox right = new VBox(16);
+        
+        // add cards
         right.getChildren().addAll(
                 smallCard("Take-off Queue",
                         "Maximum number of planes in take-off queue:", maxTakeoffQueueVal,
-                        "Average wait time in take-off queue:", avgTakeoffWaitVal
-                ),
+                        "Average wait time in take-off queue:",          avgTakeoffWaitVal),
                 smallCard("Holding Pattern",
                         "Maximum number of planes in holding pattern:", maxHoldingVal,
-                        "Average hold time for inbound aircraft:", avgHoldingVal
-                ),
+                        "Average hold time for inbound aircraft:",       avgHoldingVal),
                 smallCard("Delays",
-                        "Maximum inbound delay:", maxInboundDelayVal,
-                        "Average inbound delay:", avgInboundDelayVal
-                ),
+                        "Maximum inbound delay:",   maxInboundDelayVal,
+                        "Average inbound delay:",   avgInboundDelayVal),
                 smallCard("Cancellations and Diversions",
-                        "Total planes cancelled:", cancelledVal,
-                        "Inbound aircraft diverted due to low fuel:", divertedVal
-                )
+                        "Total planes cancelled:",                          cancelledVal,
+                        "Inbound aircraft diverted due to low fuel:",       divertedVal)
         );
-
         return right;
     }
 
@@ -188,16 +216,13 @@ public class ResultsPage implements Page {
     private VBox smallCard(String titleText,
                            String label1, Label value1,
                            String label2, Label value2) {
-
-        VBox card = new VBox(12); 
+        VBox card = new VBox(12);
         card.setStyle(CARD);
 
-        // Card title
         Label header = new Label(titleText);
         header.setFont(Font.font(18));
         header.setStyle("-fx-font-weight: 800;");
 
-        // Build a 2-row grid
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -205,16 +230,14 @@ public class ResultsPage implements Page {
         addRow(grid, 0, label1, value1);
         addRow(grid, 1, label2, value2);
 
-        // Return the finished card
         card.getChildren().addAll(header, grid);
         return card;
     }
 
     // ----- Helper Method for Adding Row to Grid -----
     private void addRow(GridPane grid, int row, String labelText, Label valueLabel) {
-        Label l = new Label(labelText); // Create label for the left column
+        Label l = new Label(labelText);
 
-        // Format the right column value label (bold and right-aligned, expands to fill available space)
         valueLabel.setStyle("-fx-font-weight: 800;");
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
         valueLabel.setMaxWidth(Double.MAX_VALUE);
@@ -222,11 +245,10 @@ public class ResultsPage implements Page {
         grid.add(l, 0, row);
         grid.add(valueLabel, 1, row);
 
-        // ----- Column Constraints -----
-        ColumnConstraints c0 = new ColumnConstraints(); // Column 0 grows to take remaining space for long labels
+        ColumnConstraints c0 = new ColumnConstraints();
         c0.setHgrow(Priority.ALWAYS);
 
-        ColumnConstraints c1 = new ColumnConstraints(); // Column 1 stayes compact so values line up neatly
+        ColumnConstraints c1 = new ColumnConstraints();
         c1.setMinWidth(140);
         c1.setHgrow(Priority.NEVER);
 
@@ -238,24 +260,23 @@ public class ResultsPage implements Page {
         d.ensureRunwayListSize();
 
         // General info
-        inboundRateVal.setText(String.format("%.2f aircraft/hour", (double) d.inboundRatePerHour));
+        inboundRateVal.setText(String.format("%.2f aircraft/hour",  (double) d.inboundRatePerHour));
         outboundRateVal.setText(String.format("%.2f aircraft/hour", (double) d.outboundRatePerHour));
         runwayCountVal.setText(String.valueOf(d.runwayCount));
         maxWaitVal.setText(String.format("%.2f minutes", (double) d.maxWaitMinutes));
 
         // Runway Mode/Status Lists
-        StringBuilder modes = new StringBuilder();
+        StringBuilder modes  = new StringBuilder();
         StringBuilder status = new StringBuilder();
-        // Build multi-line strings for runway modes and statuses
         for (int i = 0; i < d.runways.size(); i++) {
             var r = d.runways.get(i);
-            modes.append("Runway ").append(r.id).append(": ").append(r.mode).append("\n"); 
+            modes.append("Runway ").append(r.id).append(": ").append(r.mode).append("\n");
             status.append("Runway ").append(r.id).append(": ").append(r.status).append("\n");
         }
         runwayModesVal.setText(modes.toString().trim());
         runwayStatusVal.setText(status.toString().trim());
 
-        // Take-off Queue 
+        // Take-off Queue
         maxTakeoffQueueVal.setText(String.valueOf(d.maxTakeoffQueue));
         avgTakeoffWaitVal.setText(String.format("%.2f minutes", d.avgTakeoffQueue));
 
@@ -270,5 +291,193 @@ public class ResultsPage implements Page {
         // Cancellations/Diversions
         cancelledVal.setText(String.valueOf(d.cancelledCount));
         divertedVal.setText(String.valueOf(d.divertedCount));
+
+        // ----- Draw bar charts -----
+        drawCountChart(d);
+        drawTimeChart(d);
+    }
+
+    // ============================================================
+    //  BAR CHART 1 – Count Metrics
+    //  Bars: Max Takeoff Queue | Avg Takeoff Queue (rounded) |
+    //        Max Holding Queue | Cancelled | Diverted
+    // ============================================================
+    private void drawCountChart(SimulationData d) {
+        String[] labels = {
+            "Max Takeoff\nQueue",
+            "Avg Takeoff\nQueue",
+            "Max Holding\nQueue",
+            "Cancelled",
+            "Diverted"
+        };
+        double[] values = {
+            d.maxTakeoffQueue,
+            d.avgTakeoffQueue,
+            d.maxHoldingQueue,
+            d.cancelledCount,
+            d.divertedCount
+        };
+        drawBarChart(countChart, labels, values, "Number of Planes");
+    }
+
+    // ============================================================
+    //  BAR CHART 2 – Time Metrics (minutes)
+    //  Bars: Max Wait | Avg Takeoff Wait | Avg Hold |
+    //        Max Inbound Delay | Avg Inbound Delay
+    // ============================================================
+    private void drawTimeChart(SimulationData d) {
+        String[] labels = {
+            "Max Wait",
+            "Avg Takeoff\nWait",
+            "Avg Hold\nTime",
+            "Max Inbound\nDelay",
+            "Avg Inbound\nDelay"
+        };
+        double[] values = {
+            d.maxWaitMinutes,
+            d.avgTakeoffQueue,       // avg wait in takeoff queue (minutes)
+            d.avgHoldingQueue,       // avg hold time (minutes)
+            d.maxInboundDelayMin,
+            d.avgInboundDelayMin
+        };
+        drawBarChart(timeChart, labels, values, "Minutes");
+    }
+
+    // ============================================================
+    //  Generic bar-chart renderer using JavaFX Canvas
+    // ============================================================
+    private void drawBarChart(Canvas canvas, String[] labels, double[] values, String yAxisLabel) {
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        double W = canvas.getWidth();
+        double H = canvas.getHeight();
+
+        // Layout constants
+        final double PAD_LEFT   = 58;   // space for Y-axis labels
+        final double PAD_RIGHT  = 20;
+        final double PAD_TOP    = 16;
+        final double PAD_BOTTOM = 54;   // space for X-axis labels (2-line)
+
+        double chartW = W - PAD_LEFT - PAD_RIGHT;
+        double chartH = H - PAD_TOP  - PAD_BOTTOM;
+
+        // Clear
+        gc.clearRect(0, 0, W, H);
+        gc.setFill(Color.WHITE);
+        gc.fillRect(0, 0, W, H);
+
+        // Find max value (guard against all-zero)
+        double maxVal = 0;
+        for (double v : values) if (v > maxVal) maxVal = v;
+        if (maxVal == 0) maxVal = 1;
+
+        // Compute a nice round ceiling for the Y axis
+        double niceMax = niceNumber(maxVal * 1.10, true);
+        int    tickCount = 5;
+        double tickStep  = niceNumber(niceMax / tickCount, false);
+        niceMax = tickStep * tickCount;
+
+        // Draw axes
+        gc.setStroke(Color.web("#333333"));
+        gc.setLineWidth(1.5);
+        // Y axis
+        gc.strokeLine(PAD_LEFT, PAD_TOP, PAD_LEFT, PAD_TOP + chartH);
+        // X axis
+        gc.strokeLine(PAD_LEFT, PAD_TOP + chartH, PAD_LEFT + chartW, PAD_TOP + chartH);
+
+        // Y-axis gridlines & tick labels
+        gc.setFont(Font.font(11));
+        gc.setFill(Color.web("#555555"));
+        for (int t = 0; t <= tickCount; t++) {
+            double tickVal = t * tickStep;
+            double y = PAD_TOP + chartH - (tickVal / niceMax) * chartH;
+
+            // gridline
+            gc.setStroke(Color.web("#e0e0e0"));
+            gc.setLineWidth(0.8);
+            gc.strokeLine(PAD_LEFT + 1, y, PAD_LEFT + chartW, y);
+
+            // tick label (right-aligned in left margin)
+            String lbl = tickVal == (long) tickVal
+                    ? String.valueOf((long) tickVal)
+                    : String.format("%.1f", tickVal);
+            gc.setFill(Color.web("#555555"));
+            gc.fillText(lbl, PAD_LEFT - measureText(lbl, 11) - 4, y + 4);
+        }
+
+        // Y-axis unit label (rotated) – approximated by drawing at top
+        gc.setFont(Font.font(11));
+        gc.setFill(Color.web("#888888"));
+        gc.fillText("(" + yAxisLabel + ")", 2, PAD_TOP + chartH / 2);
+
+        // Bars
+        int n = labels.length;
+        double groupW  = chartW / n;
+        double barW    = groupW * 0.55;
+        double barGap  = (groupW - barW) / 2.0;
+
+        for (int i = 0; i < n; i++) {
+            double barH   = (values[i] / niceMax) * chartH;
+            double barX   = PAD_LEFT + i * groupW + barGap;
+            double barY   = PAD_TOP  + chartH - barH;
+
+            Color base = PALETTE[i % PALETTE.length];
+
+            // Bar fill
+            gc.setFill(base);
+            gc.fillRoundRect(barX, barY, barW, barH, 4, 4);
+
+            // Subtle top border
+            gc.setStroke(base.darker());
+            gc.setLineWidth(1);
+            gc.strokeRoundRect(barX, barY, barW, barH, 4, 4);
+
+            // Value label above bar
+            String valStr = values[i] == (long) values[i]
+                    ? String.valueOf((long) values[i])
+                    : String.format("%.1f", values[i]);
+            gc.setFont(Font.font(null, FontWeight.BOLD, 11));
+            gc.setFill(Color.web("#222222"));
+            double valX = barX + barW / 2 - measureText(valStr, 11) / 2;
+            gc.fillText(valStr, valX, Math.max(PAD_TOP + 12, barY - 4));
+
+            // X-axis label (supports "\n" for two lines)
+            gc.setFont(Font.font(11));
+            gc.setFill(Color.web("#333333"));
+            String[] lines = labels[i].split("\n");
+            double labelCentreX = PAD_LEFT + i * groupW + groupW / 2;
+            double lineY = PAD_TOP + chartH + 14;
+            for (String line : lines) {
+                double lineX = labelCentreX - measureText(line, 11) / 2;
+                gc.fillText(line, lineX, lineY);
+                lineY += 14;
+            }
+        }
+    }
+
+    /** Returns a "nice" round number >= val when round=true, otherwise the nearest step. */
+    private double niceNumber(double val, boolean round) {
+        if (val <= 0) return 1;
+        double exp   = Math.floor(Math.log10(val));
+        double frac  = val / Math.pow(10, exp);
+        double nice;
+        if (round) {
+            if (frac < 1.5)      nice = 1;
+            else if (frac < 3)   nice = 2;
+            else if (frac < 7)   nice = 5;
+            else                 nice = 10;
+        } else {
+            if (frac <= 1)       nice = 1;
+            else if (frac <= 2)  nice = 2;
+            else if (frac <= 5)  nice = 5;
+            else                 nice = 10;
+        }
+        return nice * Math.pow(10, exp);
+    }
+
+    /** Approximate text width for a given font size (JavaFX Text for measurement). */
+    private double measureText(String s, double fontSize) {
+        Text t = new Text(s);
+        t.setFont(Font.font(fontSize));
+        return t.getLayoutBounds().getWidth();
     }
 }
