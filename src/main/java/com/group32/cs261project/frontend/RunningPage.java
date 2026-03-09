@@ -189,13 +189,13 @@ public class RunningPage implements Page {
         }
 
         // Start simulation and update UI on snapshots 
-        sim.start(currentConfig, snap -> Platform.runLater(() -> {
-            simTimeVal.setText(String.valueOf(snap.simMinute));
-            holdingVal.setText(String.valueOf(snap.holdingQueue));
-            takeoffVal.setText(String.valueOf(snap.takeoffQueue));
-            updateRunwayTable(snap);
+        sim.start(currentConfig, snapshot -> Platform.runLater(() -> {
+            simTimeVal.setText(String.valueOf(snapshot.simMinute));
+            holdingVal.setText(String.valueOf(snapshot.holdingQueue));
+            takeoffVal.setText(String.valueOf(snapshot.takeoffQueue));
+            updateRunwayTable(snapshot);
 
-            visual.update(snap);
+            visual.update(snapshot);
         }));
     }
 
@@ -214,7 +214,7 @@ public class RunningPage implements Page {
 
         // Heading 
         Label header = new Label("Live Status");
-        header.setFont(Font.font(18));
+        header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
         // Grid layout for metrics
@@ -240,7 +240,7 @@ public class RunningPage implements Page {
 
         // Header
         Label header = new Label("Runway Configuration");
-        header.setFont(Font.font(18));
+        header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
         // Spacing between columns and rows
@@ -329,6 +329,7 @@ public class RunningPage implements Page {
 
         // Format labels
         valueLabel.setStyle(MONITOR_TITLE);
+        l.setWrapText(true);
         valueLabel.setMaxWidth(Double.MAX_VALUE);
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
 
@@ -351,7 +352,7 @@ public class RunningPage implements Page {
         c0.setHgrow(Priority.ALWAYS);
 
         ColumnConstraints c1 = new ColumnConstraints(); // Columns has minimum width and stays stable
-        c1.setMinWidth(220);
+        c1.setMinWidth(50);
         c1.setHgrow(Priority.NEVER);
 
         gp.getColumnConstraints().setAll(c0, c1);
