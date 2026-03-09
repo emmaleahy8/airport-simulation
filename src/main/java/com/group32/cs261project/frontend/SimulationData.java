@@ -4,14 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.group32.cs261project.frontend.SimulationData.PlaneArrivedHolding;
-import com.group32.cs261project.frontend.SimulationData.PlaneArrivedTakeoff;
-import com.group32.cs261project.frontend.SimulationData.PlaneDiverted;
-import com.group32.cs261project.frontend.SimulationData.PlaneEmergency;
-import com.group32.cs261project.frontend.SimulationData.PlaneLanded;
-import com.group32.cs261project.frontend.SimulationData.PlaneTookOff;
-import com.group32.cs261project.frontend.SimulationData.SimEvent;
-
 public class SimulationData {
 
     // ----- Config inputs -----
@@ -19,8 +11,10 @@ public class SimulationData {
     public int inboundRatePerHour = 10;     // 0-30
     public int outboundRatePerHour = 10;    // 0-30
     public int maxWaitMinutes = 30;         // default 30
-    public int passengerEmergencyPercentage = 5; // 0-100
-    public int mechanicalEmergencyPercentage = 5; // 0-100
+    
+    public double mechanicalEmergencyProbability = 0.0; // 0-100 (%)
+    public double passengerHealthEmergencyProbability = 0.0; // 0-100 (%)
+    
 
     public final List<RunwayConfig> runways = new ArrayList<>();
 
@@ -144,8 +138,8 @@ public class SimulationData {
         d.inboundRatePerHour = inboundRatePerHour;
         d.outboundRatePerHour = outboundRatePerHour;
         d.maxWaitMinutes = maxWaitMinutes;
-        d.passengerEmergencyPercentage = passengerEmergencyPercentage;
-        d.mechanicalEmergencyPercentage = mechanicalEmergencyPercentage;
+        d.passengerHealthEmergencyProbability = passengerHealthEmergencyProbability;
+        d.mechanicalEmergencyProbability = mechanicalEmergencyProbability;
 
         d.simMinute = simMinute;
         d.holdingQueue = holdingQueue;

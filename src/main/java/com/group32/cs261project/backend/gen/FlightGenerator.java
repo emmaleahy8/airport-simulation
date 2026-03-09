@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.sim.SimConfig;
@@ -29,12 +30,14 @@ public class FlightGenerator {
     );
     private static final String HOME_AIRPORT = "LHR";
 
+
+    
     /**
      * Constructor
-     * @param config simulation config object
+     * @param engine instance of simulation engine
      */
-    public FlightGenerator(SimConfig config) {
-        this.rng = new Random(config.randomSeed());
+    public FlightGenerator(SimConfig config, Random rng) {
+        this.rng = rng;
         this.startTime = config.startTime();
         this.endTime = config.endTime();
         this.inboundRatePerHour = config.inboundRatePerHour();
@@ -42,7 +45,7 @@ public class FlightGenerator {
     }
 
     private String randomOperator() {
-        return OPERATORS.get(rng.nextInt(OPERATORS.size()));
+        return OPERATORS.get(this.rng.nextInt(OPERATORS.size()));
     }
 
     private String randomOtherAirport() {
@@ -79,7 +82,8 @@ public class FlightGenerator {
                 scheduledTime,
                 EmergencyStatus.NONE,
                 randomFuelMinutes(),
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
     }
 
@@ -98,7 +102,8 @@ public class FlightGenerator {
                 scheduledTime,
                 EmergencyStatus.NONE,
                 randomFuelMinutes(),
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
         );
     }
     

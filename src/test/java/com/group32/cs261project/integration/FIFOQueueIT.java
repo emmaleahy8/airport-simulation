@@ -12,6 +12,7 @@ import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -29,14 +30,13 @@ public class FIFOQueueIT {
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
         Instant end = start.plusSeconds(3600);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                0.0,
-                0.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .inboundRatePerHour(0.0)
+                .outboundRatePerHour(0.0)
+                .build();
 
         RunwayData runway = new RunwayData(
                 3000,
@@ -63,7 +63,8 @@ public class FIFOQueueIT {
                 arrivalTime,
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         Aircraft secondAircraft = new Aircraft(
@@ -74,7 +75,8 @@ public class FIFOQueueIT {
                 arrivalTime,
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         // -------------------------

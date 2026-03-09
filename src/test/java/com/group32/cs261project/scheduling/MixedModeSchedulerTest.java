@@ -15,6 +15,7 @@ import com.group32.cs261project.backend.events.RunwayOperationCompleteEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -25,8 +26,8 @@ import com.group32.cs261project.backend.sim.SimulationContext;
 
 class MixedModeSchedulerTest {
 
-    private static Aircraft mk(String cs, Instant scheduled) {
-        return new Aircraft(cs, "Op", "AAA", "BBB", scheduled, EmergencyStatus.NONE, 40.0, AircraftState.OUTSIDE_MODEL);
+    private static Aircraft mk(String cs, Instant scheduled, AircraftDirection direction) {
+        return new Aircraft(cs, "Op", "AAA", "BBB", scheduled, EmergencyStatus.NONE, 40.0, AircraftState.OUTSIDE_MODEL, direction);
     }
 
     @Test
@@ -39,13 +40,17 @@ class MixedModeSchedulerTest {
         Airport airport = new Airport(List.of(mixed));
 
         AirportSimulation airportSimulation = new AirportSimulation(
-            new SimConfig(start, end, 1L, 15, 15, 60), 
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(1L)
+                .build(),
             airport
         );
 
         // Add one to each queue
-        airport.holdingPattern().enqueue(mk("IN1", start), now);
-        airport.takeOffQueue().enqueue(mk("OUT1", start), now);
+        airport.holdingPattern().enqueue(mk("IN1", start, AircraftDirection.INBOUND), now);
+        airport.takeOffQueue().enqueue(mk("OUT1", start, AircraftDirection.OUTBOUND), now);
 
         // Scheduler with alternating policy (adjust ctor)
         Scheduler scheduler = new Scheduler();
@@ -63,10 +68,10 @@ class MixedModeSchedulerTest {
         // Ensure both queues still have at least one item for the next choice:
         // (Depending on which op was chosen first, one queue is now empty; add another)
         if (airport.holdingPattern().isEmpty()) {
-            airport.holdingPattern().enqueue(mk("IN2", start), now);
+            airport.holdingPattern().enqueue(mk("IN2", start, AircraftDirection.INBOUND), now);
         }
         if (airport.takeOffQueue().isEmpty()) {
-            airport.takeOffQueue().enqueue(mk("OUT2", start), now);
+            airport.takeOffQueue().enqueue(mk("OUT2", start, AircraftDirection.OUTBOUND), now);
         }
 
         // Schedule again at same timestamp

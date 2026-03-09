@@ -24,14 +24,13 @@ class SimConfigTest {
 
     @Test
     void constructorStoresAllValuesCorrectly() {
-        SimConfig config = new SimConfig(
-                start(),
-                end(),
-                42L,
-                20.0,
-                15.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+            .startTime(start())
+            .endTime(end())
+            .randomSeed(42L)
+            .inboundRatePerHour(20.0)
+            .outboundRatePerHour(15.0)
+            .build();
 
         assertEquals(start(), config.startTime());
         assertEquals(end(), config.endTime());
@@ -47,28 +46,18 @@ class SimConfigTest {
     @Test
     void nullStartTimeThrowsException() {
         assertThrows(NullPointerException.class, () ->
-                new SimConfig(
-                        null,
-                        end(),
-                        1L,
-                        10.0,
-                        10.0,
-                        60
-                )
+            SimConfig.builder()
+                .startTime(null)
+                .build()
         );
     }
 
     @Test
     void nullEndTimeThrowsException() {
         assertThrows(NullPointerException.class, () ->
-                new SimConfig(
-                        start(),
-                        null,
-                        1L,
-                        10.0,
-                        10.0,
-                        60
-                )
+            SimConfig.builder()
+                .endTime(null)
+                .build()
         );
     }
 
@@ -82,14 +71,10 @@ class SimConfigTest {
         Instant endBefore = start.minusSeconds(60);
 
         assertThrows(IllegalArgumentException.class, () ->
-                new SimConfig(
-                        start,
-                        endBefore,
-                        1L,
-                        10.0,
-                        10.0,
-                        60
-                )
+            SimConfig.builder()
+                .startTime(start)
+                .endTime(endBefore)
+                .build()
         );
     }
 
@@ -97,14 +82,10 @@ class SimConfigTest {
     void endTimeEqualToStartTimeIsAllowed() {
         Instant same = start();
 
-        SimConfig config = new SimConfig(
-                same,
-                same,
-                1L,
-                10.0,
-                10.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+            .startTime(same)
+            .endTime(same)
+            .build();
 
         assertEquals(same, config.startTime());
         assertEquals(same, config.endTime());

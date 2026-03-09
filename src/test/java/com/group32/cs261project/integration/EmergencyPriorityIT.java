@@ -1,10 +1,9 @@
 package com.group32.cs261project.integration;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.time.Instant;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 import com.group32.cs261project.backend.AirportSimulation;
@@ -12,6 +11,7 @@ import com.group32.cs261project.backend.events.AircraftInboundArrivesEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -29,14 +29,15 @@ public class EmergencyPriorityIT {
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
         Instant end = start.plusSeconds(3600);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                0.0,
-                0.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .inboundRatePerHour(0.0)
+                .outboundRatePerHour(0.0)
+                .lowFuelMinutes(-120)
+                .fuelDiversionMinutes(-120)
+                .build();
 
         // -------------------------
         // 2. Airport + runway
@@ -66,7 +67,8 @@ public class EmergencyPriorityIT {
                 start.plusSeconds(300),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         Aircraft emergencyAircraft = new Aircraft(
@@ -77,7 +79,8 @@ public class EmergencyPriorityIT {
                 start.plusSeconds(301),
                 EmergencyStatus.FUEL,
                 10.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         // -------------------------

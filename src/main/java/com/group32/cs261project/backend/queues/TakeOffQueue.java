@@ -1,10 +1,13 @@
 package com.group32.cs261project.backend.queues;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 
 /**
  * Class for take off queue
@@ -26,6 +29,11 @@ public class TakeOffQueue {
      * @param time time added
      */
     public void enqueue(Aircraft aircraft, Instant time) {
+
+        // quick check
+        if (aircraft.direction() != AircraftDirection.OUTBOUND)
+            throw new UnsupportedOperationException();
+
         aircraft.markTakeoffQueue(time);
         this.queue.add(aircraft);
     }
@@ -55,11 +63,30 @@ public class TakeOffQueue {
     }
 
     /**
+     * Removes a specific aircraft from the takeoff queue if present.
+     * @param aircraft aircraft to remove
+     * @return true if the aircraft was in the queue and removed
+     */
+    public boolean remove(Aircraft aircraft) {
+        return this.queue.remove(aircraft);
+    }
+
+    /**
      * Checks if takeoff queue is empty
      * @return True if no aircraft is in the queue
      */
     public boolean isEmpty() {
         return this.queue.isEmpty();
+    }
+
+    /**
+     * Returns the takeoff queue as a list of aircraft in the right order
+     * @return list of aircraft objects
+     */
+    public List<Aircraft> toList() {
+        List<Aircraft> planes = new ArrayList<>();
+        planes.addAll(this.queue);
+        return planes;
     }
 
     /**

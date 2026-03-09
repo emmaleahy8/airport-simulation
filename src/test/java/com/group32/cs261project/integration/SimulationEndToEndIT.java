@@ -13,6 +13,7 @@ import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -28,16 +29,16 @@ public class SimulationEndToEndIT {
         // 1. Simulation configuration
         // -------------------------
         Instant start = Instant.parse("2025-01-01T00:00:00Z");
-        Instant end = start.plusSeconds(3600);
+        // End before 30 min so outbound (ready at 10 min) is not cancelled and remains in queue
+        Instant end = start.plusSeconds(1800);
 
-        SimConfig config = new SimConfig(
-                start,
-                end,
-                42L,
-                5.0,
-                5.0,
-                60
-        );
+        SimConfig config = SimConfig.builder()
+                .startTime(start)
+                .endTime(end)
+                .randomSeed(42L)
+                .inboundRatePerHour(5.0)
+                .outboundRatePerHour(5.0)
+                .build();
 
         // -------------------------
         // 2. Create runway + airport
@@ -67,7 +68,8 @@ public class SimulationEndToEndIT {
                 start.plusSeconds(300),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         Aircraft outboundAircraft = new Aircraft(
@@ -78,8 +80,8 @@ public class SimulationEndToEndIT {
                 start.plusSeconds(600),
                 EmergencyStatus.NONE,
                 120.0,
-                AircraftState.OUTSIDE_MODEL
-        );
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND);
 
         // -------------------------
         // 5. Schedule events

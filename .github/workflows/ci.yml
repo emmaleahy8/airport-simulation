@@ -18,9 +18,17 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Run unit tests
+      - name: Unit tests (Surefire)
         run: mvn -B test
 
-      - name: Run integration tests
-        run: mvn -B verify
+      - name: Install Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+
+      - name: Integration tests (Failsafe + TestFX)
+        run: |
+          xvfb-run -a mvn -B failsafe:integration-test failsafe:verify \
+            -Dtestfx.robot=glass \
+            -Dprism.order=sw \
+            -Djava.awt.headless=false
 

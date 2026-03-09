@@ -46,7 +46,12 @@ class SimulationEngineTest {
     @Test
     void eventsExecuteInChronologicalOrder() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
+
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .build();
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
@@ -63,7 +68,11 @@ class SimulationEngineTest {
     @Test
     void deterministicTieBreakUsesInsertionOrder() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .build();
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
@@ -79,7 +88,11 @@ class SimulationEngineTest {
     @Test
     void runUntilDoesNotProcessEventsAfterEndTime() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .build();
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
@@ -98,7 +111,11 @@ class SimulationEngineTest {
     @Test
     void eventsCanScheduleMoreEvents() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .build();
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());
@@ -117,7 +134,11 @@ class SimulationEngineTest {
     @Test
     void schedulingInThePastThrows() {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
-        SimConfig cfg = new SimConfig(start, start.plusSeconds(3600), 123, 15, 15, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(start.plusSeconds(3600))
+            .randomSeed(123L)
+            .build();
         List<String> log = new ArrayList<>();
 
         SimulationEngine<Object> engine = new SimulationEngine<>(cfg, new Object(), new EventQueue<>());

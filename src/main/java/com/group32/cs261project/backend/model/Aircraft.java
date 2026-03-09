@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
@@ -17,27 +18,16 @@ public class Aircraft {
     private final String origin;
     private final String destination;
     private final Instant scheduledTime;
-    private final EmergencyStatus emergency;
-    private double fuelMinutesRemaining;
+    private EmergencyStatus emergency; // made this non-final - needs to be mutable
+    private final double initialFuelMinutesRemaining;
+    private final AircraftDirection direction;
     private AircraftState state;
     private Instant holdingEntryTime;
     private Instant takeOffQueueEntryTime;
 
-    /**
-     * Constructor
-     * @param callsign
-     * @param operator
-     * @param origin
-     * @param destination
-     * @param scheduledTime
-     * @param emergency
-     * @param fuelMinutesRemaining
-     * @param state
-     * @param holdingEntryTime
-     * @param takeOffQueueEntryTime
-     */
     public Aircraft(String callsign, String operator, String origin, String destination, 
-                    Instant scheduledTime, EmergencyStatus emergency, double fuelMinutesRemaining, AircraftState state
+                    Instant scheduledTime, EmergencyStatus emergency, double initialFuelMinutesRemaining,
+                    AircraftState state, AircraftDirection direction
     ) {
         this.callsign = Objects.requireNonNull(callsign);
         this.operator = Objects.requireNonNull(operator);
@@ -45,8 +35,9 @@ public class Aircraft {
         this.destination = Objects.requireNonNull(destination);
         this.scheduledTime = Objects.requireNonNull(scheduledTime);
         this.emergency = Objects.requireNonNull(emergency);
-        this.fuelMinutesRemaining = fuelMinutesRemaining;
+        this.initialFuelMinutesRemaining = initialFuelMinutesRemaining;
         this.state = Objects.requireNonNull(state);
+        this.direction = Objects.requireNonNull(direction);
         this.holdingEntryTime = null;
         this.takeOffQueueEntryTime = null;
 
@@ -54,48 +45,40 @@ public class Aircraft {
 
     @Override
     public String toString() {
-        return String.format("Aircraft(%s, %s)", this.callsign, this.state.toString());
+        return String.format("Aircraft(%s, %s, %f)", this.callsign, this.state.toString(), this.initialFuelMinutesRemaining);
     }
 
-    // getters
-    public String callsign() {
-        return this.callsign;
-    }
+    /* getters */
+    public String callsign() { return this.callsign; }
+    public String operator() { return this.operator; }
+    public String origin() { return this.origin; }
+    public String destination() { return this.destination; }
+    public Instant scheduledTime() { return this.scheduledTime; }
+    public EmergencyStatus emergencyStatus() { return this.emergency; }
+    public AircraftDirection direction() { return this.direction; }
+    public AircraftState state() { return this.state; }
+    public Instant holdingPatternEntryTime() { return this.holdingEntryTime; }
+    public Instant takeOffQueueEntryTime() { return this.takeOffQueueEntryTime; }
+    public double initialFuelMinutesRemaining() { return this.initialFuelMinutesRemaining; }
 
-    public String operator() {
-        return this.operator;
-    }
+    
+    /* emergency setters and helper methods */
+    public boolean isEmergency() { return this.emergency != EmergencyStatus.NONE; }
+    public void setEmergencyStatus(EmergencyStatus status) { this.emergency = Objects.requireNonNull(status); }
 
-    public String origin() {
-        return this.origin;
-    }
+    
+    /* state transitions */
+    public void markHolding(Instant t) { this.state = AircraftState.HOLDING; this.holdingEntryTime = t; }
+    public void markTakeoffQueue(Instant t) { this.state = AircraftState.TAKEOFF_QUEUE; this.takeOffQueueEntryTime = t; }
+    public void markRunwayZone() { this.state = AircraftState.RUNWAY_ZONE; }
+    public void markCompleted() { this.state = AircraftState.COMPLETED; }
+    public void markDiverted() { this.state = AircraftState.DIVERTED; }
+    public void markCancelled() { this.state = AircraftState.CANCELLED; }
 
-    public String destination() {
-        return this.destination;
-    }
-
-    public Instant scheduledTime() {
-        return this.scheduledTime;
-    }
-
-    public EmergencyStatus emergencyStatus() {
-        return this.emergency;
-    }
-
-    public boolean isEmergency() {
-        return this.emergency != EmergencyStatus.NONE;
-    }
-
-    public AircraftState state() {
-        return this.state;
-    }
-
-    public Instant holdingPatternEntryTime() {
-        return this.holdingEntryTime;
-    }
-
-    public Instant takeOffQueueEntryTime() {
-        return this.takeOffQueueEntryTime;
+    
+    // check whether an aircraft has been handled by the airport already
+    public boolean isCompleted() {
+        return this.state != AircraftState.HOLDING && this.state != AircraftState.TAKEOFF_QUEUE;
     }
 
     // extra function
@@ -103,41 +86,14 @@ public class Aircraft {
         return Duration.between(actualTime, this.scheduledTime).toMinutes();
     }
 
-    // state transition
-    public void markHolding(Instant entryTime) {
-        this.state = AircraftState.HOLDING;
-        this.holdingEntryTime = entryTime;
+    // helper methods if emergencies escalate dynamically - may not be needed with setEmergency status methods
+    // used for when an emergency is triggered
+    public void declareMechanicalEmergency() {
+        this.emergency = EmergencyStatus.MECHANICAL;
     }
 
-    public void markTakeoffQueue(Instant entryTime) {
-        this.state = AircraftState.TAKEOFF_QUEUE;
-        this.takeOffQueueEntryTime = entryTime;
-    }
-
-    public void markRunwayZone() {
-        this.state = AircraftState.RUNWAY_ZONE;
-    }
-
-    public void markCompleted() {
-        this.state = AircraftState.COMPLETED;
-    }
-
-    public void markDiverted() {
-        this.state = AircraftState.DIVERTED;
-    }
-
-    public void markCancelled() {
-        this.state = AircraftState.CANCELLED;
-    }
-
-    // fuel logic (for later)
-    public void consumeFuelMinutes(double minutes) {
-        if (this.fuelMinutesRemaining > minutes)
-            this.fuelMinutesRemaining -= minutes;
-    }
-
-    public boolean isLowFuel(double thresholdMinutes) {
-        return this.fuelMinutesRemaining <= thresholdMinutes;
+    public void declarePassengerHealthEmergency() {
+        this.emergency = EmergencyStatus.PASSENGER_HEALTH;
     }
     
 }

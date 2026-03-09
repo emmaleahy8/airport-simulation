@@ -12,6 +12,7 @@ import com.group32.cs261project.backend.events.AircraftOutboundReadyEvent;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.Airport;
 import com.group32.cs261project.backend.model.RunwayData;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.AircraftState;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 import com.group32.cs261project.backend.model.enums.RunwayMode;
@@ -33,7 +34,8 @@ class AircraftOutboundReadyEventTest {
                 time,
                 EmergencyStatus.NONE,
                 200,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.INBOUND
         );
 
         AircraftOutboundReadyEvent event =
@@ -47,14 +49,11 @@ class AircraftOutboundReadyEventTest {
 
         Instant time = Instant.parse("2026-01-01T00:20:00Z");
 
-        SimConfig cfg = new SimConfig(
-                time.minusSeconds(600),
-                time.plusSeconds(3600),
-                42L,
-                15.0,
-                15.0,
-                60
-        );
+        SimConfig cfg = SimConfig.builder()
+                .startTime(time.minusSeconds(600))
+                .endTime(time.plusSeconds(3600))
+                .randomSeed(42L)
+                .build();
 
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.TAKEOFF, RunwayStatus.INSPECTION)
@@ -70,7 +69,8 @@ class AircraftOutboundReadyEventTest {
                 time,
                 EmergencyStatus.NONE,
                 200,
-                AircraftState.OUTSIDE_MODEL
+                AircraftState.OUTSIDE_MODEL,
+                AircraftDirection.OUTBOUND
         );
 
         AircraftOutboundReadyEvent event =

@@ -1,10 +1,14 @@
 package com.group32.cs261project.backend.queues;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import com.group32.cs261project.backend.model.Aircraft;
+import com.group32.cs261project.backend.model.enums.AircraftDirection;
+import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
 public class HoldingPattern {
 
@@ -15,7 +19,7 @@ public class HoldingPattern {
      * Constructor
      */
     public HoldingPattern() {
-        this.emergencyQueue = new LinkedList<>();
+        this.emergencyQueue = new LinkedList<>(); // landing always prefers this queue
         this.normalQueue = new LinkedList<>();
     }
 
@@ -23,6 +27,10 @@ public class HoldingPattern {
      * Enqueue an aircraft to the holding pattern given its time
      */
     public void enqueue(Aircraft aircraft, Instant time) {
+
+        // quick check
+        if (aircraft.direction() != AircraftDirection.INBOUND)
+            throw new UnsupportedOperationException();
         
         aircraft.markHolding(time);
 
@@ -74,10 +82,72 @@ public class HoldingPattern {
     }
 
     /**
+     * Returns the holding pattern as a list of planes in the right order
+     * @return list of aircraft objects
+     */
+    public List<Aircraft> toList() {
+        List<Aircraft> planes = new ArrayList<>();
+        planes.addAll(this.emergencyQueue);
+        planes.addAll(this.normalQueue);
+        return planes;
+    }
+
+    /**
      * Get string representation
      */
     @Override
     public String toString() {
         return String.format("(%s, %s)", this.emergencyQueue.toString(), this.normalQueue.toString());
     }
+
+    /**
+     * Remove an aircraft form the holding pattern
+     * @param aircraft aircraft in the holding pattern
+     */
+    public void remove(Aircraft aircraft) {
+        if (aircraft.isEmergency()) {
+            this.emergencyQueue.remove(aircraft);
+        } else {
+            this.normalQueue.remove(aircraft);
+        }
+    }
+
+    /**
+     * Promote an aircraft to emergency fuel status in the holding pattern
+     * @param aircraft non-emergency aircraft in holding pattern
+     * @param time time event occurs
+     */
+    public void promoteToEmergency(Aircraft aircraft, Instant time) {
+        this.remove(aircraft);
+        aircraft.setEmergencyStatus(EmergencyStatus.FUEL);
+        this.enqueue(aircraft, time);
+    }
+
+     
+    // /**
+    //  * consumes fuel for all waiting aircraft
+    //  * checks fuel
+    //  * escalates emergency
+    //  * moves low fuel aircarft to the emergency queue
+    //  * 
+    //  */
+    // public void updateFuelStates(double thresholdMinutes, double minutesPassed) {
+
+    //     for (Aircraft aircraft : normalQueue) {
+    
+    //         aircraft.consumeFuelMinutes(minutesPassed);
+    //         aircraft.updateFuelEmergency(thresholdMinutes);
+    
+    //         if (aircraft.isEmergency()) {
+    //             emergencyQueue.add(aircraft);
+    //         }
+    //     }
+    
+    //     normalQueue.removeIf(Aircraft::isEmergency);
+    
+    //     for (Aircraft aircraft : emergencyQueue) {
+    //         aircraft.consumeFuelMinutes(minutesPassed);
+    //     }
+    // }
+
 }

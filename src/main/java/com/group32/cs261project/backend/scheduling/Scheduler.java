@@ -41,8 +41,11 @@ public class Scheduler {
         // occupy runway
         runway.occupyUntil(completionTime);
 
+        // update aircraft runway mapping
+        engine.context().airport().assignAircraftToRunway(runway, aircraft);
+
         // schedule new runway operation completion event for when it completes
-        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway, OperationType.LANDING));
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway));
     }
 
 
@@ -65,8 +68,11 @@ public class Scheduler {
         // occupy runway
         runway.occupyUntil(completionTime);
 
+        // update aircraft runway mapping
+        engine.context().airport().assignAircraftToRunway(runway, aircraft);
+
         // schedule new runway operation completion event for when it completes
-        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway, OperationType.TAKEOFF));
+        engine.schedule(new RunwayOperationCompleteEvent(completionTime, aircraft, runway));
 
     }
 
@@ -79,6 +85,9 @@ public class Scheduler {
     public void tryScheduleOperations(Instant now, SimulationEngine<SimulationContext> engine) {
 
         Airport airport = engine.context().airport();
+
+        // airport.holdingPattern().updateFuelStates(10, engine.config().runwayOccupancySeconds() / 60.0); // convert to mins
+        // System.out.format("%s %s\n", now.toString(), airport.holdingPattern().toList());
 
         // add on runway occupancy seconds to the current time
         Instant completionTime = now.plusSeconds(engine.config().runwayOccupancySeconds());
@@ -107,8 +116,8 @@ public class Scheduler {
                 case MIXED -> {
                     if ((hasArrivals || hasDepartures) && runway.isAvailable(now)) {
                         switch (this.mixedModePolicy.chooseNextOp(hasArrivals, hasDepartures, runway)) {
-                            case LANDING -> this.scheduleLandingOperation(completionTime, runway, engine);
-                            case TAKEOFF -> this.scheduleTakeoffOperation(completionTime, runway, engine);
+                            case INBOUND -> this.scheduleLandingOperation(completionTime, runway, engine);
+                            case OUTBOUND -> this.scheduleTakeoffOperation(completionTime, runway, engine);
                         }
                     }
                 }

@@ -26,7 +26,13 @@ class FlightSeederTest {
         Instant start = Instant.parse("2026-01-01T00:00:00Z");
         Instant end = start.plus(Duration.ofHours(1));
 
-        SimConfig cfg = new SimConfig(start, end, 123L, 15.0, 15.0, 60);
+        SimConfig cfg = SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(123L)
+            .lowFuelMinutes(-120)
+            .fuelDiversionMinutes(-120)
+            .build();
 
         Airport airport = new Airport(List.of(
                 new RunwayData(3000, 90, RunwayMode.MIXED, RunwayStatus.INSPECTION)
@@ -34,7 +40,7 @@ class FlightSeederTest {
 
         AirportSimulation airportSimulation = new AirportSimulation(cfg, airport);
 
-        FlightGenerator generator = new FlightGenerator(cfg);
+        FlightGenerator generator = new FlightGenerator(cfg, airportSimulation.engine().rng());
         List<GeneratedFlight> inbound = generator.generateFlights(FlightType.INBOUND);
         List<GeneratedFlight> outbound;
         outbound = generator.generateFlights(FlightType.OUTBOUND);
@@ -45,8 +51,15 @@ class FlightSeederTest {
         // Run the simulation to end: all entry events should have executed.
         airportSimulation.engine().runUntil(end);
 
+        // Inbound: runway is closed so none can land; all remain in holding.
         assertEquals(inbound.size(), airport.holdingPattern().size());
-        assertEquals(outbound.size(), airport.takeOffQueue().size());
+
+        // Outbound: runway is closed so none can take off. Some will be cancelled after
+        // exceeding max wait time (30 min), so at end: still in queue + cancelled = all outbound.
+        int stillInQueue = airport.takeOffQueue().size();
+        int cancelled = airportSimulation.buildReport().numCancellations();
+        assertEquals(outbound.size(), stillInQueue + cancelled,
+                "Every outbound flight should be either still in take-off queue or cancelled");
     }
 
     @Test

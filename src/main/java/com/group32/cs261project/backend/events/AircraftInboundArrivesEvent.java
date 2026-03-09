@@ -1,7 +1,9 @@
 package com.group32.cs261project.backend.events;
 
+import java.time.Duration;
 import java.time.Instant;
 
+import com.group32.cs261project.backend.gen.EmergencyGenerator;
 import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
@@ -24,11 +26,29 @@ public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
     @Override
     public void handle(SimulationEngine<SimulationContext> engine) {
 
-        if (engine.config().isVerbose())
+        if (engine.config().verbose())
             System.out.format("%s: %s enqueued to holding pattern\n", time.toString(), aircraft.toString());
+
 
         // enqueue to holding pattern
         engine.context().airport().holdingPattern().enqueue(aircraft, time);
+
+
+        // schedule fuel emergency event
+        Instant fuelEmergencyTime = time.plus(
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.initialFuelMinutesRemaining() - engine.config().lowFuelMinutes()), 0.0))
+        );
+        engine.schedule(new FuelEmergencyEvent(this.aircraft, fuelEmergencyTime));
+
+
+        // schedule fuel deadline event
+        Instant fuelDiversionTime = time.plus(
+            Duration.ofSeconds((long) Math.max(60.0 * (this.aircraft.initialFuelMinutesRemaining() - engine.config().fuelDiversionMinutes()), 0.0))
+        );
+        engine.schedule(new FuelDeadlineDiversionEvent(aircraft, fuelDiversionTime));
+
+        // schedule random emergencies
+        EmergencyGenerator.scheduleEmergency(engine, this.aircraft, this.time);
 
         // try to schedule runway operations immediately
         engine.context().scheduler().tryScheduleOperations(time, engine);

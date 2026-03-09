@@ -13,6 +13,7 @@ public class StubSimulationService implements SimulationService {
 
     private final ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor(); // Single background thread that runs scheduled tasks
     private volatile boolean running = false; // Flag to indicate if the simulation is running
+    private volatile boolean paused = false;
 
     private final Object lock = new Object(); // Lock for synchronizing access to shared simulation state
     private SimulationData current;          // Current simulation state
@@ -120,9 +121,9 @@ public class StubSimulationService implements SimulationService {
 
     // ----- Simulation logic -----
     private void tick() {
-        SimulationData snap; // Hold a copied snapshot to send to the UI after unlocking
+        SimulationData snap;
         synchronized (lock) {
-            if (!running) return; // If not running, do nothing
+            if (!running || paused) return;
 
             current.ensureRunwayListSize();
             current.simMinute += 1;
@@ -413,6 +414,21 @@ public class StubSimulationService implements SimulationService {
     @Override
     public boolean isRunning() {
         return running;
+    }
+
+        @Override
+    public void pause() {
+        paused = true;
+    }
+
+    @Override
+    public void resume() {
+        paused = false;
+    }
+
+    @Override
+    public boolean isPaused() {
+        return paused;
     }
 
     private int pickTakeoffRunwayIndex() {
