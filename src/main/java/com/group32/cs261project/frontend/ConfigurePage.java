@@ -406,6 +406,7 @@ public class ConfigurePage implements Page {
         outboundSlider.setShowTickLabels(false);
         outboundSlider.setShowTickMarks(false);
 
+        // ----- Listeners -----
         runwaySlider.valueProperty().addListener((obs, o, n) -> {
             if (applyingSnapshot) return;
                 data.runwayCount = (int) Math.round(n.doubleValue());
@@ -430,6 +431,12 @@ public class ConfigurePage implements Page {
             if (applyingSnapshot) return;
             data.passengerHealthEmergencyProbability = (int) Math.round(n.doubleValue());
             passengerHealthEmergencyValue.setText(String.valueOf(data.passengerHealthEmergencyProbability));
+        });
+
+        mechanicalEmergencySlider.valueProperty().addListener((obs, o, n) -> {
+            if (applyingSnapshot) return;
+            data.mechanicalEmergencyProbability = (int) Math.round(n.doubleValue());
+            mechanicalEmergencyValue.setText(String.valueOf(data.mechanicalEmergencyProbability));
         });
     }
 
