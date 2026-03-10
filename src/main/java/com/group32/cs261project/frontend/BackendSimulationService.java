@@ -229,7 +229,7 @@ public class BackendSimulationService implements SimulationService {
             // Plane has newly appeared on a runway this snapshot
             if (previousRunway == null) {
                 if (aircraft.direction() == AircraftDirection.INBOUND) {
-                    snapshot.events.add(new SimulationData.PlaneLanded(id, i));
+                    snapshot.events.add(new SimulationData.PlaneLanded(id, i, aircraft.isEmergency()));
                 } else {
                     snapshot.events.add(new SimulationData.PlaneTookOff(id, i));
                 }

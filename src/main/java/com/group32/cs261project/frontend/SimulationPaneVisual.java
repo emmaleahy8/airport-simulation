@@ -20,6 +20,8 @@ import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.text.FontWeight;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Arc;
+import javafx.scene.shape.ArcType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +34,8 @@ public class SimulationPaneVisual extends Pane {
     private static final Color GREEN_DIM = Color.web("#1f6f2c");
     private static final Color RUNWAY_FILL = Color.web("#0a2a10");
     private static final Color RADAR_FILL = Color.web("#071407");
+    private static final Color EMERGENCY_RED = Color.web("#ff3b3b");
+    private static final Color EMERGENCY_LABEL = Color.web("#ff8a8a");
 
     private static final double PREF_W = 1200;
     private static final double PREF_H = 760;
@@ -59,6 +63,9 @@ public class SimulationPaneVisual extends Pane {
     private double radarRadius;
     private double radarSweepAngleDeg = -45;
     private double holdingRotationDeg = 0;
+    private final Arc radarSweepArc = new Arc();
+    private final Line radarHorizontalLine = new Line();
+    private final Line radarVerticalLine = new Line();
 
     // ----- Runways -----
     private final List<Rectangle> runwayRects = new ArrayList<>();
@@ -93,7 +100,17 @@ public class SimulationPaneVisual extends Pane {
 
         getChildren().addAll(backgroundLayer, queueLayer, actionLayer);
 
-        backgroundLayer.getChildren().addAll(holdingTitle, takeoffTitle, radarOuter, radarGuideLine, radarCentreDot);        
+        backgroundLayer.getChildren().addAll(
+            holdingTitle, 
+            takeoffTitle, 
+            radarOuter,
+            radarSweepArc,
+            radarHorizontalLine,
+            radarVerticalLine, 
+            radarGuideLine, 
+            radarCentreDot
+        );   
+
         backgroundLayer.setStyle("""
             -fx-background-color: #001107;
             -fx-background-radius: 16;
@@ -130,7 +147,21 @@ public class SimulationPaneVisual extends Pane {
         radarGlow.setSpread(0.32);
 
         radarOuter.setEffect(radarGlow);
+
+        radarSweepArc.setType(ArcType.ROUND);
+        radarSweepArc.setFill(Color.web("#39e75f", 0.12));
+        radarSweepArc.setStroke(null);
+        radarSweepArc.setEffect(radarGlow);
+
+        radarHorizontalLine.setStroke(GREEN_DIM);
+        radarHorizontalLine.setStrokeWidth(1.0);
+
+        radarVerticalLine.setStroke(GREEN_DIM);
+        radarVerticalLine.setStrokeWidth(1.0);
  
+        radarHorizontalLine.setEffect(new Glow(0.25));
+        radarVerticalLine.setEffect(new Glow(0.25));
+
         radarGuideLine.setStroke(GREEN);
         radarGuideLine.setStrokeWidth(1.2);
         radarGuideLine.setEffect(radarGlow);
@@ -223,6 +254,22 @@ public class SimulationPaneVisual extends Pane {
         radarOuter.setCenterY(radarCy);
         radarOuter.setRadius(radarRadius);
         radarOuter.setStrokeWidth(0.8);
+
+        radarHorizontalLine.setStartX(radarCx - radarRadius);
+        radarHorizontalLine.setStartY(radarCy);
+        radarHorizontalLine.setEndX(radarCx + radarRadius);
+        radarHorizontalLine.setEndY(radarCy);
+
+        radarVerticalLine.setStartX(radarCx);
+        radarVerticalLine.setStartY(radarCy - radarRadius);
+        radarVerticalLine.setEndX(radarCx);
+        radarVerticalLine.setEndY(radarCy + radarRadius);
+
+        radarSweepArc.setCenterX(radarCx);
+        radarSweepArc.setCenterY(radarCy);
+        radarSweepArc.setRadiusX(radarRadius);
+        radarSweepArc.setRadiusY(radarRadius);
+        radarSweepArc.setLength(56);   // width of sweep
 
         // 4 main rings
         List<Double> mainRadii = new ArrayList<>();
@@ -417,7 +464,7 @@ public class SimulationPaneVisual extends Pane {
             SimulationData.PlaneDTO p = holdingPlanes.get(i);
             desiredIds.add(p.id);
             Point2D pos = holdingSlots.get(i);
-            upsertQueuePlane(p.id, safeCode(p), pos, true);
+            upsertQueuePlane(p.id, safeCode(p), pos, true, p.emergency);
         }
 
         // takeoff queue - use outboundQueueIds for exact order
@@ -431,7 +478,7 @@ public class SimulationPaneVisual extends Pane {
 
             desiredIds.add(p.id);
             Point2D pos = takeoffSlots.get(i);
-            upsertQueuePlane(p.id, safeCode(p), pos, false);
+            upsertQueuePlane(p.id, safeCode(p), pos, false, p.emergency);
         }
 
         // remove any queue nodes no longer needed
@@ -446,7 +493,7 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
-    private void upsertQueuePlane(String planeId, String code, Point2D target, boolean holding) {
+    private void upsertQueuePlane(String planeId, String code, Point2D target, boolean holding, boolean emergency) {
         PlaneVisual pv = queuePlaneNodes.get(planeId);
 
         boolean isNew = false;
@@ -484,6 +531,7 @@ public class SimulationPaneVisual extends Pane {
         }
 
         pv.setHoldingStyle(holding);
+        pv.setEmergencyStyle(emergency);
 
         // label placement
         if (holding) {
@@ -526,18 +574,25 @@ public class SimulationPaneVisual extends Pane {
     private void playNewEvents(SimulationData snapshot) {
         if (snapshot.events == null) return;
 
+        Map<String, SimulationData.PlaneDTO> planeById = snapshot.planes.stream()
+                .filter(Objects::nonNull)
+                .filter(p -> p.id != null)
+                .collect(Collectors.toMap(p -> p.id, p -> p, (a, b) -> a));
+
         for (SimulationData.SimEvent ev : snapshot.events) {
             if (ev instanceof SimulationData.PlaneLanded landed) {
-                System.out.println("LANDING ANIMATION: " + landed.planeId() + " runway " + landed.runwayIndex());
-                animateLandingEvent(landed);
+                SimulationData.PlaneDTO p = planeById.get(landed.planeId());
+                boolean emergency = p != null && p.emergency;
+                animateLandingEvent(landed, landed.emergency());
             } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
-                System.out.println("TAKEOFF ANIMATION: " + tookOff.planeId() + " runway " + tookOff.runwayIndex());
-                animateTakeoffEvent(tookOff);
+                SimulationData.PlaneDTO p = planeById.get(tookOff.planeId());
+                boolean emergency = p != null && p.emergency;
+                animateTakeoffEvent(tookOff, emergency);
             }
         }
     }
 
-    private void animateLandingEvent(SimulationData.PlaneLanded landed) {
+    private void animateLandingEvent(SimulationData.PlaneLanded landed, boolean emergency) {
         int runwayIdx = landed.runwayIndex();
         if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size() || runwayIdx >= runwayLandingEndPoints.size()) {
             return;
@@ -556,6 +611,7 @@ public class SimulationPaneVisual extends Pane {
         moving.root.setLayoutX(startX);
         moving.root.setLayoutY(startY);
         moving.setHoldingStyle(false);
+        moving.setEmergencyStyle(emergency);
         moving.planeIcon.setRotate(0);
 
         actionLayer.getChildren().add(moving.root);
@@ -582,7 +638,7 @@ public class SimulationPaneVisual extends Pane {
         pt.play();
     }
 
-    private void animateTakeoffEvent(SimulationData.PlaneTookOff tookOff) {
+    private void animateTakeoffEvent(SimulationData.PlaneTookOff tookOff, boolean emergency) {
         int runwayIdx = tookOff.runwayIndex();
         if (runwayIdx < 0
             || runwayIdx >= runwayTakeoffStartPoints.size()
@@ -615,6 +671,7 @@ public class SimulationPaneVisual extends Pane {
         moving.root.setTranslateY(0);
 
         moving.setHoldingStyle(false);
+        moving.setEmergencyStyle(emergency);
         moving.planeIcon.setRotate(0);
 
         actionLayer.getChildren().add(moving.root);
@@ -789,12 +846,12 @@ public class SimulationPaneVisual extends Pane {
             root.setMaxSize(ROOT_W, ROOT_H);
             root.setPickOnBounds(false);
 
-            planeIcon.setTextFill(GREEN);
             planeIcon.setFont(Font.font(26));
             planeIcon.setEffect(new Glow(0.8));
 
-            codeLabel.setTextFill(Color.web("#7CFF95"));
             codeLabel.setFont(Font.font("Consolas", FontWeight.BOLD, 13));
+
+            setEmergencyStyle(false);
 
             iconWrap.setPrefSize(28, 28);
             iconWrap.setMinSize(28, 28);
@@ -812,6 +869,23 @@ public class SimulationPaneVisual extends Pane {
             // default label position
             codeLabel.setLayoutX(40);
             codeLabel.setLayoutY(16);
+        }
+
+        void setEmergencyStyle(boolean emergency) {
+            if (emergency) {
+                planeIcon.setTextFill(EMERGENCY_RED);
+                codeLabel.setTextFill(EMERGENCY_LABEL);
+
+                DropShadow redGlow = new DropShadow();
+                redGlow.setColor(EMERGENCY_RED);
+                redGlow.setRadius(12);
+                redGlow.setSpread(0.35);
+                planeIcon.setEffect(redGlow);
+            } else {
+                planeIcon.setTextFill(GREEN);
+                codeLabel.setTextFill(Color.web("#7CFF95"));
+                planeIcon.setEffect(new Glow(0.8));
+            }
         }
 
         void setCode(String code) {
@@ -846,5 +920,9 @@ public class SimulationPaneVisual extends Pane {
         radarGuideLine.setStartY(radarCy);
         radarGuideLine.setEndX(x2);
         radarGuideLine.setEndY(y2);
+
+        // arc trails behind the guide line
+        radarSweepArc.setStartAngle(-radarSweepAngleDeg);
+        radarSweepArc.setLength(56);
     }
 }
