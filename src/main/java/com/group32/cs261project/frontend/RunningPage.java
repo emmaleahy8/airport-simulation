@@ -31,10 +31,12 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.scene.transform.Rotate;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 import com.group32.cs261project.App;
 
@@ -50,8 +52,7 @@ public class RunningPage implements Page {
     private final Label takeoffVal = new Label("0");
 
     private final GridPane runwayTable = new GridPane();
-    private final List<Label> runwayModeVals = new ArrayList<>();
-    private final List<Label> runwayStatusVals = new ArrayList<>();
+    private final List<RunwayEditorCard> runwayEditorCards = new ArrayList<>();
 
     private PathTransition spinnerAnim;
     private Timeline sweepAnim;
@@ -68,8 +69,9 @@ public class RunningPage implements Page {
     private final Slider speedSlider = new Slider(1, 19, 10);
     private final Label speedValueLabel = new Label("1.0x");
 
-    // Pause button
+    // Buttons
     private Button pauseBtn;
+    private Button applyRunwayChangesBtn;
 
     private static final String PAGE_BG =
         "-fx-background-color: rgb(14, 26, 40);";
@@ -99,6 +101,35 @@ public class RunningPage implements Page {
             "-fx-padding: 8 12;" +
             "-fx-background-radius: 8;";
 
+    private static final String RUNWAY_EDIT_CARD =
+        "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
+        "-fx-border-color: #1dd6ff;" +
+        "-fx-border-width: 1.4;" +
+        "-fx-border-radius: 12;" +
+        "-fx-background-radius: 14;" +
+        "-fx-padding: 10;" +
+        "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.16), 12, 0.22, 0, 0);";
+
+    private static final String RUNWAY_EDIT_CARD_DISABLED =
+            "-fx-background-color: linear-gradient(to bottom, #1a232b 0%, #182028 100%);" +
+            "-fx-border-color: #46535e;" +
+            "-fx-border-width: 1.1;" +
+            "-fx-border-radius: 12;" +
+            "-fx-background-radius: 12;" +
+            "-fx-padding: 10;" +
+            "-fx-opacity: 0.74;";
+
+    private static final String COMBO_STYLE =
+                "-fx-background-color: #0d1d29;" +
+                "-fx-control-inner-background: #0d1d29;" +
+                "-fx-background-insets: 0;" +
+                "-fx-background-radius: 6;" +
+                "-fx-border-color: #2d6678;" +
+                "-fx-border-radius: 6;" +
+                "-fx-text-fill: white;" +
+                "-fx-prompt-text-fill: white;" +
+                "-fx-mark-color: white;";
+            
     private static final String TITLE_TEXT = "-fx-text-fill: #eaf6ff;";
     private static final String SUBTITLE_TEXT = "-fx-text-fill: #cccccc;";
     private static final String LABEL_TEXT = "-fx-text-fill: #dcebf5;";
@@ -279,7 +310,6 @@ public class RunningPage implements Page {
     }
 
     private VBox buildRunwayCard() {
-
         VBox card = new VBox(12);
         card.setStyle(CARD);
 
@@ -287,25 +317,28 @@ public class RunningPage implements Page {
         header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
-        runwayTable.setHgap(12);
+        Label sub = new Label("Change runway status and mode while the simulation is running");
+        sub.setStyle(SMALL_TEXT);
+
+        runwayTable.getChildren().clear();
+        runwayTable.getColumnConstraints().clear();
+        runwayTable.setHgap(10);
         runwayTable.setVgap(10);
-        runwayTable.setPadding(new Insets(6, 0, 0, 0));
+        runwayTable.setPadding(new Insets(2, 0, 2, 0));
 
-        ColumnConstraints c0 = new ColumnConstraints();
-        c0.setMinWidth(110);
+        ScrollPane scroll = new ScrollPane(runwayTable);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        scroll.setPrefViewportHeight(280);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        ColumnConstraints c1 = new ColumnConstraints();
-        c1.setHgrow(Priority.ALWAYS);
+        applyRunwayChangesBtn = new Button("Apply Changes");
+        applyRunwayChangesBtn.setStyle(BTN_PRIMARY);
+        applyRunwayChangesBtn.setOnAction(e -> applyRunwayChanges());
 
-        ColumnConstraints c2 = new ColumnConstraints();
-        c2.setHgrow(Priority.ALWAYS);
-
-        runwayTable.getColumnConstraints().setAll(c0, c1, c2);
-
-        VBox.setVgrow(runwayTable, Priority.ALWAYS);
-        runwayTable.setMaxHeight(Double.MAX_VALUE);
-
-        card.getChildren().addAll(header, new Separator(), runwayTable);
+        card.getChildren().addAll(header, sub, new Separator(), scroll, applyRunwayChangesBtn);
 
         return card;
     }
@@ -506,58 +539,170 @@ public class RunningPage implements Page {
     }
 
     private void rebuildRunwayTable(int runwayCount) {
-
         runwayTable.getChildren().clear();
-        runwayModeVals.clear();
-        runwayStatusVals.clear();
+        runwayEditorCards.clear();
+        runwayTable.getColumnConstraints().clear();
 
-        Label h0 = new Label("Runway");
-        Label h1 = new Label("Operating Mode");
-        Label h2 = new Label("Operational Status");
+        ColumnConstraints c0 = new ColumnConstraints();
+        c0.setPercentWidth(50);
+        c0.setHgrow(Priority.ALWAYS);
 
-        h0.setStyle(MONITOR_LABEL);
-        h1.setStyle(MONITOR_LABEL);
-        h2.setStyle(MONITOR_LABEL);
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setPercentWidth(50);
+        c1.setHgrow(Priority.ALWAYS);
 
-        runwayTable.add(h0, 0, 0);
-        runwayTable.add(h1, 1, 0);
-        runwayTable.add(h2, 2, 0);
+        runwayTable.getColumnConstraints().setAll(c0, c1);
 
         for (int i = 0; i < runwayCount; i++) {
 
-            int row = i + 1;
+            SimulationData.RunwayConfig cfg = currentConfig.runways.get(i);
+            RunwayEditorCard card = new RunwayEditorCard(cfg);
+            runwayEditorCards.add(card);
 
-            Label name = new Label("Runway " + (i + 1) + ":");
-            Label mode = new Label("-");
-            Label status = new Label("-");
+            int col = i % 2;
+            int row = i / 2;
 
-            name.setStyle(SMALL_TEXT);
-            mode.setStyle(SMALL_TEXT);
-            status.setStyle(SMALL_TEXT);
-
-            runwayModeVals.add(mode);
-            runwayStatusVals.add(status);
-
-            runwayTable.add(name, 0, row);
-            runwayTable.add(mode, 1, row);
-            runwayTable.add(status, 2, row);
+            runwayTable.add(card.root, col, row);
         }
     }
 
     // ----- Helpers -----
 
     private void updateRunwayTable(SimulationData d) {
-
         d.ensureRunwayListSize();
 
-        int n = Math.min(d.runways.size(), runwayModeVals.size());
+        if (runwayEditorCards.size() != d.runways.size()) {
+            currentConfig = d.copy();
+            rebuildRunwayTable(currentConfig.runwayCount);
+        }
+    }
+
+    private void applyRunwayChanges() {
+        if (currentConfig == null) {
+            return;
+        }
+
+        SimulationData updated = currentConfig.copy();
+        updated.ensureRunwayListSize();
+
+        int n = Math.min(updated.runways.size(), runwayEditorCards.size());
 
         for (int i = 0; i < n; i++) {
+            RunwayEditorCard card = runwayEditorCards.get(i);
+            updated.runways.get(i).status = card.getStatus();
+            updated.runways.get(i).mode = card.getMode();
+        }
 
-            var r = d.runways.get(i);
+        currentConfig = updated.copy();
+        sim.updateConfig(updated);
 
-            runwayModeVals.get(i).setText(pretty(r.mode.name()));
-            runwayStatusVals.get(i).setText(pretty(r.status.name()));
+        // optional: rebind cards once here if you want UI to snap to applied values
+        for (int i = 0; i < n; i++) {
+            runwayEditorCards.get(i).bindTo(currentConfig.runways.get(i));
+        }
+    }
+
+    private class RunwayEditorCard {
+        private final VBox root = new VBox(6);
+        private final Label title = new Label();
+
+        private final ComboBox<SimulationData.RunwayStatus> statusBox = new ComboBox<>();
+        private final ComboBox<SimulationData.RunwayMode> modeBox = new ComboBox<>();
+
+        RunwayEditorCard(SimulationData.RunwayConfig cfg) {
+            root.setStyle(RUNWAY_EDIT_CARD);
+            root.setMaxWidth(Double.MAX_VALUE);
+            root.setPrefWidth(160);
+
+            title.setStyle(MONITOR_TITLE);
+            title.setFont(Font.font(14));
+
+            Label statusLabel = new Label("Status");
+            statusLabel.setStyle(MONITOR_LABEL);
+            statusLabel.setFont(Font.font(11));
+
+            Label modeLabel = new Label("Mode");
+            modeLabel.setStyle(MONITOR_LABEL);
+            modeLabel.setFont(Font.font(11));
+
+            statusBox.getItems().setAll(SimulationData.RunwayStatus.values());
+            modeBox.getItems().setAll(SimulationData.RunwayMode.values());
+
+            statusBox.setStyle(COMBO_STYLE);
+            modeBox.setStyle(COMBO_STYLE);
+
+            statusBox.setMaxWidth(Double.MAX_VALUE);
+            modeBox.setMaxWidth(Double.MAX_VALUE);
+
+            statusBox.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(SimulationData.RunwayStatus item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.toString());
+                    setTextFill(Color.WHITE);                    
+                    setStyle("-fx-background-color: #0d1d29;");
+                }
+            });
+
+            modeBox.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(SimulationData.RunwayMode item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.toString());
+                    setTextFill(Color.WHITE);   
+                    setStyle("-fx-background-color: #0d1d29;");
+                }
+            });
+
+            statusBox.setCellFactory(list -> new ListCell<>() {
+                @Override
+                protected void updateItem(SimulationData.RunwayStatus item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.toString());
+                    setTextFill(Color.WHITE);   
+                    setStyle("-fx-background-color: #0d1d29;");
+                }
+            });
+
+            modeBox.setCellFactory(list -> new ListCell<>() {
+                @Override
+                protected void updateItem(SimulationData.RunwayMode item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? "" : item.toString());
+                    setTextFill(Color.WHITE);   
+                    setStyle("-fx-background-color: #0d1d29;");
+                }
+            });
+
+            VBox content = new VBox(5, statusLabel, statusBox, modeLabel, modeBox);
+            content.setAlignment(Pos.TOP_LEFT);
+
+            root.getChildren().addAll(title, content);
+
+            bindTo(cfg);
+        }
+
+        void bindTo(SimulationData.RunwayConfig cfg) {
+            title.setText("Runway " + (cfg.id));
+            statusBox.setValue(cfg.status);
+            modeBox.setValue(cfg.mode);
+            setEnabled(true);
+        }
+
+        void setEnabled(boolean enabled) {
+            root.setStyle(enabled ? RUNWAY_EDIT_CARD : RUNWAY_EDIT_CARD_DISABLED);
+            statusBox.setDisable(!enabled);
+            modeBox.setDisable(!enabled);
+            title.setStyle(enabled ? MONITOR_TITLE : "-fx-text-fill: #ffffff; -fx-font-weight: 700;");
+            root.setOpacity(enabled ? 1.0 : 0.82);
+        }
+
+        SimulationData.RunwayStatus getStatus() {
+            return statusBox.getValue();
+        }
+
+        SimulationData.RunwayMode getMode() {
+            return modeBox.getValue();
         }
     }
 

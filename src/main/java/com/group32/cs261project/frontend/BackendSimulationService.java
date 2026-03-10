@@ -326,10 +326,31 @@ public class BackendSimulationService implements SimulationService {
 
     @Override
     public void updateConfig(SimulationData newConfig) {
-        // TODO: not implemented yet
-        throw new UnsupportedOperationException();
-    }
+        if (!this.running || this.backendSim == null || newConfig == null) {
+            return;
+        }
 
+        SimulationData safeConfig = newConfig.copy();
+        safeConfig.ensureRunwayListSize();
+
+        int runwayCount = Math.min(
+            safeConfig.runways.size(),
+            this.backendSim.airport().runways().size()
+        );
+
+        for (int i = 0; i < runwayCount; i++) {
+            SimulationData.RunwayConfig uiRunway = safeConfig.runways.get(i);
+
+            this.backendSim.airport().setRunwayMode(i, convertMode(uiRunway.mode));
+            this.backendSim.airport().setRunwayStatus(i, convertStatus(uiRunway.status));
+        }
+
+        this.initialConfig = safeConfig;
+
+        if (this.onSnapshot != null) {
+            this.onSnapshot.accept(snapshotFrom(this.backendSim));
+        }
+    }
 
     @Override
     public SimulationData stop() {

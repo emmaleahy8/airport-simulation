@@ -94,6 +94,12 @@ public class SimulationPaneVisual extends Pane {
     private static final double VISUAL_SLOWDOWN = 3.0;
     private final List<Animation> activeEventAnimations = new ArrayList<>();
 
+    // ----- Planes -----
+    private final Set<String> landingNow = new HashSet<>();
+    private final Set<String> takingOffNow = new HashSet<>();
+    private final Map<String, Boolean> knownEmergencyByPlaneId = new HashMap<>();
+    private final Map<String, Long> queueSuppressedUntil = new HashMap<>();
+
     public SimulationPaneVisual() {
         setPrefSize(PREF_W, PREF_H);
         setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -201,10 +207,11 @@ public class SimulationPaneVisual extends Pane {
     public void update(SimulationData snapshot) {
         if (snapshot == null) return;
 
-        Platform.runLater(() -> {
+            Platform.runLater(() -> {
             relayout(snapshot);
-            playNewEvents(snapshot);
+            updateEmergencyCache(snapshot);
             renderQueues(snapshot);
+            playNewEvents(snapshot);
             previousSnapshot = snapshot.copy();
         });
     }
@@ -453,12 +460,19 @@ public class SimulationPaneVisual extends Pane {
     // ----- Queue rendering -----
 
     private void renderQueues(SimulationData snapshot) {
+        cleanupSuppressedPlanes();
         List<String> desiredIds = new ArrayList<>();
 
-        // holding queue - assumes snapshot.planes order is queue order for HOLDING planes
+        Map<String, SimulationData.PlaneDTO> planeById = snapshot.planes.stream()
+                .filter(Objects::nonNull)
+                .filter(p -> p.id != null)
+                .collect(Collectors.toMap(p -> p.id, p -> p, (a, b) -> a));
+
         List<SimulationData.PlaneDTO> holdingPlanes = snapshot.planes.stream()
-                .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
-                .collect(Collectors.toList());
+            .filter(Objects::nonNull)
+            .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+            .filter(p -> !isSuppressedFromQueues(p.id))
+            .collect(Collectors.toList());
 
         for (int i = 0; i < Math.min(holdingPlanes.size(), holdingSlots.size()); i++) {
             SimulationData.PlaneDTO p = holdingPlanes.get(i);
@@ -466,10 +480,6 @@ public class SimulationPaneVisual extends Pane {
             Point2D pos = holdingSlots.get(i);
             upsertQueuePlane(p.id, safeCode(p), pos, true, p.emergency);
         }
-
-        // takeoff queue - use outboundQueueIds for exact order
-        Map<String, SimulationData.PlaneDTO> planeById = snapshot.planes.stream()
-                .collect(Collectors.toMap(p -> p.id, p -> p, (a, b) -> a));
 
         for (int i = 0; i < Math.min(snapshot.outboundQueueIds.size(), takeoffSlots.size()); i++) {
             String id = snapshot.outboundQueueIds.get(i);
@@ -481,7 +491,6 @@ public class SimulationPaneVisual extends Pane {
             upsertQueuePlane(p.id, safeCode(p), pos, false, p.emergency);
         }
 
-        // remove any queue nodes no longer needed
         Set<String> desiredSet = new HashSet<>(desiredIds);
         List<String> toRemove = queuePlaneNodes.keySet().stream()
                 .filter(id -> !desiredSet.contains(id))
@@ -574,51 +583,102 @@ public class SimulationPaneVisual extends Pane {
     private void playNewEvents(SimulationData snapshot) {
         if (snapshot.events == null) return;
 
-        Map<String, SimulationData.PlaneDTO> planeById = snapshot.planes.stream()
-                .filter(Objects::nonNull)
-                .filter(p -> p.id != null)
-                .collect(Collectors.toMap(p -> p.id, p -> p, (a, b) -> a));
-
         for (SimulationData.SimEvent ev : snapshot.events) {
             if (ev instanceof SimulationData.PlaneLanded landed) {
-                SimulationData.PlaneDTO p = planeById.get(landed.planeId());
-                boolean emergency = p != null && p.emergency;
-                animateLandingEvent(landed, landed.emergency());
+                boolean emergency = knownEmergencyByPlaneId.getOrDefault(
+                        landed.planeId(),
+                        landed.emergency()
+                );
+                animateLandingEvent(landed, emergency);
+
             } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
-                SimulationData.PlaneDTO p = planeById.get(tookOff.planeId());
-                boolean emergency = p != null && p.emergency;
+                boolean emergency = knownEmergencyByPlaneId.getOrDefault(
+                        tookOff.planeId(),
+                        false
+                );
                 animateTakeoffEvent(tookOff, emergency);
             }
         }
     }
 
     private void animateLandingEvent(SimulationData.PlaneLanded landed, boolean emergency) {
+        landingNow.add(landed.planeId());
+        suppressFromQueues(landed.planeId(), 2500);
+
         int runwayIdx = landed.runwayIndex();
         if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size() || runwayIdx >= runwayLandingEndPoints.size()) {
             return;
         }
 
-        Point2D start = runwayLeftEntryPoints.get(runwayIdx);
+        Point2D fallbackStart = runwayLeftEntryPoints.get(runwayIdx);
+        Point2D previousHoldingPos = findPreviousHoldingSlot(landed.planeId());
         Point2D end = runwayLandingEndPoints.get(runwayIdx);
 
-        PlaneVisual moving = new PlaneVisual(landed.planeId());
+        PlaneVisual moving;
+        double startX;
+        double startY;
 
-        double startX = anchoredX(moving, start);
-        double startY = anchoredY(moving, start);
+        // 1. Best case: plane already exists visually in queue -> reuse it
+        PlaneVisual existing = queuePlaneNodes.remove(landed.planeId());
+
+        if (existing != null) {
+            if (existing.moveTransition != null) {
+                existing.moveTransition.stop();
+                existing.moveTransition = null;
+            }
+
+            queueLayer.getChildren().remove(existing.root);
+
+            moving = existing;
+            moving.setHoldingStyle(false);
+            moving.setEmergencyStyle(emergency);
+
+            startX = moving.root.getLayoutX() + moving.root.getTranslateX();
+            startY = moving.root.getLayoutY() + moving.root.getTranslateY();
+
+            moving.root.setLayoutX(startX);
+            moving.root.setLayoutY(startY);
+            moving.root.setTranslateX(0);
+            moving.root.setTranslateY(0);
+        }
+        // 2. Next best: plane was in holding last snapshot -> start from that slot
+        else if (previousHoldingPos != null) {
+            moving = new PlaneVisual(landed.planeId());
+            moving.setHoldingStyle(false);
+            moving.setEmergencyStyle(emergency);
+
+            startX = anchoredX(moving, previousHoldingPos);
+            startY = anchoredY(moving, previousHoldingPos);
+
+            moving.root.setLayoutX(startX);
+            moving.root.setLayoutY(startY);
+        }
+        // 3. Fallback: old behaviour, start at runway entry
+        else {
+            moving = new PlaneVisual(landed.planeId());
+            moving.setHoldingStyle(false);
+            moving.setEmergencyStyle(emergency);
+
+            startX = anchoredX(moving, fallbackStart);
+            startY = anchoredY(moving, fallbackStart);
+
+            moving.root.setLayoutX(startX);
+            moving.root.setLayoutY(startY);
+        }
+
         double endX = anchoredX(moving, end);
         double endY = anchoredY(moving, end);
 
-        moving.root.setLayoutX(startX);
-        moving.root.setLayoutY(startY);
-        moving.setHoldingStyle(false);
-        moving.setEmergencyStyle(emergency);
         moving.planeIcon.setRotate(0);
 
         actionLayer.getChildren().add(moving.root);
+        moving.root.toFront();
 
-        Duration moveDuration = durationForDistance(startX, startY, endX, endY, 300.0); //***** 
+        Duration moveDuration = durationForDistance(startX, startY, endX, endY, 300.0);
+
         TranslateTransition move = new TranslateTransition(moveDuration, moving.root);
-
+        move.setFromX(0);
+        move.setFromY(0);
         move.setToX(endX - startX);
         move.setToY(endY - startY);
         move.setInterpolator(Interpolator.LINEAR);
@@ -632,9 +692,11 @@ public class SimulationPaneVisual extends Pane {
         activeEventAnimations.add(pt);
 
         pt.setOnFinished(e -> {
+            landingNow.remove(landed.planeId());
             activeEventAnimations.remove(pt);
             actionLayer.getChildren().remove(moving.root);
         });
+
         pt.play();
     }
 
@@ -661,8 +723,6 @@ public class SimulationPaneVisual extends Pane {
 
         double exitX = anchoredX(moving, exit);
         double exitY = anchoredY(moving, exit);
-
-        System.out.println("TAKEOFF startX = " + startX + ", startY = " + startY);
 
         // place it FIRST, before adding to the pane
         moving.root.setLayoutX(startX);
@@ -823,6 +883,86 @@ public class SimulationPaneVisual extends Pane {
             }
         }
     }
+
+    private Point2D findPreviousHoldingSlot(String planeId) {
+        if (previousSnapshot == null || previousSnapshot.planes == null) return null;
+
+        List<SimulationData.PlaneDTO> holdingPlanes = previousSnapshot.planes.stream()
+                .filter(Objects::nonNull)
+                .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < Math.min(holdingPlanes.size(), holdingSlots.size()); i++) {
+            SimulationData.PlaneDTO p = holdingPlanes.get(i);
+            if (p != null && Objects.equals(p.id, planeId)) {
+                return holdingSlots.get(i);
+            }
+        }
+
+        return null;
+    }
+
+    private Set<String> getActiveEventPlaneIds(SimulationData snapshot) {
+        Set<String> ids = new HashSet<>();
+        if (snapshot == null || snapshot.events == null) return ids;
+
+        for (SimulationData.SimEvent ev : snapshot.events) {
+            if (ev instanceof SimulationData.PlaneLanded landed) {
+                ids.add(landed.planeId());
+            } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
+                ids.add(tookOff.planeId());
+            }
+        }
+        return ids;
+    }
+
+    private Boolean findEmergencyInPreviousSnapshot(String planeId) {
+        if (previousSnapshot == null || previousSnapshot.planes == null) return null;
+
+        for (SimulationData.PlaneDTO p : previousSnapshot.planes) {
+            if (p != null && Objects.equals(p.id, planeId)) {
+                return p.emergency;
+            }
+        }
+        return null;
+    }
+
+    private void updateEmergencyCache(SimulationData snapshot) {
+        if (snapshot == null || snapshot.planes == null) return;
+
+        for (SimulationData.PlaneDTO p : snapshot.planes) {
+            if (p != null && p.id != null) {
+                if (p.emergency) {
+                    knownEmergencyByPlaneId.put(p.id, true);
+                } else {
+                    knownEmergencyByPlaneId.putIfAbsent(p.id, false);
+                }
+            }
+        }
+    }
+
+    private void suppressFromQueues(String planeId, long millis) {
+        if (planeId == null) return;
+        queueSuppressedUntil.put(planeId, System.currentTimeMillis() + millis);
+    }
+
+    private boolean isSuppressedFromQueues(String planeId) {
+        if (planeId == null) return false;
+        Long until = queueSuppressedUntil.get(planeId);
+        if (until == null) return false;
+
+        if (System.currentTimeMillis() > until) {
+            queueSuppressedUntil.remove(planeId);
+            return false;
+        }
+        return true;
+    }
+
+    private void cleanupSuppressedPlanes() {
+        long now = System.currentTimeMillis();
+        queueSuppressedUntil.entrySet().removeIf(e -> e.getValue() < now);
+    }
+
     // ----- Plane Animations -----
 
     private static class PlaneVisual {
