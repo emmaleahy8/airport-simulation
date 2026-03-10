@@ -15,9 +15,26 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.util.Duration;
+import javafx.scene.control.Slider;
+import javafx.animation.Interpolator;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.Glow;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Arc;
+import javafx.scene.shape.ArcType;
+import javafx.animation.RotateTransition;
+import javafx.scene.Group;
+import javafx.scene.Node;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.scene.transform.Rotate;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 import com.group32.cs261project.App;
 
@@ -37,10 +54,19 @@ public class RunningPage implements Page {
     private final List<Label> runwayStatusVals = new ArrayList<>();
 
     private PathTransition spinnerAnim;
+    private Timeline sweepAnim;
 
     private SimulationPaneVisual visual;
 
     private SimulationData currentConfig;
+
+    private StackPane simulationPane;
+    private VBox fastModeOverlay;
+    private Label fastModeNote;
+
+    // Simulation Speed Slider
+    private final Slider speedSlider = new Slider(1, 19, 10);
+    private final Label speedValueLabel = new Label("1.0x");
 
     // Pause button
     private Button pauseBtn;
@@ -102,45 +128,37 @@ public class RunningPage implements Page {
 
         VBox metricsCard = buildMetricsCard();
         VBox runwayCard = buildRunwayCard();
+        VBox speedCard = buildSpeedCard();
+        HBox buttons = buildControlButtons();
         
         VBox.setVgrow(runwayCard, Priority.ALWAYS);
 
         metricsCard.setMaxWidth(Double.MAX_VALUE);
         runwayCard.setMaxWidth(Double.MAX_VALUE);
+        speedCard.setMaxWidth(Double.MAX_VALUE);
         leftColumn.setFillWidth(true);
 
-        leftColumn.getChildren().addAll(metricsCard, runwayCard);
+        leftColumn.getChildren().addAll(metricsCard, runwayCard, speedCard, buttons);
 
         visual = new SimulationPaneVisual();
+        fastModeOverlay = buildFastModeOverlay();
 
-        StackPane simulationPane = new StackPane();
+        simulationPane = new StackPane();
         simulationPane.setAlignment(Pos.CENTER);
         simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
-        simulationPane.getChildren().add(visual);
+        
+        visual.prefWidthProperty().bind(simulationPane.widthProperty());
+        visual.prefHeightProperty().bind(simulationPane.heightProperty());
+
+        fastModeOverlay.prefWidthProperty().bind(simulationPane.widthProperty());
+        fastModeOverlay.prefHeightProperty().bind(simulationPane.heightProperty());
+
+        simulationPane.getChildren().addAll(visual, fastModeOverlay);
 
         HBox.setHgrow(simulationPane, Priority.ALWAYS);
 
         mainLayout.getChildren().addAll(leftColumn, simulationPane);
         root.setCenter(mainLayout);
-
-        // Pause Button
-        pauseBtn = new Button("Pause");
-        pauseBtn.setStyle(BTN_SOFT);
-        pauseBtn.setOnAction(e -> togglePause());
-
-        Button endBtn = new Button("End Simulation");
-        endBtn.setStyle(BTN_PRIMARY);
-        endBtn.setOnAction(e -> onEnd());
-
-        Button restartBtn = new Button("Restart");
-        restartBtn.setStyle(BTN_SOFT);
-        restartBtn.setOnAction(e -> onRestart());
-
-        HBox buttons = new HBox(14, pauseBtn, endBtn, restartBtn);
-        buttons.setAlignment(Pos.CENTER_LEFT);
-        buttons.setPadding(new Insets(0, 18, 18, 18));
-
-        root.setBottom(buttons);
     }
 
     @Override
@@ -150,7 +168,6 @@ public class RunningPage implements Page {
 
     @Override
     public void onEnter(Object data) {
-
         currentConfig = ((SimulationData) data).copy();
         currentConfig.ensureRunwayListSize();
 
@@ -164,6 +181,15 @@ public class RunningPage implements Page {
         if (spinnerAnim != null) {
             spinnerAnim.playFromStart();
         }
+        if (sweepAnim != null) {
+            sweepAnim.playFromStart();
+        }
+
+        speedSlider.setValue(10);  // maps to 1.0x
+        speedValueLabel.setText(formatSpeed(1.0));
+        sim.setPlaybackSpeed(1.0);
+        visual.setPlaybackSpeed(1.0);
+        updateVisualMode(1.0);
 
         sim.start(currentConfig, snap -> Platform.runLater(() -> {
 
@@ -173,8 +199,9 @@ public class RunningPage implements Page {
 
             updateRunwayTable(snap);
 
-            visual.update(snap);
-
+            if (mapSliderToSpeed(speedSlider.getValue()) <= 2.0) {
+                visual.update(snap);
+            }
         }));
     }
 
@@ -183,6 +210,48 @@ public class RunningPage implements Page {
         if (spinnerAnim != null) {
             spinnerAnim.stop();
         }
+    }
+
+    // ----- Speed Slider -----
+    private VBox buildSpeedCard() {
+        VBox box = new VBox(8);
+
+        Label title = new Label("Simulation Speed");
+        title.setStyle(MONITOR_LABEL);
+        title.setFont(Font.font(16));
+
+        speedSlider.setMin(1);
+        speedSlider.setMax(19);
+        speedSlider.setValue(10);
+        speedSlider.setBlockIncrement(1);
+        speedSlider.setMajorTickUnit(1);
+        speedSlider.setMinorTickCount(0);
+        speedSlider.setSnapToTicks(true);
+        speedSlider.setShowTickMarks(false);
+        speedSlider.setShowTickLabels(false);
+
+        speedValueLabel.setStyle(MONITOR_TITLE);
+
+        // Listener
+        speedSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            double speed = mapSliderToSpeed(newVal.doubleValue());
+            speedValueLabel.setText(formatSpeed(speed));
+
+            sim.setPlaybackSpeed(speed);
+            visual.setPlaybackSpeed(speed);
+            updateVisualMode(speed);
+        });
+
+        HBox headerRow = new HBox();
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        headerRow.getChildren().addAll(title, spacer, speedValueLabel);
+
+        box.getChildren().addAll(headerRow, speedSlider);
+        return box;
     }
 
     private VBox buildMetricsCard() {
@@ -239,6 +308,169 @@ public class RunningPage implements Page {
         card.getChildren().addAll(header, new Separator(), runwayTable);
 
         return card;
+    }
+
+    private Node buildPlaneSpinnerWithTrack(double paneSize, double radius) {
+        StackPane wrap = new StackPane();
+        wrap.setAlignment(Pos.CENTER);
+
+        Pane pane = new Pane();
+        pane.setPrefSize(paneSize, paneSize);
+        pane.setMinSize(paneSize, paneSize);
+        pane.setMaxSize(paneSize, paneSize);
+
+        double cx = paneSize / 2.0;
+        double cy = paneSize / 2.0;
+
+        // Background disc
+        Circle bg = new Circle(cx, cy, radius + 12);
+        bg.setFill(Color.web("#071407"));
+        bg.setStroke(Color.web("#163d1f"));
+        bg.setStrokeWidth(1.5);
+
+        // Outer ring
+        Circle track = new Circle(cx, cy, radius);
+        track.setFill(null);
+        track.setStroke(Color.web("#39e75f"));
+        track.setStrokeWidth(2.5);
+        track.setEffect(new Glow(0.45));
+
+        // Inner rings
+        Circle innerRing1 = new Circle(cx, cy, radius * 0.66);
+        innerRing1.setFill(null);
+        innerRing1.setStroke(Color.web("#1f6f2c"));
+        innerRing1.setStrokeWidth(1.3);
+
+        Circle innerRing2 = new Circle(cx, cy, radius * 0.33);
+        innerRing2.setFill(null);
+        innerRing2.setStroke(Color.web("#163d1f"));
+        innerRing2.setStrokeWidth(1.0);
+
+        // Crosshair
+        Line hLine = new Line(cx - radius, cy, cx + radius, cy);
+        hLine.setStroke(Color.web("#1f6f2c"));
+        hLine.setStrokeWidth(1);
+
+        Line vLine = new Line(cx, cy - radius, cx, cy + radius);
+        vLine.setStroke(Color.web("#1f6f2c"));
+        vLine.setStrokeWidth(1);
+
+        // Radar sweep wedge
+        Arc wedge = new Arc(cx, cy, radius, radius, -28, 56);
+        wedge.setType(ArcType.ROUND);
+        wedge.setFill(Color.web("#39e75f", 0.14));
+        wedge.setStroke(null);
+        wedge.setEffect(new Glow(0.8));
+
+        // Plane path
+        Circle path = new Circle(cx, cy, radius);
+
+        // Plane icon
+        Label plane = new Label("✈");
+        plane.setStyle(
+            "-fx-font-size: 18px;" +
+            "-fx-text-fill: #d6ffe2;"
+        );
+        plane.setEffect(new Glow(1.0));
+
+        // Bright leading edge
+        double frontAngleDeg = -28; // leading edge of the wedge
+        double theta = Math.toRadians(frontAngleDeg);
+
+        double ex = cx + radius * Math.cos(theta);
+        double ey = cy - radius * Math.sin(theta);
+
+        Line sweepEdge = new Line(cx, cy, ex, ey);
+        sweepEdge.setStroke(Color.web("#7CFF9B"));
+        sweepEdge.setStrokeWidth(2.2);
+        sweepEdge.setOpacity(0.95);
+        sweepEdge.setEffect(new Glow(0.9));
+
+        // Put them in one group
+        Group sweepGroup = new Group(wedge, sweepEdge);
+
+        // Rotate around the radar centre
+        Rotate sweepRotate = new Rotate(0, cx, cy);
+        sweepGroup.getTransforms().add(sweepRotate);
+
+        // Animate the angle 
+        sweepAnim = new Timeline(
+            new KeyFrame(Duration.ZERO, new KeyValue(sweepRotate.angleProperty(), 0)),
+            new KeyFrame(Duration.seconds(3.2), new KeyValue(sweepRotate.angleProperty(), 360))
+        );
+        sweepAnim.setCycleCount(Animation.INDEFINITE);
+
+        spinnerAnim = new PathTransition(Duration.seconds(1.8), path, plane);
+        spinnerAnim.setCycleCount(Animation.INDEFINITE);
+        spinnerAnim.setInterpolator(Interpolator.LINEAR);
+        spinnerAnim.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+
+        spinnerAnim = new PathTransition(Duration.seconds(1.8), path, plane);
+        spinnerAnim.setCycleCount(Animation.INDEFINITE);
+        spinnerAnim.setInterpolator(Interpolator.LINEAR);
+        spinnerAnim.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+
+        // Centre dot
+        Circle centreDot = new Circle(cx, cy, 3.5);
+        centreDot.setFill(Color.web("#39e75f"));
+        centreDot.setEffect(new Glow(0.8));
+
+        pane.getChildren().addAll(
+            bg,
+            innerRing2,
+            innerRing1,
+            hLine,
+            vLine,
+            track,
+            sweepGroup,
+            centreDot,
+            plane
+        );
+
+        Label hint = new Label("Simulation running...");
+        hint.setStyle(
+            "-fx-text-fill: #39e75f;" +
+            "-fx-font-size: 18px;" +
+            "-fx-font-weight: bold;"
+        );
+        hint.setEffect(new Glow(0.25));
+
+        VBox box = new VBox(10, pane, hint);
+        box.setAlignment(Pos.CENTER);
+
+        wrap.getChildren().add(box);
+
+        sweepAnim.play();
+        spinnerAnim.play();
+
+        return wrap;
+    }
+
+    private VBox buildFastModeOverlay() {
+
+    VBox box = new VBox(14);
+        box.setAlignment(Pos.CENTER);
+        box.setStyle(
+            "-fx-background-color: rgb(14, 26, 40);" +
+            "-fx-background-radius: 16;"
+        );
+
+        Node loadingIcon = buildPlaneSpinnerWithTrack(240, 95);
+
+        Label title = new Label("Fast Mode Enabled");
+        title.setFont(Font.font(16));
+        title.setStyle(MONITOR_LABEL);
+
+        Label note = new Label("Reduce speed to see visual");
+        note.setFont(Font.font(14));
+        note.setStyle(SMALL_TEXT);
+
+        box.getChildren().addAll(loadingIcon, title, note);
+
+        box.setVisible(false);
+        box.setManaged(false);
+
+        return box;
     }
 
     private void addRow(GridPane gp, int row, String labelText, Label valueLabel, String suffix) {
@@ -312,6 +544,8 @@ public class RunningPage implements Page {
         }
     }
 
+    // ----- Helpers -----
+
     private void updateRunwayTable(SimulationData d) {
 
         d.ensureRunwayListSize();
@@ -325,6 +559,54 @@ public class RunningPage implements Page {
             runwayModeVals.get(i).setText(pretty(r.mode.name()));
             runwayStatusVals.get(i).setText(pretty(r.status.name()));
         }
+    }
+
+    // Buttons Control Card
+    private HBox buildControlButtons() {
+        pauseBtn = new Button("Pause");
+        pauseBtn.setStyle(BTN_SOFT);
+        pauseBtn.setOnAction(e -> togglePause());
+
+        Button endBtn = new Button("End Simulation");
+        endBtn.setStyle(BTN_PRIMARY);
+        endBtn.setOnAction(e -> onEnd());
+
+        Button restartBtn = new Button("Restart");
+        restartBtn.setStyle(BTN_SOFT);
+        restartBtn.setOnAction(e -> onRestart());
+
+        HBox buttons = new HBox(14, pauseBtn, endBtn, restartBtn);
+        buttons.setAlignment(Pos.CENTER_LEFT);
+
+        return buttons;
+    }
+
+    private double mapSliderToSpeed(double sliderValue) {
+        int v = (int) Math.round(sliderValue);
+
+        if (v <= 9) {
+            return v / 10.0;   // 1->0.1, 2->0.2, ..., 9->0.9
+        }
+        if (v == 10) {
+            return 1.0;        // 10->1.0
+        }
+        return v - 9;          // 11->2.0, 12->3.0, ..., 19->10.0
+    }
+
+    private void updateVisualMode(double speed) {
+        boolean hideVisual = speed >= 3.0;
+
+        visual.setVisible(!hideVisual);
+        visual.setManaged(!hideVisual);
+
+        fastModeOverlay.setVisible(hideVisual);
+        fastModeOverlay.setManaged(hideVisual);
+    }
+
+    private String formatSpeed(double speed) {
+        return (speed < 1.0)
+                ? String.format("%.1fx", speed)
+                : (speed == 1.0 ? "1.0x" : String.format("%.0fx", speed));
     }
 
     private String pretty(String enumName) {

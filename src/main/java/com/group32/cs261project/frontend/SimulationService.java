@@ -43,4 +43,9 @@ public interface SimulationService {
      * Returns whether the simulation is currently paused
      */
     boolean isPaused();
+
+    /**
+     * Changes the speed of the simulation
+     */
+    void setPlaybackSpeed(double speed);
 }

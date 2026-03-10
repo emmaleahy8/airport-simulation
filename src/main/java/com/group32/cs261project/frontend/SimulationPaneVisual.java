@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class SimulationPaneVisual extends Pane {
 
-    // ---------- Styling ----------
+    // ----- Styling -----
     private static final Color BG = Color.web("#000000");
     private static final Color GREEN = Color.web("#39e75f");
     private static final Color GREEN_DIM = Color.web("#1f6f2c");
@@ -39,16 +39,16 @@ public class SimulationPaneVisual extends Pane {
     private static final String HEADING = "-fx-text-fill: #51ed73; -fx-font-weight: 700;";
     private static final String RUNWAY_TITLE = "-fx-text-fill: #51ed73; -fx-font-weight: 700;";
 
-    // ---------- Main layers ----------
+    // ----- Main layers -----
     private final Pane backgroundLayer = new Pane();
     private final Pane queueLayer = new Pane();
     private final Pane actionLayer = new Pane();
 
-    // ---------- Titles ----------
+    // ----- Titles -----
     private final Label holdingTitle = makeTitle("Holding Queue:");
     private final Label takeoffTitle = makeTitle("Take-off Queue:");
 
-    // ---------- Radar ----------
+    // ----- Radar -----
     private final Circle radarOuter = new Circle();
     private final List<Circle> radarMainRings = new ArrayList<>();
     private final List<Circle> radarSubtleRings = new ArrayList<>();
@@ -60,25 +60,32 @@ public class SimulationPaneVisual extends Pane {
     private double radarSweepAngleDeg = -45;
     private double holdingRotationDeg = 0;
 
-    // ---------- Runways ----------
+    // ----- Runways -----
     private final List<Rectangle> runwayRects = new ArrayList<>();
     private final List<Label> runwayLabels = new ArrayList<>();
     private final List<Line> runwayTopLines = new ArrayList<>();
     private final List<Line> runwayBottomLines = new ArrayList<>();
+    private final List<Point2D> runwayLandingEndPoints = new ArrayList<>();
+    private final List<Point2D> runwayTakeoffStartPoints = new ArrayList<>();
+    private final List<Point2D> runwayTakeoffRunEndPoints = new ArrayList<>();
 
-    // ---------- Slot positions ----------
+    // ----- Slot positions -----
     private final List<Point2D> holdingSlots = new ArrayList<>();
     private final List<Point2D> takeoffSlots = new ArrayList<>();
     private final List<Point2D> runwayLeftEntryPoints = new ArrayList<>();
     private final List<Point2D> runwayCentres = new ArrayList<>();
     private final List<Point2D> runwayRightExitPoints = new ArrayList<>();
 
-    // ---------- Queue visuals ----------
+    // ----- Queue visuals -----
     private final Map<String, PlaneVisual> queuePlaneNodes = new HashMap<>();
 
-    // ---------- State tracking ----------
+    // ----- State tracking -----
     private SimulationData previousSnapshot;
-    private int processedEventCount = 0;
+
+    // ----- Playback Speed -----
+    private double playbackSpeed = 1.0;
+    private static final double VISUAL_SLOWDOWN = 3.0;
+    private final List<Animation> activeEventAnimations = new ArrayList<>();
 
     public SimulationPaneVisual() {
         setPrefSize(PREF_W, PREF_H);
@@ -171,9 +178,7 @@ public class SimulationPaneVisual extends Pane {
         });
     }
 
-    // =========================================================
-    // Layout
-    // =========================================================
+    // ----- Layout -----
 
     private void relayout(SimulationData snapshot) {
         double w = Math.max(getWidth(), getPrefWidth());
@@ -325,6 +330,9 @@ public class SimulationPaneVisual extends Pane {
         runwayLeftEntryPoints.clear();
         runwayCentres.clear();
         runwayRightExitPoints.clear();
+        runwayLandingEndPoints.clear();
+        runwayTakeoffRunEndPoints.clear();
+        runwayTakeoffStartPoints.clear();
 
         double columnX = w * 0.69;
         double runwayWidth = Math.min(290, w * 0.23);
@@ -383,15 +391,19 @@ public class SimulationPaneVisual extends Pane {
             backgroundLayer.getChildren().addAll(rect, topLine, bottomLine, label);
 
             double midY = runwayY + runwayHeight / 2.0;
-            runwayLeftEntryPoints.add(new Point2D(columnX - 110, midY));
+            runwayLeftEntryPoints.add(new Point2D(columnX - 20, midY));
             runwayCentres.add(new Point2D(columnX + runwayWidth / 2.0, midY));
-            runwayRightExitPoints.add(new Point2D(columnX + runwayWidth + 90, midY));
+            
+            runwayRightExitPoints.add(new Point2D(w + 140, midY - 120));
+            
+            runwayLandingEndPoints.add(new Point2D(columnX + runwayWidth, midY));
+            
+            runwayTakeoffStartPoints.add(new Point2D(columnX - 20, midY));
+            runwayTakeoffRunEndPoints.add(new Point2D(columnX + runwayWidth - 10, midY));
         }
     }
 
-    // =========================================================
-    // Queue rendering
-    // =========================================================
+    // ----- Queue rendering -----
 
     private void renderQueues(SimulationData snapshot) {
         List<String> desiredIds = new ArrayList<>();
@@ -452,8 +464,11 @@ public class SimulationPaneVisual extends Pane {
 
         // position / movement
         if (holding || isNew) {
-            // Holding planes snap into place.
-            // New takeoff planes also appear directly in place.
+            if (pv.moveTransition != null) {
+                pv.moveTransition.stop();
+                pv.moveTransition = null;
+            }
+
             pv.root.setLayoutX(x);
             pv.root.setLayoutY(y);
             pv.root.setTranslateX(0);
@@ -464,7 +479,7 @@ public class SimulationPaneVisual extends Pane {
             double currentY = pv.root.getLayoutY() + pv.root.getTranslateY();
 
             if (Math.abs(currentX - x) > 1 || Math.abs(currentY - y) > 1) {
-                animateNodeTo(pv.root, x, y, Duration.millis(250));
+                animateNodeTo(pv, x, y, scaledMillis(25)); //***** 
             }
         }
 
@@ -492,6 +507,11 @@ public class SimulationPaneVisual extends Pane {
 
             PlaneVisual pv = queuePlaneNodes.get(p.id);
             if (pv != null) {
+                if (pv.moveTransition != null) {
+                    pv.moveTransition.stop();
+                    pv.moveTransition = null;
+                }
+
                 Point2D pos = holdingSlots.get(i);
                 pv.root.setLayoutX(pos.getX() - pv.getAnchorOffsetX());
                 pv.root.setLayoutY(pos.getY() - pv.getAnchorOffsetY());
@@ -501,84 +521,145 @@ public class SimulationPaneVisual extends Pane {
         }
     }    
 
-    // =========================================================
-    // Event animations
-    // =========================================================
+    // ----- Event animations -----
 
     private void playNewEvents(SimulationData snapshot) {
         if (snapshot.events == null) return;
-        if (processedEventCount > snapshot.events.size()) processedEventCount = 0;
 
-        for (int i = processedEventCount; i < snapshot.events.size(); i++) {
-            SimulationData.SimEvent ev = snapshot.events.get(i);
-
+        for (SimulationData.SimEvent ev : snapshot.events) {
             if (ev instanceof SimulationData.PlaneLanded landed) {
+                System.out.println("LANDING ANIMATION: " + landed.planeId() + " runway " + landed.runwayIndex());
                 animateLandingEvent(landed);
             } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
+                System.out.println("TAKEOFF ANIMATION: " + tookOff.planeId() + " runway " + tookOff.runwayIndex());
                 animateTakeoffEvent(tookOff);
             }
         }
-
-        processedEventCount = snapshot.events.size();
     }
 
     private void animateLandingEvent(SimulationData.PlaneLanded landed) {
         int runwayIdx = landed.runwayIndex();
-        if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size()) return;
+        if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size() || runwayIdx >= runwayLandingEndPoints.size()) {
+            return;
+        }
 
         Point2D start = runwayLeftEntryPoints.get(runwayIdx);
-        Point2D end = runwayCentres.get(runwayIdx);
+        Point2D end = runwayLandingEndPoints.get(runwayIdx);
 
         PlaneVisual moving = new PlaneVisual(landed.planeId());
-        moving.root.setLayoutX(start.getX());
-        moving.root.setLayoutY(start.getY());
+
+        double startX = anchoredX(moving, start);
+        double startY = anchoredY(moving, start);
+        double endX = anchoredX(moving, end);
+        double endY = anchoredY(moving, end);
+
+        moving.root.setLayoutX(startX);
+        moving.root.setLayoutY(startY);
+        moving.setHoldingStyle(false);
+        moving.planeIcon.setRotate(0);
+
         actionLayer.getChildren().add(moving.root);
 
-        TranslateTransition move = new TranslateTransition(Duration.millis(700), moving.root);
-        move.setToX(end.getX() - start.getX());
-        move.setToY(end.getY() - start.getY());
-        move.setInterpolator(Interpolator.EASE_BOTH);
+        Duration moveDuration = durationForDistance(startX, startY, endX, endY, 300.0); //***** 
+        TranslateTransition move = new TranslateTransition(moveDuration, moving.root);
 
-        FadeTransition fade = new FadeTransition(Duration.millis(220), moving.root);
+        move.setToX(endX - startX);
+        move.setToY(endY - startY);
+        move.setInterpolator(Interpolator.LINEAR);
+
+        FadeTransition fade = new FadeTransition(scaledMillis(140), moving.root);
         fade.setFromValue(1.0);
         fade.setToValue(0.0);
-        fade.setDelay(Duration.millis(520));
+        fade.setDelay(moveDuration.subtract(scaledMillis(120)));
 
         ParallelTransition pt = new ParallelTransition(move, fade);
-        pt.setOnFinished(e -> actionLayer.getChildren().remove(moving.root));
+        activeEventAnimations.add(pt);
+
+        pt.setOnFinished(e -> {
+            activeEventAnimations.remove(pt);
+            actionLayer.getChildren().remove(moving.root);
+        });
         pt.play();
     }
 
     private void animateTakeoffEvent(SimulationData.PlaneTookOff tookOff) {
         int runwayIdx = tookOff.runwayIndex();
-        if (runwayIdx < 0 || runwayIdx >= runwayCentres.size()) return;
+        if (runwayIdx < 0
+            || runwayIdx >= runwayTakeoffStartPoints.size()
+            || runwayIdx >= runwayTakeoffRunEndPoints.size()
+            || runwayIdx >= runwayRightExitPoints.size()) {
+            return;
+        }
 
-        Point2D start = runwayCentres.get(runwayIdx);
-        Point2D end = runwayRightExitPoints.get(runwayIdx);
+        Point2D start = runwayTakeoffStartPoints.get(runwayIdx);
+        Point2D runwayEnd = runwayTakeoffRunEndPoints.get(runwayIdx);
+        Point2D exit = runwayRightExitPoints.get(runwayIdx);
 
         PlaneVisual moving = new PlaneVisual(tookOff.planeId());
-        moving.root.setLayoutX(start.getX());
-        moving.root.setLayoutY(start.getY());
+
+        double startX = anchoredX(moving, start);
+        double startY = anchoredY(moving, start);
+
+        double runEndX = anchoredX(moving, runwayEnd);
+        double runEndY = anchoredY(moving, runwayEnd);
+
+        double exitX = anchoredX(moving, exit);
+        double exitY = anchoredY(moving, exit);
+
+        System.out.println("TAKEOFF startX = " + startX + ", startY = " + startY);
+
+        // place it FIRST, before adding to the pane
+        moving.root.setLayoutX(startX);
+        moving.root.setLayoutY(startY);
+        moving.root.setTranslateX(0);
+        moving.root.setTranslateY(0);
+
+        moving.setHoldingStyle(false);
+        moving.planeIcon.setRotate(0);
+
         actionLayer.getChildren().add(moving.root);
+        moving.root.toFront();
 
-        TranslateTransition move = new TranslateTransition(Duration.millis(850), moving.root);
-        move.setToX(end.getX() - start.getX());
-        move.setToY(end.getY() - start.getY());
-        move.setInterpolator(Interpolator.EASE_OUT);
+        Duration rollDuration = durationForDistance(startX, startY, runEndX, runEndY, 300.0); //***** 
+        TranslateTransition roll = new TranslateTransition(rollDuration, moving.root);        
+        roll.setFromX(0);
+        roll.setFromY(0);
+        roll.setToX(runEndX - startX);
+        roll.setToY(runEndY - startY);
+        roll.setInterpolator(Interpolator.LINEAR);
 
-        FadeTransition fade = new FadeTransition(Duration.millis(260), moving.root);
+        Duration climbDuration = durationForDistance(runEndX, runEndY, exitX, exitY, 1800.0);
+        TranslateTransition climb = new TranslateTransition(climbDuration, moving.root);        
+        climb.setFromX(runEndX - startX);
+        climb.setFromY(runEndY - startY);
+        climb.setToX(exitX - startX);
+        climb.setToY(exitY - startY);
+        climb.setInterpolator(Interpolator.EASE_OUT);
+
+        Duration totalTakeoffDuration = rollDuration.add(climbDuration);
+        FadeTransition fade = new FadeTransition(scaledMillis(200), moving.root);
         fade.setFromValue(1.0);
         fade.setToValue(0.0);
-        fade.setDelay(Duration.millis(620));
+        fade.setDelay(totalTakeoffDuration.subtract(scaledMillis(180)));
 
-        ParallelTransition pt = new ParallelTransition(move, fade);
-        pt.setOnFinished(e -> actionLayer.getChildren().remove(moving.root));
+        SequentialTransition seq = new SequentialTransition(roll, climb);
+        ParallelTransition pt = new ParallelTransition(seq, fade);
+
+        activeEventAnimations.add(pt);
+
+        pt.setOnFinished(e -> {
+            activeEventAnimations.remove(pt);
+            actionLayer.getChildren().remove(moving.root);
+        });
         pt.play();
     }
 
-    // =========================================================
-    // Helpers
-    // =========================================================
+    public void setPlaybackSpeed(double playbackSpeed) {
+        this.playbackSpeed = Math.max(0.1, playbackSpeed);
+        Platform.runLater(this::resetTransientAnimations);
+    }
+
+    // ----- Helpers -----
 
     private static Label makeTitle(String text) {
         Label l = new Label(text);
@@ -593,7 +674,13 @@ public class SimulationPaneVisual extends Pane {
         return "?";
     }
 
-    private void animateNodeTo(Pane node, double targetX, double targetY, Duration duration) {
+    private void animateNodeTo(PlaneVisual pv, double targetX, double targetY, Duration duration) {
+        Pane node = pv.root;
+
+        if (pv.moveTransition != null) {
+            pv.moveTransition.stop();
+        }
+
         double currentX = node.getLayoutX() + node.getTranslateX();
         double currentY = node.getLayoutY() + node.getTranslateY();
 
@@ -606,24 +693,88 @@ public class SimulationPaneVisual extends Pane {
         tt.setToX(targetX - currentX);
         tt.setToY(targetY - currentY);
         tt.setInterpolator(Interpolator.EASE_BOTH);
+
         tt.setOnFinished(e -> {
             node.setLayoutX(targetX);
             node.setLayoutY(targetY);
             node.setTranslateX(0);
             node.setTranslateY(0);
+            pv.moveTransition = null;
         });
+
+        pv.moveTransition = tt;
         tt.play();
     }
 
-    // =========================================================
-    // Plane visual node
-    // =========================================================
+    private double anchoredX(PlaneVisual pv, Point2D point) {
+            return point.getX() - pv.getAnchorOffsetX();
+        }
+
+    private double anchoredY(PlaneVisual pv, Point2D point) {
+        return point.getY() - pv.getAnchorOffsetY();
+    }
+
+    // Time on Runway 
+    private Duration durationForDistance(double startX, double startY, double endX, double endY, double pixelsPerSecond) {
+        double dx = endX - startX;
+        double dy = endY - startY;
+        double distance = Math.hypot(dx, dy);
+
+        double millis = (distance / pixelsPerSecond) * 1000.0;
+
+        return Duration.millis(millis / effectiveVisualSpeed());
+    }
+
+    private Duration scaledMillis(double baseMillis) {
+        return Duration.millis(baseMillis / effectiveVisualSpeed());
+    }
+
+    private double effectiveVisualSpeed() {
+        if (playbackSpeed <= 0.1) return 0.12;
+        if (playbackSpeed <= 0.2) return 0.22;
+        if (playbackSpeed <= 0.3) return 0.32;
+        if (playbackSpeed <= 0.4) return 0.42;
+        if (playbackSpeed <= 0.5) return 0.55;
+        if (playbackSpeed <= 0.6) return 0.68;
+        if (playbackSpeed <= 0.7) return 0.78;
+        if (playbackSpeed <= 0.8) return 0.88;
+        if (playbackSpeed <= 0.9) return 0.95;
+        return playbackSpeed;
+    }
+
+    private void resetTransientAnimations() {
+        for (Animation animation : activeEventAnimations) {
+            if (animation != null) {
+                animation.stop();
+            }
+        }
+        activeEventAnimations.clear();
+        actionLayer.getChildren().clear();
+
+        for (PlaneVisual pv : queuePlaneNodes.values()) {
+            if (pv.moveTransition != null) {
+                pv.moveTransition.stop();
+                pv.moveTransition = null;
+
+                double currentX = pv.root.getLayoutX() + pv.root.getTranslateX();
+                double currentY = pv.root.getLayoutY() + pv.root.getTranslateY();
+
+                pv.root.setLayoutX(currentX);
+                pv.root.setLayoutY(currentY);
+                pv.root.setTranslateX(0);
+                pv.root.setTranslateY(0);
+            }
+        }
+    }
+    // ----- Plane Animations -----
 
     private static class PlaneVisual {
         final Pane root = new Pane();
         final StackPane iconWrap = new StackPane();
         final Label planeIcon = new Label("✈");
         final Label codeLabel = new Label();
+
+        TranslateTransition moveTransition;
 
         static final double ROOT_W = 170;
         static final double ROOT_H = 60;
@@ -644,7 +795,6 @@ public class SimulationPaneVisual extends Pane {
 
             codeLabel.setTextFill(Color.web("#7CFF95"));
             codeLabel.setFont(Font.font("Consolas", FontWeight.BOLD, 13));
-            codeLabel.setEffect(new Glow(0.85));
 
             iconWrap.setPrefSize(28, 28);
             iconWrap.setMinSize(28, 28);
