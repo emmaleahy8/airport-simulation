@@ -5,29 +5,20 @@ import java.time.Instant;
 
 import com.group32.cs261project.backend.model.Aircraft;
 
-
 public class MetricsCollector {
 
+    private final MaxAndAverageCollector<Integer> holdingSizeCollector;
+    private final MaxAndAverageCollector<Long> holdingTimeMinutesCollector;
 
-    private final MaxAndAverageCollector<Integer> holdingSizeCollector; // maximum size of holding pattern (2b)
-    private final MaxAndAverageCollector<Long> holdingTimeMinutesCollector; // avg time in holding pattern (2b)
+    private final MaxAndAverageCollector<Integer> takeoffQueueSizeCollector;
+    private final MaxAndAverageCollector<Long> takeoffTimeWaitMinutesCollector;
 
-    private final MaxAndAverageCollector<Integer> takeoffQueueSizeCollector; // maximum size of takeoff queue (1b)
-    private final MaxAndAverageCollector<Long> takeoffTimeWaitMinutesCollector; // avg time in takeoff queue (1b)
+    private final MaxAndAverageCollector<Long> arrivalDelayMinutesCollector;
+    private final MaxAndAverageCollector<Long> departureDelayMinutesCollector;
 
-    // maximum & average(actual arrival time - scheduled arrival time) (1c)
-    private final MaxAndAverageCollector<Long> arrivalDelayMinutesCollector; 
+    private int numDiverted;
+    private int numCancellations;
 
-    // maximum & average(actual departure time - scheduled departure time) (1c)
-    private final MaxAndAverageCollector<Long> departureDelayMinutesCollector; 
-
-    private int numDiverted; // number of planes diverted (5)
-    private int numCancellations; // number of planes cancelled based on configurable max wait time (4b)
-
-
-    /**
-     * Constructor initialises all values
-     */
     public MetricsCollector() {
         this.holdingSizeCollector = new MaxAndAverageCollector<>();
         this.holdingTimeMinutesCollector = new MaxAndAverageCollector<>();
@@ -81,8 +72,9 @@ public class MetricsCollector {
         this.numDiverted++;
     }
 
-    public SimulationReport buildReport() {
+    public SimulationReport buildReport(int numRunways) {
         return new SimulationReport(
+            numRunways,
             holdingSizeCollector.getMax(),
             holdingTimeMinutesCollector.getAverage(),
             takeoffQueueSizeCollector.getMax(),
@@ -95,5 +87,4 @@ public class MetricsCollector {
             numCancellations
         );
     }
-    
 }

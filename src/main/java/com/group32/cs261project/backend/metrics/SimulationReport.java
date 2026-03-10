@@ -1,13 +1,15 @@
 package com.group32.cs261project.backend.metrics;
 
 public record SimulationReport(
-    
+
+    Integer numRunways,
+
     Integer maxHoldingSize, // maximum size of holding pattern (2b)
     Double avgHoldingTimeMinutes, // avg time in holding pattern (2b)
 
     Integer maxTakeoffQueueSize, // maximum size of takeoff queue (1b)
     Double avgTakeoffWaitMinutes, // avg time in takeoff queue (1b)
-    
+
     Long maxArrivalDelayMinutes, // maximum actual arrival time - scheduled arrival time (1c)
     Double avgArrivalDelayMinutes, // avg actual arrival time - scheduled arrival time (1c)
 

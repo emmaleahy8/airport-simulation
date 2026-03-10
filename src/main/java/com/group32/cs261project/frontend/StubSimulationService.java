@@ -1,10 +1,17 @@
 package com.group32.cs261project.frontend;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.*;
+
+import com.group32.cs261project.backend.compare.RunCompareCompletedRun;
+import com.group32.cs261project.backend.compare.RunCompareHistory;
+import com.group32.cs261project.backend.metrics.SimulationReport;
+import com.group32.cs261project.backend.sim.SimConfig;
 /* Stub implementation of simulation backend.
 *  It implements the SimulationService interface methods: start, updateConfig, stop, and isRunning.
 *  Will be replaced by SimulationService once backend is complete.
@@ -25,6 +32,10 @@ public class StubSimulationService implements SimulationService {
     private long sumTakeoff = 0;
 
     private Random rng;
+
+    // compare-runs feature state
+    private final RunCompareHistory runCompareHistory = new RunCompareHistory();
+    private SimConfig currentRunConfig = null;
 
     // Plane Storage and queues
     private final Map<String, Plane> planes = new HashMap<>();
@@ -80,6 +91,7 @@ public class StubSimulationService implements SimulationService {
 
             sink = onSnapshot; // Store the callback for later tick updates
             rng = new Random(current.stableConfigHash()); // Seed RNG with config hash for deterministic behavior
+            currentRunConfig = mapConfigFromCurrent(current);
             
             running = true; // Mark simulation as running
 
@@ -116,6 +128,7 @@ public class StubSimulationService implements SimulationService {
             current.simMinute = simMinute;
             current.holdingQueue = holding;
             current.takeoffQueue = takeoff;
+            currentRunConfig = mapConfigFromCurrent(current);
         }
     }
 
@@ -400,11 +413,64 @@ public class StubSimulationService implements SimulationService {
         return base + (rng.nextDouble() < frac ? 1 : 0) + (rng.nextDouble() < 0.08 ? 1 : 0);
     }
 
+    // compare-runs helpers
+    private SimConfig mapConfigFromCurrent(SimulationData data) {
+        Instant start = Instant.now();
+        Instant end = start.plus(Duration.ofHours(12));
+
+        return SimConfig.builder()
+            .startTime(start)
+            .endTime(end)
+            .randomSeed(data.stableConfigHash())
+            .inboundRatePerHour(data.inboundRatePerHour)
+            .outboundRatePerHour(data.outboundRatePerHour)
+            .runwayOccupancySeconds(60)
+            .maxTakeoffWaitMinutes(30)
+            .lowFuelMinutes(20)
+            .fuelDiversionMinutes(10)
+            .mechanicalEmergencyProbability(data.mechanicalEmergencyProbability)
+            .passengerHealthEmergencyProbability(data.passengerHealthEmergencyProbability)
+            .verbose(false)
+            .build();
+    }
+
+    private SimulationReport buildReportFromCurrent(SimulationData data) {
+        return new SimulationReport(
+            data.runwayCount,
+            data.maxHoldingQueue,
+            data.avgHoldingQueue,
+            data.maxTakeoffQueue,
+            data.avgTakeoffQueue,
+            (long) data.maxInboundDelayMin,
+            data.avgInboundDelayMin,
+            (long) data.maxOutboundDelayMin,
+            data.avgOutboundDelayMin,
+            data.divertedCount,
+            data.cancelledCount
+        );
+    }
+
     // Stop the simulation safely and return a final report snapshot
     @Override
     public SimulationData stop() {
         synchronized (lock) {
             running = false;
+
+            if (current != null && currentRunConfig != null) {
+                SimulationReport report = buildReportFromCurrent(current);
+
+                RunCompareCompletedRun completedRun = new RunCompareCompletedRun(
+                    UUID.randomUUID().toString(),
+                    Instant.now(),
+                    currentRunConfig,
+                    report
+                );
+
+                runCompareHistory.addRun(completedRun);
+            }
+
+            currentRunConfig = null;
+
             // Final snapshot already has report fields; just return copy
             return current == null ? new SimulationData() : current.copy();
         }
@@ -429,6 +495,11 @@ public class StubSimulationService implements SimulationService {
     @Override
     public boolean isPaused() {
         return paused;
+    }
+
+    @Override
+    public RunCompareHistory getRunCompareHistory() {
+        return runCompareHistory;
     }
 
     private int pickTakeoffRunwayIndex() {

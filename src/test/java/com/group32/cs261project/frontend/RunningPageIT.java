@@ -1,6 +1,7 @@
 package com.group32.cs261project.frontend;
 
 import com.group32.cs261project.App;
+import com.group32.cs261project.backend.compare.RunCompareHistory;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -173,6 +174,7 @@ public class RunningPageIT extends ApplicationTest {
 
         boolean started = false;
         boolean paused = false;
+        private final RunCompareHistory runCompareHistory = new RunCompareHistory();
 
         Consumer<SimulationData> snapshotConsumer;
 
@@ -214,6 +216,11 @@ public class RunningPageIT extends ApplicationTest {
         @Override
         public boolean isPaused() {
             return paused;
+        }
+
+        @Override
+        public RunCompareHistory getRunCompareHistory() {
+            return runCompareHistory;
         }
     }
 }

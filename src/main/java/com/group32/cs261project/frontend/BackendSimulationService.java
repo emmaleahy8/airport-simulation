@@ -5,12 +5,15 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import com.group32.cs261project.backend.AirportSimulation;
+import com.group32.cs261project.backend.compare.RunCompareCompletedRun;
+import com.group32.cs261project.backend.compare.RunCompareHistory;
 import com.group32.cs261project.backend.gen.FlightGenerator;
 import com.group32.cs261project.backend.gen.FlightSeeder;
 import com.group32.cs261project.backend.gen.FlightType;
@@ -44,6 +47,10 @@ public class BackendSimulationService implements SimulationService {
     private SimulationData initialConfig = null;
     private AirportSimulation backendSim = null;
     private Instant startTime = null, endTime = null;
+
+    // compare-runs feature state
+    private final RunCompareHistory runCompareHistory = new RunCompareHistory();
+    private SimConfig currentRunConfig = null;
 
 
     /**
@@ -241,6 +248,10 @@ public class BackendSimulationService implements SimulationService {
         SimConfig cfg = mapConfig(uiConfig);
         Airport airport = mapAirport(uiConfig);
 
+        this.currentRunConfig = cfg;
+        this.startTime = cfg.startTime();
+        this.endTime = cfg.endTime();
+
         this.backendSim = new AirportSimulation(cfg, airport);
 
         FlightGenerator gen = new FlightGenerator(cfg, this.backendSim.engine().rng());
@@ -285,7 +296,12 @@ public class BackendSimulationService implements SimulationService {
     public SimulationData stop() {
 
         this.running = false;
-        this.executor.shutdownNow(); this.executor = null;
+
+        if (this.executor != null) {
+            this.executor.shutdownNow();
+            this.executor = null;
+        }
+
         SimulationReport report = this.backendSim.buildReport();
         SimulationData snap = snapshotFrom(this.backendSim);
 
@@ -302,6 +318,24 @@ public class BackendSimulationService implements SimulationService {
         snap.avgOutboundDelayMin = Objects.requireNonNullElse(report.avgDepartureDelayMinutes(), 0.0);
         snap.maxInboundDelayMin = Objects.requireNonNullElse(report.maxArrivalDelayMinutes(), 0L).intValue();
         snap.maxOutboundDelayMin = Objects.requireNonNullElse(report.maxDepartureDelayMinutes(), 0L).intValue();
+
+        if (this.currentRunConfig != null) {
+            RunCompareCompletedRun completedRun = new RunCompareCompletedRun(
+                UUID.randomUUID().toString(),
+                Instant.now(),
+                this.currentRunConfig,
+                report
+            );
+            this.runCompareHistory.addRun(completedRun);
+        }
+
+        this.paused = false;
+        this.backendSim = null;
+        this.onSnapshot = null;
+        this.initialConfig = null;
+        this.currentRunConfig = null;
+        this.startTime = null;
+        this.endTime = null;
 
         return snap;
     }
@@ -328,6 +362,15 @@ public class BackendSimulationService implements SimulationService {
     @Override
     public boolean isPaused() {
         return this.paused;
+    }
+
+    /**
+     * Returns the stored compare-run history for this service instance.
+     * Keeps only the most recent completed runs.
+     */
+    @Override
+    public RunCompareHistory getRunCompareHistory() {
+        return this.runCompareHistory;
     }
 
 }

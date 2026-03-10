@@ -1,6 +1,7 @@
 package com.group32.cs261project.frontend;
 
 import com.group32.cs261project.App;
+import com.group32.cs261project.backend.compare.RunCompareHistory;
 
 import javafx.scene.control.Labeled;
 import javafx.scene.Node;
@@ -144,6 +145,8 @@ public class ResultsPageIT extends ApplicationTest {
 
     private static class StubSimulationService implements SimulationService {
 
+        private final RunCompareHistory runCompareHistory = new RunCompareHistory();
+
         @Override
         public void start(SimulationData config, Consumer<SimulationData> onSnapshot) { }
 
@@ -169,6 +172,10 @@ public class ResultsPageIT extends ApplicationTest {
         @Override
         public boolean isPaused() {
             return false;
+        }
+        @Override
+        public RunCompareHistory getRunCompareHistory() {
+            return runCompareHistory;
         }
     }
 }
