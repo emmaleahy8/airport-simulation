@@ -1,21 +1,21 @@
 package com.group32.cs261project.frontend;
 
+import java.util.function.Consumer;
+
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testfx.api.FxToolkit;
+import org.testfx.framework.junit5.ApplicationTest;
+
 import com.group32.cs261project.App;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.testfx.api.FxToolkit;
-import org.testfx.framework.junit5.ApplicationTest;
-import org.testfx.util.WaitForAsyncUtils;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.function.Consumer;
 
 public class ConfigurePageIT extends ApplicationTest {
 
@@ -181,6 +181,10 @@ public class ConfigurePageIT extends ApplicationTest {
         @Override
         public boolean isPaused() {
             return paused;
+        }
+
+        @Override
+        public void setPlaybackSpeed(double speed) {
         }
     }
 }

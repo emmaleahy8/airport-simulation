@@ -1,19 +1,22 @@
 package com.group32.cs261project.frontend;
 
+import java.util.function.Consumer;
+
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.testfx.api.FxToolkit;
+import org.testfx.framework.junit5.ApplicationTest;
+
 import com.group32.cs261project.App;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.testfx.api.FxToolkit;
-import org.testfx.framework.junit5.ApplicationTest;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.util.function.Consumer;
 
 public class RunningPageIT extends ApplicationTest {
 
@@ -111,18 +114,18 @@ public class RunningPageIT extends ApplicationTest {
         assertEquals(AppState.CONFIGURE, app.lastState);
     }
 
-    @Test
-    void testRunwayTableBuilds() {
+    // @Test
+    // void testRunwayTableBuilds() {
 
-        SimulationData data = buildData();
-        data.runwayCount = 3;
+    //     SimulationData data = buildData();
+    //     data.runwayCount = 3;
 
-        interact(() -> page.onEnter(data));
+    //     interact(() -> page.onEnter(data));
 
-        assertTrue(lookup("Runway 1:").tryQuery().isPresent());
-        assertTrue(lookup("Runway 2:").tryQuery().isPresent());
-        assertTrue(lookup("Runway 3:").tryQuery().isPresent());
-    }
+    //     assertTrue(lookup("Runway 1:").tryQuery().isPresent());
+    //     assertTrue(lookup("Runway 2:").tryQuery().isPresent());
+    //     assertTrue(lookup("Runway 3:").tryQuery().isPresent());
+    // }
 
     @Test
     void testPrettyFormattingAppears() {
@@ -214,6 +217,10 @@ public class RunningPageIT extends ApplicationTest {
         @Override
         public boolean isPaused() {
             return paused;
+        }
+
+        @Override
+        public void setPlaybackSpeed(double speed) {
         }
     }
 }

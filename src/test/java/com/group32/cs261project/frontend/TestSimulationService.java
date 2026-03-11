@@ -36,4 +36,8 @@ public class TestSimulationService implements SimulationService {
     public boolean isPaused() {
         return paused;
     }
+
+    @Override
+    public void setPlaybackSpeed(double speed) {
+    }
 }
