@@ -27,6 +27,7 @@ jobs:
 
       - name: Integration tests (Failsafe + TestFX)
         run: |
+          export MAVEN_OPTS="-Xmx2g"
           xvfb-run -a mvn -B failsafe:integration-test failsafe:verify \
             -Dtestfx.robot=glass \
             -Dprism.order=sw \
