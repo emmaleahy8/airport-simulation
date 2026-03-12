@@ -34,6 +34,10 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollPane;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +76,7 @@ public class RunningPage implements Page {
     // Buttons
     private Button pauseBtn;
     private Button applyRunwayChangesBtn;
+    private final Label changesAppliedLabel = new Label("Changes applied!");
 
     private static final String PAGE_BG =
         "-fx-background-color: rgb(14, 26, 40);";
@@ -334,11 +339,25 @@ public class RunningPage implements Page {
         scroll.setPrefViewportHeight(280);
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
+        changesAppliedLabel.setStyle(
+            "-fx-text-fill: #39e75f;" +
+            "-fx-font-size: 13px;" +
+            "-fx-font-weight: bold;"
+        );
+        changesAppliedLabel.setVisible(false);
+        changesAppliedLabel.setManaged(false);
+
         applyRunwayChangesBtn = new Button("Apply Changes");
         applyRunwayChangesBtn.setStyle(BTN_PRIMARY);
-        applyRunwayChangesBtn.setOnAction(e -> applyRunwayChanges());
+        applyRunwayChangesBtn.setOnAction(e -> {
+            applyRunwayChanges();
+            showChangesAppliedMessage();
+        });
 
-        card.getChildren().addAll(header, sub, new Separator(), scroll, applyRunwayChangesBtn);
+        HBox applyRow = new HBox(10, applyRunwayChangesBtn, changesAppliedLabel);
+        applyRow.setAlignment(Pos.CENTER_LEFT);
+
+        card.getChildren().addAll(header, sub, new Separator(), scroll, applyRow);
 
         return card;
     }
@@ -752,6 +771,25 @@ public class RunningPage implements Page {
         return (speed < 1.0)
                 ? String.format("%.1fx", speed)
                 : (speed == 1.0 ? "1.0x" : String.format("%.0fx", speed));
+    }
+
+    private void showChangesAppliedMessage() {
+        changesAppliedLabel.setVisible(true);
+        changesAppliedLabel.setManaged(true);
+        changesAppliedLabel.setOpacity(1.0);
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(1.2));
+        FadeTransition fade = new FadeTransition(Duration.seconds(0.8), changesAppliedLabel);
+        fade.setFromValue(1.0);
+        fade.setToValue(0.0);
+
+        fade.setOnFinished(e -> {
+            changesAppliedLabel.setVisible(false);
+            changesAppliedLabel.setManaged(false);
+            changesAppliedLabel.setOpacity(1.0);
+        });
+
+        new SequentialTransition(pause, fade).play();
     }
 
     private String pretty(String enumName) {

@@ -471,6 +471,7 @@ public class SimulationPaneVisual extends Pane {
         List<SimulationData.PlaneDTO> holdingPlanes = snapshot.planes.stream()
             .filter(Objects::nonNull)
             .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+            .filter(p -> !landingNow.contains(p.id))
             .filter(p -> !isSuppressedFromQueues(p.id))
             .collect(Collectors.toList());
 
@@ -607,30 +608,31 @@ public class SimulationPaneVisual extends Pane {
 
         int runwayIdx = landed.runwayIndex();
         if (runwayIdx < 0 || runwayIdx >= runwayLeftEntryPoints.size() || runwayIdx >= runwayLandingEndPoints.size()) {
+            landingNow.remove(landed.planeId());
             return;
         }
 
-        Point2D fallbackStart = runwayLeftEntryPoints.get(runwayIdx);
-        Point2D previousHoldingPos = findPreviousHoldingSlot(landed.planeId());
         Point2D end = runwayLandingEndPoints.get(runwayIdx);
 
-        PlaneVisual moving;
-        double startX;
-        double startY;
-
-        // 1. Best case: plane already exists visually in queue -> reuse it
         PlaneVisual existing = queuePlaneNodes.remove(landed.planeId());
-
         if (existing != null) {
             if (existing.moveTransition != null) {
                 existing.moveTransition.stop();
                 existing.moveTransition = null;
             }
-
             queueLayer.getChildren().remove(existing.root);
+        }
 
+        Point2D fallbackStart = runwayLeftEntryPoints.get(runwayIdx);
+        Point2D previousHoldingPos = findPreviousHoldingSlot(landed.planeId());
+
+        PlaneVisual moving;
+        double startX;
+        double startY;
+
+        if (existing != null) {
             moving = existing;
-            moving.setHoldingStyle(false);
+            moving.setHoldingStyle(emergency);
             moving.setEmergencyStyle(emergency);
 
             startX = moving.root.getLayoutX() + moving.root.getTranslateX();
@@ -640,11 +642,9 @@ public class SimulationPaneVisual extends Pane {
             moving.root.setLayoutY(startY);
             moving.root.setTranslateX(0);
             moving.root.setTranslateY(0);
-        }
-        // 2. Next best: plane was in holding last snapshot -> start from that slot
-        else if (previousHoldingPos != null) {
+        } else if (previousHoldingPos != null) {
             moving = new PlaneVisual(landed.planeId());
-            moving.setHoldingStyle(false);
+            moving.setHoldingStyle(emergency);
             moving.setEmergencyStyle(emergency);
 
             startX = anchoredX(moving, previousHoldingPos);
@@ -652,11 +652,9 @@ public class SimulationPaneVisual extends Pane {
 
             moving.root.setLayoutX(startX);
             moving.root.setLayoutY(startY);
-        }
-        // 3. Fallback: old behaviour, start at runway entry
-        else {
+        } else {
             moving = new PlaneVisual(landed.planeId());
-            moving.setHoldingStyle(false);
+            moving.setHoldingStyle(emergency);
             moving.setEmergencyStyle(emergency);
 
             startX = anchoredX(moving, fallbackStart);
@@ -890,6 +888,7 @@ public class SimulationPaneVisual extends Pane {
         List<SimulationData.PlaneDTO> holdingPlanes = previousSnapshot.planes.stream()
                 .filter(Objects::nonNull)
                 .filter(p -> p.status == SimulationData.PlaneStatus.HOLDING)
+                .filter(p -> !isSuppressedFromQueues(p.id))
                 .collect(Collectors.toList());
 
         for (int i = 0; i < Math.min(holdingPlanes.size(), holdingSlots.size()); i++) {
