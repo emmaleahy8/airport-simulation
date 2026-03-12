@@ -221,11 +221,14 @@ public class RunningPage implements Page {
             sweepAnim.playFromStart();
         }
 
-        speedSlider.setValue(10);  // maps to 1.0x
-        speedValueLabel.setText(formatSpeed(1.0));
-        sim.setPlaybackSpeed(1.0);
-        visual.setPlaybackSpeed(1.0);
-        updateVisualMode(1.0);
+        speedSlider.setValue(5);  // maps to 0.5x
+        speedValueLabel.setText(formatSpeed(0.5));
+        sim.setPlaybackSpeed(0.5);
+        visual.setPlaybackSpeed(0.5);
+        updateVisualMode(0.5);
+
+        sim.resume();
+        pauseBtn.setText("Pause");
 
         sim.start(currentConfig, snap -> Platform.runLater(() -> {
 
