@@ -83,7 +83,7 @@ public class AirportSimulation {
      * @return simulation report object
      */
     public SimulationReport buildReport() {
-        return this.engine.context().metrics().buildReport();
+        return this.engine.context().metrics().buildReport(this.airport.runways().size());
     }
 
 }

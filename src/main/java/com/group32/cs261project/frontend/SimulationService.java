@@ -2,6 +2,8 @@ package com.group32.cs261project.frontend;
 
 import java.util.function.Consumer;
 
+import com.group32.cs261project.backend.compare.RunCompareHistory;
+
 public interface SimulationService {
 
     /**
@@ -45,6 +47,12 @@ public interface SimulationService {
     boolean isPaused();
 
     /**
+     * Returns the stored run comparison history.
+     * The history contains the most recent completed runs.
+     */
+    RunCompareHistory getRunCompareHistory();
+
+    /*
      * Changes the speed of the simulation
      */
     void setPlaybackSpeed(double speed);

@@ -14,6 +14,8 @@ import com.group32.cs261project.frontend.Page;
 import com.group32.cs261project.frontend.ResultsPage;
 import com.group32.cs261project.frontend.RunningPage;
 import com.group32.cs261project.frontend.SimulationService;
+import com.group32.cs261project.frontend.compare.RunCompareHistoryPage;
+import com.group32.cs261project.frontend.compare.RunComparePage;
 // import com.group32.cs261project.frontend.StubSimulationService;
 
 public class App extends Application {
@@ -34,6 +36,8 @@ public class App extends Application {
         pages.put(AppState.CONFIGURE, new ConfigurePage(this, sim));
         pages.put(AppState.RUNNING, new RunningPage(this, sim));
         pages.put(AppState.RESULTS, new ResultsPage(this, sim));
+        pages.put(AppState.COMPARE, new RunComparePage(this));
+        pages.put(AppState.COMPARE_HISTORY, new RunCompareHistoryPage(this, sim));
 
         // Set window title and initial scene then switch to the configure page
         stage.setTitle("CS261 Airport Simulation (UI Stub)");
