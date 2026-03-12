@@ -2,7 +2,9 @@ package com.group32.cs261project.frontend;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
@@ -40,8 +42,9 @@ public class BackendSimulationService implements SimulationService {
     private volatile boolean running = false;
     private volatile boolean paused = false;
     private ScheduledExecutorService executor = null;
-    private final int tickMilliSeconds = 200; 
+    private final long tickMilliSeconds = 200; 
     private final int numEventsPerTick = 1;
+    private volatile double playbackSpeed = 1.0;
 
     private Consumer<SimulationData> onSnapshot = null;
     private SimulationData initialConfig = null;
@@ -51,6 +54,7 @@ public class BackendSimulationService implements SimulationService {
     // compare-runs feature state
     private final RunCompareHistory runCompareHistory = new RunCompareHistory();
     private SimConfig currentRunConfig = null;
+    private final Map<String, Integer> previousRunwayAssignments = new HashMap<>();
 
 
     /**
@@ -150,9 +154,12 @@ public class BackendSimulationService implements SimulationService {
      * @param sim instance of backend simulation
      * @return frontend snapshot
      */
-    private static SimulationData snapshotFrom(AirportSimulation sim) {
+    private SimulationData snapshotFrom(AirportSimulation sim) {
 
         SimulationData snapshot = new SimulationData();
+
+        snapshot.events.clear();
+        Map<String, Integer> currentRunwayAssignments = new HashMap<>();
 
         // pass current sim time
         snapshot.simMinute = (int) Duration.between(sim.config().startTime(), sim.engine().now()).toMinutes();
@@ -220,6 +227,20 @@ public class BackendSimulationService implements SimulationService {
             Aircraft aircraft = sim.airport().runwayAircraft().get(i);
             if (aircraft == null) continue;
 
+            String id = aircraft.callsign();
+            currentRunwayAssignments.put(id, i);
+
+            Integer previousRunway = previousRunwayAssignments.get(id);
+
+            // Plane has newly appeared on a runway this snapshot
+            if (previousRunway == null) {
+                if (aircraft.direction() == AircraftDirection.INBOUND) {
+                    snapshot.events.add(new SimulationData.PlaneLanded(id, i, aircraft.isEmergency()));
+                } else {
+                    snapshot.events.add(new SimulationData.PlaneTookOff(id, i));
+                }
+            }
+
             PlaneDTO uiPlane = new PlaneDTO();
             uiPlane.id = aircraft.callsign();
             uiPlane.code = aircraft.callsign();
@@ -232,6 +253,9 @@ public class BackendSimulationService implements SimulationService {
             snapshot.planes.add(uiPlane);
         }
         
+        previousRunwayAssignments.clear();
+        previousRunwayAssignments.putAll(currentRunwayAssignments);
+
         return snapshot;
     }
 
@@ -260,14 +284,39 @@ public class BackendSimulationService implements SimulationService {
         FlightSeeder.seedInbound(this.backendSim.engine(), in);
         FlightSeeder.seedOutbound(this.backendSim.engine(), out);
 
+        this.previousRunwayAssignments.clear();
+
         SimulationData snap0 = snapshotFrom(this.backendSim);
         onSnapshot.accept(snap0);
 
+        this.playbackSpeed = 1.0;
         this.running = true;
         this.executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(this::tick, 0, this.tickMilliSeconds, TimeUnit.MILLISECONDS);
+        scheduleNextTick(0);
     }
 
+    private void scheduleNextTick(long delayMs) {
+        if (this.executor == null || this.executor.isShutdown()) {
+            return;
+        }
+
+        this.executor.schedule(this::runTickAndReschedule, delayMs, TimeUnit.MILLISECONDS);
+    }
+
+    private void runTickAndReschedule() {
+        if (!this.running) {
+            return;
+        }
+
+        tick();
+
+        if (!this.running) {
+            return;
+        }
+
+        long nextDelay = Math.max(20, (long) (tickMilliSeconds / this.playbackSpeed));
+        scheduleNextTick(nextDelay);
+    }
 
     /**
      * Tick the simulation by a set amount
@@ -287,10 +336,31 @@ public class BackendSimulationService implements SimulationService {
 
     @Override
     public void updateConfig(SimulationData newConfig) {
-        // TODO: not implemented yet
-        throw new UnsupportedOperationException();
-    }
+        if (!this.running || this.backendSim == null || newConfig == null) {
+            return;
+        }
 
+        SimulationData safeConfig = newConfig.copy();
+        safeConfig.ensureRunwayListSize();
+
+        int runwayCount = Math.min(
+            safeConfig.runways.size(),
+            this.backendSim.airport().runways().size()
+        );
+
+        for (int i = 0; i < runwayCount; i++) {
+            SimulationData.RunwayConfig uiRunway = safeConfig.runways.get(i);
+
+            this.backendSim.airport().setRunwayMode(i, convertMode(uiRunway.mode));
+            this.backendSim.airport().setRunwayStatus(i, convertStatus(uiRunway.status));
+        }
+
+        this.initialConfig = safeConfig;
+
+        if (this.onSnapshot != null) {
+            this.onSnapshot.accept(snapshotFrom(this.backendSim));
+        }
+    }
 
     @Override
     public SimulationData stop() {
@@ -371,6 +441,11 @@ public class BackendSimulationService implements SimulationService {
     @Override
     public RunCompareHistory getRunCompareHistory() {
         return this.runCompareHistory;
+    }
+
+    @Override
+    public void setPlaybackSpeed(double speed) {
+        this.playbackSpeed = Math.max(0.1, speed);
     }
 
 }

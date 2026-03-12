@@ -54,7 +54,7 @@ public class SimulationData {
     public sealed interface SimEvent permits PlaneArrivedHolding, PlaneArrivedTakeoff, PlaneLanded, PlaneTookOff, PlaneEmergency, PlaneDiverted {}
     public record PlaneArrivedHolding(String planeId, boolean emergency) implements SimEvent {}
     public record PlaneArrivedTakeoff(String planeId) implements SimEvent {}
-    public record PlaneLanded(String planeId, int runwayIndex) implements SimEvent {}
+    public record PlaneLanded(String planeId, int runwayIndex, boolean emergency) implements SimEvent {}
     public record PlaneTookOff(String planeId, int runwayIndex) implements SimEvent {}
     public record PlaneEmergency(String planeId) implements SimEvent {}
     public record PlaneDiverted(String planeId, String reason) implements SimEvent {}
@@ -125,7 +125,7 @@ public class SimulationData {
         }
     }
 
-    // Ensures the runwa list length always matches runway count
+    // Ensures the runway list length always matches runway count
     public void ensureRunwayListSize() {
         while (runways.size() < runwayCount) runways.add(new RunwayConfig(runways.size() + 1)); // If the list is too small: add new RunwayConfig objects 
         while (runways.size() > runwayCount) runways.remove(runways.size() - 1); // If list is too big: remove entries from end 
@@ -138,6 +138,8 @@ public class SimulationData {
         d.inboundRatePerHour = inboundRatePerHour;
         d.outboundRatePerHour = outboundRatePerHour;
         d.maxWaitMinutes = maxWaitMinutes;
+        d.passengerHealthEmergencyProbability = passengerHealthEmergencyProbability;
+        d.mechanicalEmergencyProbability = mechanicalEmergencyProbability;
 
         d.simMinute = simMinute;
         d.holdingQueue = holdingQueue;

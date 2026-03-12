@@ -513,4 +513,9 @@ public class StubSimulationService implements SimulationService {
         if (candidates.isEmpty()) return -1;
         return candidates.get(rng.nextInt(candidates.size()));
     }
+
+    @Override
+    public void setPlaybackSpeed(double speed) {
+        // no-op
+    }
 }

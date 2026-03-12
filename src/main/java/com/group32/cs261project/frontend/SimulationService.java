@@ -51,4 +51,9 @@ public interface SimulationService {
      * The history contains the most recent completed runs.
      */
     RunCompareHistory getRunCompareHistory();
+
+    /*
+     * Changes the speed of the simulation
+     */
+    void setPlaybackSpeed(double speed);
 }
