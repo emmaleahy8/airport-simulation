@@ -170,6 +170,8 @@ public class ConfigurePage implements Page {
         VBox pageBody = new VBox(5);
         pageBody.setPadding(new Insets(6, 0, 0, 0));
         pageBody.setFillWidth(true);
+        pageBody.setMinWidth(1200);
+        pageBody.setMinHeight(820);
 
         StackPane atcView = buildAtcView();
         atcView.setMaxWidth(Double.MAX_VALUE);
@@ -177,6 +179,7 @@ public class ConfigurePage implements Page {
         HBox bottomDashboard = new HBox(18);
         bottomDashboard.setAlignment(Pos.BOTTOM_LEFT);
         bottomDashboard.setFillHeight(true);
+        bottomDashboard.setMinHeight(420);
 
         VBox leftSidebar = buildLeftSidebar();
         VBox rightContent = buildRightContent();
@@ -187,7 +190,14 @@ public class ConfigurePage implements Page {
 
         pageBody.getChildren().addAll(atcView, bottomDashboard);
 
-        root.setCenter(pageBody);
+        ScrollPane pageScroll = new ScrollPane(pageBody);
+        pageScroll.setFitToWidth(true);
+        pageScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        pageScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        pageScroll.setPannable(true);
+        pageScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        root.setCenter(pageScroll);
 
         // Initial Setup
         initSliders();
@@ -215,13 +225,13 @@ public class ConfigurePage implements Page {
 
     // ----- UI Builder for left side content -----
     private VBox buildLeftSidebar() {
-        VBox left = new VBox(14); // Vertical box with spacing of 16px between sections
+        VBox left = new VBox(10); // Vertical box with spacing of 16px between sections
         left.setPrefWidth(330);
         left.setAlignment(Pos.BOTTOM_LEFT);
         VBox.setVgrow(left, Priority.ALWAYS);
 
         // ----- Simulation Control panel -----
-        VBox simPanel = new VBox(12); // Vertical box with spacing of 14px between controls
+        VBox simPanel = new VBox(11); // Vertical box with spacing of 14px between controls
         simPanel.setStyle(PANEL); // Apply panel styling 
 
         Label simTitle = new Label("Simulation Control");
@@ -280,7 +290,7 @@ public class ConfigurePage implements Page {
         simPanel.getChildren().addAll(simTitle, runwayRow, runBtn, undoRedoReset);
 
         // ----- Aircraft Generation panel -----
-        VBox aircraftPanel = new VBox(12); // Vertical box with spacing of 14px between controls
+        VBox aircraftPanel = new VBox(10); // Vertical box with spacing of 14px between controls
         aircraftPanel.setStyle(PANEL);
 
         Label aircraftTitle = new Label("Aircraft Generation");
@@ -311,7 +321,7 @@ public class ConfigurePage implements Page {
         aircraftPanel.getChildren().addAll(aircraftTitle, inboundBox, outboundBox);
 
         // ----- Emergency Generation panel -----
-        VBox emergencyPanel = new VBox(12); // Vertical box with spacing of 14px between controls
+        VBox emergencyPanel = new VBox(10); // Vertical box with spacing of 14px between controls
         emergencyPanel.setStyle(PANEL);
 
         Label emergencyTitle = new Label("Emergency Generation");
@@ -352,13 +362,19 @@ public class ConfigurePage implements Page {
     // ----- UI Builder for the right side content -----
     private VBox buildRightContent() {
         VBox right = new VBox(16);
-        right.setAlignment(Pos.TOP_LEFT);
+        right.setAlignment(Pos.BOTTOM_LEFT);
+        right.setFillWidth(true);
+        VBox.setVgrow(right, Priority.ALWAYS);
 
         // ----- "Monitor wall" -----
         VBox monitorWall = new VBox(12);
         monitorWall.setFillWidth(true);
         monitorWall.setAlignment(Pos.TOP_LEFT);
         monitorWall.setStyle(SCREEN_WALL);
+        VBox.setVgrow(monitorWall, Priority.ALWAYS);
+        monitorWall.setMaxHeight(Double.MAX_VALUE);
+        monitorWall.setPrefHeight(545);
+        monitorWall.setMaxHeight(545);
 
         Label runwayTitle = new Label("Runway Configuration Screens");
         runwayTitle.setFont(Font.font(20));
