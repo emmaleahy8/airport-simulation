@@ -150,6 +150,7 @@ public class RunningPage implements Page {
 
         HBox mainLayout = new HBox(10);
         mainLayout.setPadding(new Insets(18));
+        mainLayout.setMinWidth(1500);
 
         Label title = new Label("Running Simulation");
         title.setFont(Font.font(30));
@@ -182,7 +183,8 @@ public class RunningPage implements Page {
         simulationPane = new StackPane();
         simulationPane.setAlignment(Pos.CENTER);
         simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
-        
+        simulationPane.setMinHeight(800);
+
         visual.prefWidthProperty().bind(simulationPane.widthProperty());
         visual.prefHeightProperty().bind(simulationPane.heightProperty());
 
@@ -194,7 +196,15 @@ public class RunningPage implements Page {
         HBox.setHgrow(simulationPane, Priority.ALWAYS);
 
         mainLayout.getChildren().addAll(leftColumn, simulationPane);
-        root.setCenter(mainLayout);
+
+        ScrollPane scroll = new ScrollPane(mainLayout);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setPannable(true);
+        scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+
+        root.setCenter(scroll);    
     }
 
     @Override
