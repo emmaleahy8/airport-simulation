@@ -479,7 +479,8 @@ public class SimulationPaneVisual extends Pane {
             SimulationData.PlaneDTO p = holdingPlanes.get(i);
             desiredIds.add(p.id);
             Point2D pos = holdingSlots.get(i);
-            upsertQueuePlane(p.id, safeCode(p), pos, true, p.emergency);
+            boolean emergency = knownEmergencyByPlaneId.getOrDefault(p.id, p.emergency);
+            upsertQueuePlane(p.id, safeCode(p), pos, true, emergency);
         }
 
         for (int i = 0; i < Math.min(snapshot.outboundQueueIds.size(), takeoffSlots.size()); i++) {
@@ -489,7 +490,7 @@ public class SimulationPaneVisual extends Pane {
 
             desiredIds.add(p.id);
             Point2D pos = takeoffSlots.get(i);
-            upsertQueuePlane(p.id, safeCode(p), pos, false, p.emergency);
+            upsertQueuePlane(p.id, safeCode(p), pos, false, false);
         }
 
         Set<String> desiredSet = new HashSet<>(desiredIds);
@@ -632,7 +633,7 @@ public class SimulationPaneVisual extends Pane {
 
         if (existing != null) {
             moving = existing;
-            moving.setHoldingStyle(emergency);
+            moving.setHoldingStyle(false);
             moving.setEmergencyStyle(emergency);
 
             startX = moving.root.getLayoutX() + moving.root.getTranslateX();
@@ -644,7 +645,8 @@ public class SimulationPaneVisual extends Pane {
             moving.root.setTranslateY(0);
         } else if (previousHoldingPos != null) {
             moving = new PlaneVisual(landed.planeId());
-            moving.setHoldingStyle(emergency);
+            moving.setCode(landed.planeId());
+            moving.setHoldingStyle(false);
             moving.setEmergencyStyle(emergency);
 
             startX = anchoredX(moving, previousHoldingPos);
@@ -654,7 +656,8 @@ public class SimulationPaneVisual extends Pane {
             moving.root.setLayoutY(startY);
         } else {
             moving = new PlaneVisual(landed.planeId());
-            moving.setHoldingStyle(emergency);
+            moving.setCode(landed.planeId());
+            moving.setHoldingStyle(false);
             moving.setEmergencyStyle(emergency);
 
             startX = anchoredX(moving, fallbackStart);
@@ -1012,17 +1015,25 @@ public class SimulationPaneVisual extends Pane {
 
         void setEmergencyStyle(boolean emergency) {
             if (emergency) {
-                planeIcon.setTextFill(EMERGENCY_RED);
-                codeLabel.setTextFill(EMERGENCY_LABEL);
+                planeIcon.setStyle(
+                    "-fx-text-fill: #ff2b2b;" +
+                    "-fx-stroke: #ff2b2b;" +
+                    "-fx-stroke-width: 0.6;"
+                );
+                codeLabel.setStyle(
+                    "-fx-text-fill: #ff8a8a;" +
+                    "-fx-stroke: #ff8a8a;" +
+                    "-fx-stroke-width: 0.4;"
+                );
 
                 DropShadow redGlow = new DropShadow();
                 redGlow.setColor(EMERGENCY_RED);
-                redGlow.setRadius(12);
-                redGlow.setSpread(0.35);
+                redGlow.setRadius(8);
+                redGlow.setSpread(0.18);
                 planeIcon.setEffect(redGlow);
             } else {
-                planeIcon.setTextFill(GREEN);
-                codeLabel.setTextFill(Color.web("#7CFF95"));
+                planeIcon.setTextFill(Color.WHITE);
+                codeLabel.setTextFill(Color.WHITE);
                 planeIcon.setEffect(new Glow(0.8));
             }
         }
