@@ -224,10 +224,6 @@ public class ResultsPage implements Page {
 
         BorderPane.setMargin(bottomBar, new Insets(14, 0, 0, 0));
         root.setBottom(bottomBar);
-        // back.setOnAction(e -> app.switchTo(AppState.CONFIGURE, null)); // When clicked, navigate to Configure Page
-        // back.setStyle(BTN_PRIMARY);
-        // BorderPane.setMargin(back, new Insets(14, 0, 0, 0));
-        // root.setBottom(back);
     }
 
     // ----- Page Interface Methods -----
@@ -304,10 +300,7 @@ public class ResultsPage implements Page {
 
         card.getChildren().addAll(header, grid, sep, runwayInfo);
         VBox.setVgrow(runwayInfo, Priority.ALWAYS);
-
-        // ----- Assemble and return card -----
-        // card.getChildren().addAll(header, grid, sep, runwayInfo);
-
+        
         return card;
     }
 

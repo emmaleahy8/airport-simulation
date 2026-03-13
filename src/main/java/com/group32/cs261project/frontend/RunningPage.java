@@ -201,7 +201,7 @@ public class RunningPage implements Page {
 
         ScrollPane scroll = new ScrollPane(mainLayout);
         scroll.setFitToWidth(true);
-        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scroll.setPannable(true);
         scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
