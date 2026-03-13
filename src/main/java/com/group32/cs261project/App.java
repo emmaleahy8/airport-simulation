@@ -40,7 +40,7 @@ public class App extends Application {
         pages.put(AppState.COMPARE_HISTORY, new RunCompareHistoryPage(this, sim));
 
         // Set window title and initial scene then switch to the configure page
-        stage.setTitle("CS261 Airport Simulation (UI Stub)");
+        stage.setTitle("CS261 Airport Simulation");
         stage.setScene(new Scene(pages.get(AppState.CONFIGURE).getView(), 900, 600));
         switchTo(AppState.CONFIGURE, null);
         stage.show(); // Display the window

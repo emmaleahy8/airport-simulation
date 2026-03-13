@@ -62,8 +62,8 @@ public class ResultsPage implements Page {
     private final Button compareAnyTwoButton = new Button("Compare Any Two Runs");
 
     // Canvas for bar charts
-    private static final int CHART_W = 860;
-    private static final int CHART_H = 220;
+    private static final int CHART_W = 750;
+    private static final int CHART_H = 217;
     private final Canvas countChart = new Canvas(CHART_W, CHART_H);
     private final Canvas timeChart  = new Canvas(CHART_W, CHART_H);
 
@@ -121,6 +121,11 @@ public class ResultsPage implements Page {
         Color.web("#E03131")
     };
 
+    private static final Color CHART_AXIS = Color.web("#2d6678");
+    private static final Color CHART_GRID = Color.web("#1f3b52");
+    private static final Color CHART_TEXT = Color.web("#dcebf5");
+    private static final Color CHART_SUBTLE_TEXT = Color.web("#b8cad6");
+
     // ----- Constructor: Builds UI Layout -----
     public ResultsPage(App app, SimulationService sim) {
         this.app = app;
@@ -137,41 +142,75 @@ public class ResultsPage implements Page {
 
         // ----- Scrollable centre content -----
         VBox content = new VBox(22);
+        content.setPrefWidth(1650);
 
         // Row 1: stats cards (left + right)
-        HBox statsRow = new HBox(22);
+        GridPane statsRow = new GridPane();
+        statsRow.setHgap(22);
+
+        ColumnConstraints half1 = new ColumnConstraints();
+        half1.setPercentWidth(50);
+        half1.setHgrow(Priority.ALWAYS);
+        half1.setFillWidth(true);
+
+        ColumnConstraints half2 = new ColumnConstraints();
+        half2.setPercentWidth(50);
+        half2.setHgrow(Priority.ALWAYS);
+        half2.setFillWidth(true);
+
+        statsRow.getColumnConstraints().setAll(half1, half2);
+
         VBox left = buildGeneralInfoCard();
         VBox right = buildRightCards();
-        HBox.setHgrow(left, Priority.ALWAYS);
-        HBox.setHgrow(right, Priority.ALWAYS);
-        left.setPrefWidth(520);
-        right.setPrefWidth(420);
-        statsRow.getChildren().addAll(left, right);
+
+        left.setMaxWidth(Double.MAX_VALUE);
+        right.setMaxWidth(Double.MAX_VALUE);
+
+        statsRow.add(left, 0, 0);
+        statsRow.add(right, 1, 0);
 
         // Row 2: Count chart
         VBox countCard = buildChartCard("Count Metrics", countChart);
 
         // Row 3: Time chart
-        VBox timeCard = buildChartCard("Time Metrics (minutes)", timeChart);
+        VBox timeCard = buildChartCard("Time Metrics", timeChart);
 
-        content.getChildren().addAll(statsRow, countCard, timeCard);
+        HBox chartRow = new HBox(22);
+        chartRow.getChildren().addAll(countCard, timeCard);
+
+        HBox.setHgrow(countCard, Priority.ALWAYS);
+        HBox.setHgrow(timeCard, Priority.ALWAYS);
+
+        content.getChildren().addAll(statsRow, chartRow);
 
         ScrollPane scroll = new ScrollPane(content);
-        scroll.setFitToWidth(true);
-        scroll.setStyle("-fx-background-color: white; -fx-background: white;");
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setStyle("""
+            -fx-background: rgb(14, 26, 40);
+            -fx-background-color: rgb(14, 26, 40);
+            -fx-control-inner-background: rgb(14, 26, 40);
+        """);
+        content.setStyle(PAGE_BG);
         root.setCenter(scroll);
+
+        scroll.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+            if (scroll.lookup(".viewport") != null) {
+                scroll.lookup(".viewport").setStyle("-fx-background-color: rgb(14, 26, 40);");
+            }
+        });
 
         // ----- Bottom Buttons -----
         Button back = new Button("Back to Configure");
         back.setOnAction(e -> app.switchTo(AppState.CONFIGURE, null));
-        back.setStyle("-fx-background-color: #111; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;");
+        back.setStyle(BTN_PRIMARY);
 
-        comparePreviousButton.setStyle("-fx-background-color: #111; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;");
+        comparePreviousButton.setStyle(BTN_SOFT);
         comparePreviousButton.setVisible(false);
         comparePreviousButton.setManaged(false);
         comparePreviousButton.setOnAction(e -> openCompareWithPreviousRun());
 
-        compareAnyTwoButton.setStyle("-fx-background-color: #111; -fx-text-fill: white; -fx-font-weight: 700; -fx-padding: 10 14;");
+        compareAnyTwoButton.setStyle(BTN_SOFT);
         compareAnyTwoButton.setVisible(false);
         compareAnyTwoButton.setManaged(false);
         compareAnyTwoButton.setOnAction(e -> app.switchTo(AppState.COMPARE_HISTORY, null));
@@ -207,7 +246,10 @@ public class ResultsPage implements Page {
         card.setStyle(CARD);
 
         Label h = new Label(heading);
-        h.setFont(Font.font(null, FontWeight.BOLD, 16));
+        h.setFont(Font.font(null, FontWeight.BOLD, 20));
+        h.setStyle(MONITOR_LABEL);
+
+        VBox.setVgrow(canvas, Priority.ALWAYS);
 
         card.getChildren().addAll(h, canvas);
         return card;
@@ -239,7 +281,7 @@ public class ResultsPage implements Page {
         VBox runwayInfo = new VBox(10);
 
         Label modesHeader = new Label("Runway operating modes:");
-        modesHeader.setStyle("-fx-font-weight: 800;");
+        modesHeader.setStyle(MONITOR_LABEL);
         // runwayModesVal.setWrapText(true);
 
         // Label statusHeader = new Label("Runway operational statuses:");
@@ -479,8 +521,6 @@ public class ResultsPage implements Page {
         double chartH = H - PAD_TOP - PAD_BOTTOM;
 
         gc.clearRect(0, 0, W, H);
-        gc.setFill(Color.WHITE);
-        gc.fillRect(0, 0, W, H);
 
         double maxVal = 0;
         for (double v : values) {
@@ -497,13 +537,12 @@ public class ResultsPage implements Page {
         double tickStep = niceNumber(niceMax / tickCount, false);
         niceMax = tickStep * tickCount;
 
-        gc.setStroke(Color.web("#333333"));
+        gc.setStroke(CHART_AXIS);
         gc.setLineWidth(1.5);
         gc.strokeLine(PAD_LEFT, PAD_TOP, PAD_LEFT, PAD_TOP + chartH);
         gc.strokeLine(PAD_LEFT, PAD_TOP + chartH, PAD_LEFT + chartW, PAD_TOP + chartH);
 
-        gc.setFont(Font.font(11));
-        gc.setFill(Color.web("#555555"));
+        // Grid and y-axis tick labels
         for (int t = 0; t <= tickCount; t++) {
             double tickVal = t * tickStep;
             double y = PAD_TOP + chartH - (tickVal / niceMax) * chartH;
@@ -516,13 +555,21 @@ public class ResultsPage implements Page {
                     ? String.valueOf((long) tickVal)
                     : String.format("%.1f", tickVal);
 
-            gc.setFill(Color.web("#555555"));
+            gc.setFill(CHART_SUBTLE_TEXT);
             gc.fillText(lbl, PAD_LEFT - measureText(lbl, 11) - 4, y + 4);
         }
 
+        // Rotate y-axis labels
+        gc.save();
+
+        gc.translate(18, PAD_TOP + chartH / 2);
+        gc.rotate(-90);
+
         gc.setFont(Font.font(11));
-        gc.setFill(Color.web("#888888"));
-        gc.fillText("(" + yAxisLabel + ")", 2, PAD_TOP + chartH / 2);
+        gc.setFill(CHART_SUBTLE_TEXT);
+        gc.fillText("(" + yAxisLabel + ")", -measureText("(" + yAxisLabel + ")", 11) / 2, 0);
+
+        gc.restore();
 
         int n = labels.length;
         double groupW = chartW / n;
@@ -539,7 +586,7 @@ public class ResultsPage implements Page {
             gc.setFill(base);
             gc.fillRoundRect(barX, barY, barW, barH, 4, 4);
 
-            gc.setStroke(base.darker());
+            gc.setStroke(base.brighter());
             gc.setLineWidth(1);
             gc.strokeRoundRect(barX, barY, barW, barH, 4, 4);
 
@@ -548,12 +595,12 @@ public class ResultsPage implements Page {
                     : String.format("%.1f", values[i]);
 
             gc.setFont(Font.font(null, FontWeight.BOLD, 11));
-            gc.setFill(Color.web("#222222"));
+            gc.setFill(Color.WHITE);
             double valX = barX + barW / 2 - measureText(valStr, 11) / 2;
-            gc.fillText(valStr, valX, Math.max(PAD_TOP + 12, barY - 4));
+            gc.fillText(valStr, valX, barY - 6);
 
-            gc.setFont(Font.font(11));
-            gc.setFill(Color.web("#333333"));
+            gc.setFont(Font.font(null, FontWeight.BOLD, 11));
+            gc.setFill(CHART_TEXT);
             String[] lines = labels[i].split("\n");
             double labelCentreX = PAD_LEFT + i * groupW + groupW / 2;
             double lineY = PAD_TOP + chartH + 14;

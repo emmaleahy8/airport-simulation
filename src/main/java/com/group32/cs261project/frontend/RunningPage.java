@@ -183,7 +183,7 @@ public class RunningPage implements Page {
         simulationPane = new StackPane();
         simulationPane.setAlignment(Pos.CENTER);
         simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
-        simulationPane.setMinHeight(800);
+        simulationPane.setMinHeight(875);
 
         visual.prefWidthProperty().bind(simulationPane.widthProperty());
         visual.prefHeightProperty().bind(simulationPane.heightProperty());
