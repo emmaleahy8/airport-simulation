@@ -6,6 +6,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Priority;
 import javafx.scene.image.ImageView;
@@ -116,10 +117,10 @@ public class ConfigurePage implements Page {
         "-fx-text-fill: #b8cad6;";
 
     private static final String MONITOR_TITLE =
-        "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #63e6ff;";
 
     private static final String MONITOR_LABEL =
-        "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #d7f8ff;";
 
     // Button styles
     private static final String BTN_PRIMARY =
@@ -157,9 +158,9 @@ public class ConfigurePage implements Page {
         // ----- Header (title + subtitle) -----
         VBox header = new VBox(4);
         Label title = new Label("✈ Airport Traffic Simulation System");
-        title.setFont(Font.font(30));
+        title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
-        Label subtitle = new Label("model aircraft throughput and analyse runway configurations");
+        Label subtitle = new Label("Model aircraft throughput and analyse runway configurations.");
         subtitle.setStyle(SUBTITLE_TEXT);
 
         header.getChildren().addAll(title, subtitle);
@@ -235,10 +236,12 @@ public class ConfigurePage implements Page {
         simPanel.setStyle(PANEL); // Apply panel styling 
 
         Label simTitle = new Label("Simulation Control");
-        simTitle.setFont(Font.font(20));
+        simTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
         simTitle.setStyle(MONITOR_LABEL);
 
         // Number of runways
+        runwayValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         VBox runwayRow = new VBox(6); // Vertical box with spacing of 6px between label and slider
         Label runwayLabel = new Label("Number of Runways: ");
         HBox runwayLine = new HBox(6, runwayLabel, runwayValue); // Horizontal box to put label and value on the same line with spacing of 6px
@@ -294,16 +297,20 @@ public class ConfigurePage implements Page {
         aircraftPanel.setStyle(PANEL);
 
         Label aircraftTitle = new Label("Aircraft Generation");
-        aircraftTitle.setFont(Font.font(20));
+        aircraftTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
         aircraftTitle.setStyle(MONITOR_LABEL);
 
         // Inbound flow rate slider + label
+        inboundValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         VBox inboundBox = new VBox(5);
         HBox inboundLine = new HBox(5, new Label("Arrival Rate:"), inboundValue, new Label("/hour"));
         inboundLine.setAlignment(Pos.CENTER_LEFT);
         inboundBox.getChildren().addAll(inboundLine, inboundSlider);
 
         // Outbound flow rate slider + label
+        outboundValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         VBox outboundBox = new VBox(5);
         HBox outboundLine = new HBox(5, new Label("Departure Rate:"), outboundValue, new Label("/hour"));
         outboundLine.setAlignment(Pos.CENTER_LEFT);
@@ -325,16 +332,20 @@ public class ConfigurePage implements Page {
         emergencyPanel.setStyle(PANEL);
 
         Label emergencyTitle = new Label("Emergency Generation");
-        emergencyTitle.setFont(Font.font(20));
+        emergencyTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
         emergencyTitle.setStyle(MONITOR_LABEL);
 
         // Passenger Emergency slider + label
+        passengerHealthEmergencyValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         VBox passengerHealthEmergencyBox = new VBox(5);
         HBox passengerHealthEmergencyLine = new HBox(5, new Label("Passenger Health Emergencies:"), passengerHealthEmergencyValue, new Label("%"));
         passengerHealthEmergencyLine.setAlignment(Pos.CENTER_LEFT);
         passengerHealthEmergencyBox.getChildren().addAll(passengerHealthEmergencyLine, passengerHealthEmergencySlider);
 
         // Mechanical Emergency slider + label
+        mechanicalEmergencyValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         VBox mechanicalEmergencyBox = new VBox(5);
         HBox mechanicalEmergencyLine = new HBox(5, new Label("Mechanical Emergencies:"), mechanicalEmergencyValue, new Label("%"));
         mechanicalEmergencyLine.setAlignment(Pos.CENTER_LEFT);
@@ -377,7 +388,7 @@ public class ConfigurePage implements Page {
         monitorWall.setMaxHeight(545);
 
         Label runwayTitle = new Label("Runway Configuration Screens");
-        runwayTitle.setFont(Font.font(20));
+        runwayTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
         runwayTitle.setStyle(MONITOR_LABEL);
 
         runwayGrid.setHgap(18);
@@ -395,8 +406,6 @@ public class ConfigurePage implements Page {
         }
 
         monitorWall.getChildren().addAll(runwayTitle, runwayGrid, errorLabel);
-
-        errorLabel.setStyle("-fx-text-fill: #ff7b7b; -fx-font-weight: 700;");
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -563,7 +572,7 @@ public class ConfigurePage implements Page {
             root.setPrefWidth(220);
             root.setMinHeight(170);
 
-            title.setFont(Font.font(20));
+            title.setFont(Font.font(null, FontWeight.BOLD, 16));
             title.setStyle(MONITOR_TITLE);
 
             Label statusLabel = new Label("Operational Status");
@@ -635,7 +644,7 @@ public class ConfigurePage implements Page {
             root.setStyle(enabled ? CARD : CARD_DISABLED);
             statusBox.setDisable(!enabled);
             modeBox.setDisable(!enabled);
-            title.setStyle(enabled ? MONITOR_TITLE : "-fx-text-fill: #7d8a93; -fx-font-weight: 700;");
+            title.setStyle(enabled ? MONITOR_TITLE : "-fx-text-fill: #7d8a93;");
             root.setOpacity(enabled ? 1.0 : 0.82);
         }
     }

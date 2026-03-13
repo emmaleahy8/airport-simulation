@@ -14,6 +14,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
 import javafx.scene.control.Slider;
 import javafx.animation.Interpolator;
@@ -139,8 +140,8 @@ public class RunningPage implements Page {
     private static final String SUBTITLE_TEXT = "-fx-text-fill: #cccccc;";
     private static final String LABEL_TEXT = "-fx-text-fill: #dcebf5;";
     private static final String SMALL_TEXT = "-fx-text-fill: #b8cad6;";
-    private static final String MONITOR_TITLE = "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
-    private static final String MONITOR_LABEL = "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+    private static final String MONITOR_TITLE = "-fx-text-fill: #63e6ff;";
+    private static final String MONITOR_LABEL = "-fx-text-fill: #d7f8ff;";
 
     public RunningPage(App app, SimulationService sim) {
         this.app = app;
@@ -153,7 +154,7 @@ public class RunningPage implements Page {
         mainLayout.setMinWidth(1500);
 
         Label title = new Label("Running Simulation");
-        title.setFont(Font.font(30));
+        title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
         BorderPane.setMargin(title, new Insets(18, 18, 14, 18));
         root.setTop(title);
@@ -267,7 +268,7 @@ public class RunningPage implements Page {
 
         Label title = new Label("Simulation Speed");
         title.setStyle(MONITOR_LABEL);
-        title.setFont(Font.font(16));
+        title.setFont(Font.font(null, FontWeight.BOLD, 16));
 
         speedSlider.setMin(1);
         speedSlider.setMax(19);
@@ -310,7 +311,7 @@ public class RunningPage implements Page {
         card.setFocusTraversable(false);
 
         Label header = new Label("Live Status");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane gp = new GridPane();
@@ -334,7 +335,7 @@ public class RunningPage implements Page {
         card.setFocusTraversable(false);
 
         Label header = new Label("Runway Configuration");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         Label sub = new Label("Change runway status and mode while the simulation is running");
@@ -525,11 +526,11 @@ public class RunningPage implements Page {
         Node loadingIcon = buildPlaneSpinnerWithTrack(240, 95);
 
         Label title = new Label("Fast Mode Enabled");
-        title.setFont(Font.font(16));
+        title.setFont(Font.font(null, FontWeight.BOLD, 16));
         title.setStyle(MONITOR_LABEL);
 
         Label note = new Label("Reduce speed to see visual");
-        note.setFont(Font.font(14));
+        note.setFont(Font.font(null, FontWeight.BOLD, 14));
         note.setStyle(SMALL_TEXT);
 
         box.getChildren().addAll(loadingIcon, title, note);
@@ -541,11 +542,11 @@ public class RunningPage implements Page {
     }
 
     private void addRow(GridPane gp, int row, String labelText, Label valueLabel, String suffix) {
-
         Label l = new Label(labelText);
         l.setStyle(SMALL_TEXT);
 
         valueLabel.setStyle(MONITOR_TITLE);
+        valueLabel.setFont(Font.font(null, FontWeight.BOLD, 12));
         valueLabel.setMaxWidth(Double.MAX_VALUE);
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
 
@@ -649,15 +650,15 @@ public class RunningPage implements Page {
             root.setPrefWidth(160);
 
             title.setStyle(MONITOR_TITLE);
-            title.setFont(Font.font(14));
+            title.setFont(Font.font(null, FontWeight.BOLD, 14));
 
             Label statusLabel = new Label("Status");
             statusLabel.setStyle(MONITOR_LABEL);
-            statusLabel.setFont(Font.font(11));
+            statusLabel.setFont(Font.font(null, FontWeight.BOLD, 11));
 
             Label modeLabel = new Label("Mode");
             modeLabel.setStyle(MONITOR_LABEL);
-            modeLabel.setFont(Font.font(11));
+            modeLabel.setFont(Font.font(null, FontWeight.BOLD, 11));
 
             statusBox.getItems().setAll(SimulationData.RunwayStatus.values());
             modeBox.getItems().setAll(SimulationData.RunwayMode.values());

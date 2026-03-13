@@ -65,10 +65,10 @@ public class RunComparePage implements Page {
             "-fx-text-fill: #b8cad6;";
 
     private static final String MONITOR_TITLE =
-            "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
+            "-fx-text-fill: #63e6ff;";
 
     private static final String MONITOR_LABEL =
-            "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+            "-fx-text-fill: #d7f8ff;";
 
     private static final String BTN_PRIMARY =
             "-fx-background-color: linear-gradient(to bottom, #03418be6, #1a6eff);" +
@@ -116,7 +116,7 @@ public class RunComparePage implements Page {
         VBox header = new VBox(4);
 
         Label title = new Label("Compare Simulation Runs");
-        title.setFont(Font.font(30));
+        title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
 
         Label subtitle = new Label("Review key differences between two completed simulation runs.");
@@ -268,7 +268,7 @@ public class RunComparePage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label("General Information");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane grid = createFourColumnGrid();
@@ -365,7 +365,7 @@ public class RunComparePage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label(titleText);
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane grid = createFourColumnGrid();
@@ -444,7 +444,7 @@ public class RunComparePage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label(heading);
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         card.getChildren().addAll(header, canvas);
@@ -505,7 +505,7 @@ public class RunComparePage implements Page {
         gc.strokeLine(PAD_LEFT, PAD_TOP + chartH, PAD_LEFT + chartW, PAD_TOP + chartH);
 
         // Grid lines and y-axis tick labels
-        gc.setFont(Font.font(11));
+        gc.setFont(Font.font(null, FontWeight.BOLD, 11));
         gc.setFill(CHART_SUBTEXT);
         for (int t = 0; t <= tickCount; t++) {
             double tickVal = t * tickStep;
@@ -529,7 +529,7 @@ public class RunComparePage implements Page {
         gc.translate(PAD_LEFT - 44, PAD_TOP + chartH / 2);
         gc.rotate(-90);
 
-        gc.setFont(Font.font(11));
+        gc.setFont(Font.font(null, FontWeight.BOLD, 11));
         gc.setFill(CHART_SUBTEXT);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
@@ -586,7 +586,7 @@ public class RunComparePage implements Page {
             );
 
             // X-axis labels
-            gc.setFont(Font.font(11));
+            gc.setFont(Font.font(null, FontWeight.BOLD, 11));
             gc.setFill(CHART_TEXT);
             String[] lines = labels[i].split("\n");
             double labelCentreX = PAD_LEFT + i * groupW + groupW / 2;
@@ -607,7 +607,7 @@ public class RunComparePage implements Page {
         gc.setFill(LEFT_RUN_COLOR);
         gc.fillRoundRect(x, y - 9, 12, 12, 3, 3);
         gc.setFill(CHART_TEXT);
-        gc.setFont(Font.font(11));
+        gc.setFont(Font.font(null, FontWeight.BOLD, 11));
         gc.fillText(LEFT_LEGEND, x + 18, y);
 
         double x2 = x + 120;
@@ -625,7 +625,7 @@ public class RunComparePage implements Page {
         card.setMaxWidth(Double.MAX_VALUE);
 
         Label header = new Label("Additional Configuration");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane grid = createFourColumnGrid();
@@ -672,7 +672,7 @@ public class RunComparePage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label("Compare Simulation Runs");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         Label body = new Label("No comparison data was provided.");
@@ -714,6 +714,10 @@ public class RunComparePage implements Page {
         Label rightHeader = new Label(rightHeaderText);
         Label deltaHeader = new Label("Difference (Right - Left)");
 
+        leftHeader.setFont(Font.font(null, FontWeight.BOLD, 12));
+        rightHeader.setFont(Font.font(null, FontWeight.BOLD, 12));
+        deltaHeader.setFont(Font.font(null, FontWeight.BOLD, 12));
+
         leftHeader.setStyle(MONITOR_LABEL);
         rightHeader.setStyle(MONITOR_LABEL);
         deltaHeader.setStyle(MONITOR_LABEL);
@@ -745,6 +749,7 @@ public class RunComparePage implements Page {
         deltaValue.setWrapText(true);
         deltaValue.setAlignment(Pos.CENTER_RIGHT);
         deltaValue.setMaxWidth(Double.MAX_VALUE);
+        deltaValue.setFont(Font.font(null, FontWeight.BOLD, 12));
         deltaValue.setStyle(MONITOR_TITLE);
 
         grid.add(label, 0, row);
@@ -839,7 +844,7 @@ public class RunComparePage implements Page {
     // Approximate text width so labels can be centered on the Canvas.
     private double measureText(String s, double fontSize) {
         Text t = new Text(s);
-        t.setFont(Font.font(fontSize));
+        t.setFont(Font.font(null, FontWeight.BOLD, fontSize));
         return t.getLayoutBounds().getWidth();
     }
 }

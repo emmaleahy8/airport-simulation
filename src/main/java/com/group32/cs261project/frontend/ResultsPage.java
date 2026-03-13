@@ -92,10 +92,10 @@ public class ResultsPage implements Page {
         "-fx-text-fill: #b8cad6;";
 
     private static final String MONITOR_TITLE =
-        "-fx-text-fill: #63e6ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #63e6ff;";
 
     private static final String MONITOR_LABEL =
-        "-fx-text-fill: #d7f8ff; -fx-font-weight: 700;";
+        "-fx-text-fill: #d7f8ff;";
 
     private static final String BTN_PRIMARY =
         "-fx-background-color: linear-gradient(to bottom, #03418be6, #1a6eff);" +
@@ -135,7 +135,7 @@ public class ResultsPage implements Page {
         root.setPadding(new Insets(18));
 
         // ----- Title at Top -----
-        title.setFont(Font.font(28));
+        title.setFont(Font.font(null, FontWeight.BOLD, 28));
         title.setStyle(TITLE_TEXT);
         BorderPane.setMargin(title, new Insets(0, 0, 14, 0));
         root.setTop(title);
@@ -261,7 +261,7 @@ public class ResultsPage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label("General Information");
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane grid = new GridPane();
@@ -282,11 +282,6 @@ public class ResultsPage implements Page {
 
         Label modesHeader = new Label("Runway operating modes:");
         modesHeader.setStyle(MONITOR_LABEL);
-        // runwayModesVal.setWrapText(true);
-
-        // Label statusHeader = new Label("Runway operational statuses:");
-        // statusHeader.setStyle("-fx-font-weight: 800;");
-        // modesHeader.setStyle(MONITOR_LABEL);
 
         runwayModesVal.setWrapText(true);
         runwayModesVal.setStyle(LABEL_TEXT);
@@ -342,7 +337,7 @@ public class ResultsPage implements Page {
         card.setStyle(CARD);
 
         Label header = new Label(titleText);
-        header.setFont(Font.font(20));
+        header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
         GridPane grid = new GridPane();
@@ -363,6 +358,7 @@ public class ResultsPage implements Page {
 
         // Format the right column value label (bold and right-aligned, expands to fill available space)
         valueLabel.setStyle(MONITOR_TITLE);
+        valueLabel.setFont(Font.font(null, FontWeight.BOLD, 12));
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
         valueLabel.setMaxWidth(Double.MAX_VALUE);
 
@@ -565,7 +561,7 @@ public class ResultsPage implements Page {
         gc.translate(18, PAD_TOP + chartH / 2);
         gc.rotate(-90);
 
-        gc.setFont(Font.font(11));
+        gc.setFont(Font.font(null, FontWeight.BOLD, 11));
         gc.setFill(CHART_SUBTLE_TEXT);
         gc.fillText("(" + yAxisLabel + ")", -measureText("(" + yAxisLabel + ")", 11) / 2, 0);
 
@@ -647,7 +643,7 @@ public class ResultsPage implements Page {
     /** Approximate text width for a given font size (JavaFX Text for measurement). */
     private double measureText(String s, double fontSize) {
         Text t = new Text(s);
-        t.setFont(Font.font(fontSize));
+        t.setFont(Font.font(null, FontWeight.BOLD, fontSize));
         return t.getLayoutBounds().getWidth();
     }
 }

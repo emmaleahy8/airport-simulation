@@ -26,6 +26,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public class RunCompareHistoryPage implements Page {
 
@@ -116,7 +117,7 @@ public class RunCompareHistoryPage implements Page {
 
         // ----- Header -----
         // Uses the newer title + subtitle style so this page matches the updated UI.
-        title.setFont(Font.font(30));
+        title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
 
         subtitle.setStyle(SUBTITLE_TEXT);
