@@ -25,6 +25,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
+import com.group32.cs261project.frontend.HelpOverlay;
+import com.group32.cs261project.frontend.HelpText;
+
 public class ResultsPage implements Page {
 
     private final App app;
@@ -230,7 +233,7 @@ public class ResultsPage implements Page {
     // ----- Page Interface Methods -----
     @Override
     public Parent getView() {
-        return root;
+        return HelpOverlay.wrap(root, "End of Run Summary", HelpText.endOfRunSummaryPage());
     }
 
     @Override

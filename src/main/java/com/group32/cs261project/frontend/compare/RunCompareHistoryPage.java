@@ -28,6 +28,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import com.group32.cs261project.frontend.HelpOverlay;
+import com.group32.cs261project.frontend.HelpText;
+
 public class RunCompareHistoryPage implements Page {
 
     // ----- Shared page styling -----
@@ -158,7 +161,7 @@ public class RunCompareHistoryPage implements Page {
 
     @Override
     public Parent getView() {
-        return root;
+        return HelpOverlay.wrap(root, "Run History", HelpText.compareAnyTwoRunsPage());
     }
 
     @Override

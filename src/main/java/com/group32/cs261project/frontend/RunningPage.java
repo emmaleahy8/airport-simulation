@@ -39,11 +39,12 @@ import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
 import com.group32.cs261project.App;
+import com.group32.cs261project.frontend.HelpOverlay;
+import com.group32.cs261project.frontend.HelpText;
 
 public class RunningPage implements Page {
 
@@ -210,7 +211,7 @@ public class RunningPage implements Page {
 
     @Override
     public Parent getView() {
-        return root;
+        return HelpOverlay.wrap(root, "Running", HelpText.runningPage());
     }
 
     @Override

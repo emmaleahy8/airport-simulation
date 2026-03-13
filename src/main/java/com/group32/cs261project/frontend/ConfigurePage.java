@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.group32.cs261project.App;
-
+import com.group32.cs261project.frontend.HelpOverlay;
+import com.group32.cs261project.frontend.HelpText;
 public class ConfigurePage implements Page {
 
     private final App app;
@@ -216,7 +217,7 @@ public class ConfigurePage implements Page {
     // ----- Page Interface Methods -----
     @Override
     public Parent getView() {
-        return root;
+        return HelpOverlay.wrap(root, "Configure Page", HelpText.configurePage());
     }
 
     @Override

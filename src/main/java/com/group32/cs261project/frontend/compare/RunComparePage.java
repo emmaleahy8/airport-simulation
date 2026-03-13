@@ -36,6 +36,9 @@ import javafx.scene.text.Text;
 import javafx.geometry.VPos;
 import javafx.scene.text.TextAlignment;
 
+import com.group32.cs261project.frontend.HelpOverlay;
+import com.group32.cs261project.frontend.HelpText;
+
 public class RunComparePage implements Page {
 
     // ----- Shared page styling -----
@@ -145,7 +148,7 @@ public class RunComparePage implements Page {
 
     @Override
     public Parent getView() {
-        return root;
+        return HelpOverlay.wrap(root, "Compare Simulation Runs", HelpText.comparisonPage());
     }
 
     @Override
