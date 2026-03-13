@@ -33,6 +33,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.geometry.VPos;
+import javafx.scene.text.TextAlignment;
 
 public class RunComparePage implements Page {
 
@@ -83,7 +85,7 @@ public class RunComparePage implements Page {
                     .withZone(ZoneId.systemDefault());
 
     // ----- Chart constants -----
-    private static final int CHART_W = 860;
+    private static final int CHART_W = 750;
     private static final int CHART_H = 230;
 
     // Fixed short legend names to avoid the overlap caused by long run IDs.
@@ -179,23 +181,85 @@ public class RunComparePage implements Page {
         // Top section mirrors the ResultsPage layout:
         // left side = general info
         // right side = metric summary cards
-        HBox statsRow = new HBox(22);
+        GridPane statsRow = new GridPane();
+        statsRow.setHgap(22);
+
+        ColumnConstraints c1 = new ColumnConstraints();
+        c1.setPercentWidth(50);
+        c1.setHgrow(Priority.ALWAYS);
+        c1.setFillWidth(true);
+
+        ColumnConstraints c2 = new ColumnConstraints();
+        c2.setPercentWidth(50);
+        c2.setHgrow(Priority.ALWAYS);
+        c2.setFillWidth(true);
+
+        statsRow.getColumnConstraints().setAll(c1, c2);
+
         VBox left = buildGeneralInfoCard(leftRun, rightRun, leftConfig, rightConfig, leftReport, rightReport);
         VBox right = buildRightCards(leftReport, rightReport);
 
-        HBox.setHgrow(left, Priority.ALWAYS);
-        HBox.setHgrow(right, Priority.ALWAYS);
-        left.setPrefWidth(520);
-        right.setPrefWidth(420);
-        statsRow.getChildren().addAll(left, right);
+        left.setMaxWidth(Double.MAX_VALUE);
+        right.setMaxWidth(Double.MAX_VALUE);
+
+        statsRow.add(left, 0, 0);
+        statsRow.add(right, 1, 0);
+
+        // Put charts side by side
+        VBox countCard = buildCountChartCard(leftReport, rightReport);
+        VBox timeCard = buildTimeChartCard(leftReport, rightReport);
+
+        GridPane chartRow = new GridPane();
+        chartRow.setHgap(22);
+
+        ColumnConstraints chartC1 = new ColumnConstraints();
+        chartC1.setPercentWidth(50);
+        chartC1.setHgrow(Priority.ALWAYS);
+        chartC1.setFillWidth(true);
+
+        ColumnConstraints chartC2 = new ColumnConstraints();
+        chartC2.setPercentWidth(50);
+        chartC2.setHgrow(Priority.ALWAYS);
+        chartC2.setFillWidth(true);
+
+        chartRow.getColumnConstraints().setAll(chartC1, chartC2);
+
+        countCard.setMaxWidth(Double.MAX_VALUE);
+        timeCard.setMaxWidth(Double.MAX_VALUE);
+
+        chartRow.add(countCard, 0, 0);
+        chartRow.add(timeCard, 1, 0);
+
+        VBox additionalConfigCard = buildAdditionalConfigCard(leftConfig, rightConfig);
+        VBox configDiffCard = buildConfigDifferencesCard(result.configDifferences());
+        VBox metricDeltaCard = buildRawMetricDeltasCard(result.metricDeltas());
+
+        GridPane bottomRow = new GridPane();
+        bottomRow.setHgap(22);
+
+        ColumnConstraints bottomC1 = new ColumnConstraints();
+        bottomC1.setPercentWidth(50);
+        bottomC1.setHgrow(Priority.ALWAYS);
+        bottomC1.setFillWidth(true);
+
+        ColumnConstraints bottomC2 = new ColumnConstraints();
+        bottomC2.setPercentWidth(50);
+        bottomC2.setHgrow(Priority.ALWAYS);
+        bottomC2.setFillWidth(true);
+
+        bottomRow.getColumnConstraints().setAll(bottomC1, bottomC2);
+
+        configDiffCard.setMaxWidth(Double.MAX_VALUE);
+        metricDeltaCard.setMaxWidth(Double.MAX_VALUE);
+
+        bottomRow.add(configDiffCard, 0, 0);
+        bottomRow.add(metricDeltaCard, 1, 0);
 
         content.getChildren().addAll(
                 statsRow,
-                buildCountChartCard(leftReport, rightReport),
-                buildTimeChartCard(leftReport, rightReport),
-                buildAdditionalConfigCard(leftConfig, rightConfig),
-                buildConfigDifferencesCard(result.configDifferences()),
-                buildRawMetricDeltasCard(result.metricDeltas())
+                chartRow,
+                additionalConfigCard,
+                bottomRow
         );
     }
 
@@ -407,7 +471,7 @@ public class RunComparePage implements Page {
         double H = canvas.getHeight();
 
         // Extra top padding is intentional so the legend has room and does not overlap the chart.
-        final double PAD_LEFT = 58;
+        final double PAD_LEFT = 70;
         final double PAD_RIGHT = 20;
         final double PAD_TOP = 46;
         final double PAD_BOTTOM = 56;
@@ -466,10 +530,19 @@ public class RunComparePage implements Page {
             gc.fillText(lbl, PAD_LEFT - measureText(lbl, 11) - 4, y + 4);
         }
 
-        // Y-axis unit label
+        // Y-axis unit label - rotate sideways
+        gc.save();
+
+        gc.translate(PAD_LEFT - 44, PAD_TOP + chartH / 2);
+        gc.rotate(-90);
+
         gc.setFont(Font.font(11));
         gc.setFill(CHART_SUBTEXT);
-        gc.fillText("(" + yAxisLabel + ")", 2, PAD_TOP + chartH / 2);
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextBaseline(VPos.CENTER);
+        gc.fillText("(" + yAxisLabel + ")", 0, 0);
+
+        gc.restore();
 
         int n = labels.length;
         double groupW = chartW / n;
@@ -556,6 +629,7 @@ public class RunComparePage implements Page {
     private VBox buildAdditionalConfigCard(SimConfig leftConfig, SimConfig rightConfig) {
         VBox card = new VBox(14);
         card.setStyle(CARD);
+        card.setMaxWidth(Double.MAX_VALUE);
 
         Label header = new Label("Additional Configuration");
         header.setFont(Font.font(20));
@@ -582,12 +656,12 @@ public class RunComparePage implements Page {
         addComparisonRow(grid, 4, "Mechanical emergency probability:",
                 formatProbability(leftConfig.mechanicalEmergencyProbability()),
                 formatProbability(rightConfig.mechanicalEmergencyProbability()),
-                formatDelta(rightConfig.mechanicalEmergencyProbability() - leftConfig.mechanicalEmergencyProbability(), ""));
+                formatDelta(rightConfig.mechanicalEmergencyProbability() - leftConfig.mechanicalEmergencyProbability(), "%"));
 
         addComparisonRow(grid, 5, "Passenger health emergency probability:",
                 formatProbability(leftConfig.passengerHealthEmergencyProbability()),
                 formatProbability(rightConfig.passengerHealthEmergencyProbability()),
-                formatDelta(rightConfig.passengerHealthEmergencyProbability() - leftConfig.passengerHealthEmergencyProbability(), ""));
+                formatDelta(rightConfig.passengerHealthEmergencyProbability() - leftConfig.passengerHealthEmergencyProbability(), "%"));
 
         addComparisonRow(grid, 6, "Random seed:",
                 String.valueOf(leftConfig.randomSeed()),
@@ -603,6 +677,7 @@ public class RunComparePage implements Page {
     private VBox buildConfigDifferencesCard(Map<String, String> configDifferences) {
         VBox card = new VBox(14);
         card.setStyle(CARD);
+        card.setMaxWidth(Double.MAX_VALUE);
 
         Label header = new Label("Configuration Differences");
         header.setFont(Font.font(20));
@@ -646,14 +721,14 @@ public class RunComparePage implements Page {
         VBox card = new VBox(14);
         card.setStyle(CARD);
 
-        Label header = new Label("Metric Deltas (Right - Left)");
+        Label header = new Label("Metric Differences (Right - Left)");
         header.setFont(Font.font(20));
         header.setStyle(MONITOR_LABEL);
 
         VBox body = new VBox(10);
 
         if (metricDeltas == null || metricDeltas.isEmpty()) {
-            Label none = new Label("No metric deltas.");
+            Label none = new Label("No metric difference.");
             none.setStyle(SMALL_TEXT);
             body.getChildren().add(none);
         } else {
@@ -742,11 +817,14 @@ public class RunComparePage implements Page {
         Label spacer = new Label("");
         Label leftHeader = new Label(leftHeaderText);
         Label rightHeader = new Label(rightHeaderText);
-        Label deltaHeader = new Label("Delta");
+        Label deltaHeader = new Label("Difference (Right - Left)");
 
         leftHeader.setStyle(MONITOR_LABEL);
         rightHeader.setStyle(MONITOR_LABEL);
         deltaHeader.setStyle(MONITOR_LABEL);
+
+        deltaHeader.setMaxWidth(Double.MAX_VALUE);
+        deltaHeader.setAlignment(Pos.CENTER_RIGHT);
 
         grid.add(spacer, 0, 0);
         grid.add(leftHeader, 1, 0);
@@ -808,7 +886,7 @@ public class RunComparePage implements Page {
     }
 
     private String formatProbability(double value) {
-        return String.format("%.4f", value);
+        return String.format("%.0f%%", value);
     }
 
     private String formatDelta(double value, String suffix) {
