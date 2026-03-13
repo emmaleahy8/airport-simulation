@@ -155,7 +155,7 @@ public class ConfigurePage implements Page {
         root.setPadding(new Insets(16));
 
         // ----- Header (title + subtitle) -----
-        VBox header = new VBox(4); // Vertical box with spacing of 4px between title and subtitle
+        VBox header = new VBox(4);
         Label title = new Label("✈ Airport Traffic Simulation System");
         title.setFont(Font.font(30));
         title.setStyle(TITLE_TEXT);
@@ -326,7 +326,7 @@ public class ConfigurePage implements Page {
 
         Label emergencyTitle = new Label("Emergency Generation");
         emergencyTitle.setFont(Font.font(20));
-        emergencyTitle.setStyle(MONITOR_TITLE);
+        emergencyTitle.setStyle(MONITOR_LABEL);
 
         // Passenger Emergency slider + label
         VBox passengerHealthEmergencyBox = new VBox(5);

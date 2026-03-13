@@ -204,6 +204,7 @@ public class RunCompareHistoryPage implements Page {
     private VBox buildRunCard(RunSelectionRow row) {
         VBox card = new VBox(10);
         card.setStyle(row.checkBox.isSelected() ? CARD_SELECTED : CARD);
+        card.setFocusTraversable(false);
 
         // ----- Top row -----
         // Keeps selection control and main run identity together.

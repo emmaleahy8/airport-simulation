@@ -307,6 +307,7 @@ public class RunningPage implements Page {
 
         VBox card = new VBox(12);
         card.setStyle(CARD);
+        card.setFocusTraversable(false);
 
         Label header = new Label("Live Status");
         header.setFont(Font.font(20));
@@ -330,6 +331,7 @@ public class RunningPage implements Page {
     private VBox buildRunwayCard() {
         VBox card = new VBox(12);
         card.setStyle(CARD);
+        card.setFocusTraversable(false);
 
         Label header = new Label("Runway Configuration");
         header.setFont(Font.font(20));
@@ -742,6 +744,9 @@ public class RunningPage implements Page {
     private HBox buildControlButtons() {
         pauseBtn = new Button("Pause");
         pauseBtn.setStyle(BTN_SOFT);
+        pauseBtn.setPrefWidth(70);   // wide enough for "Resume"
+        pauseBtn.setMinWidth(70);
+        pauseBtn.setMaxWidth(70);
         pauseBtn.setOnAction(e -> togglePause());
 
         Button endBtn = new Button("End Simulation");
@@ -752,7 +757,7 @@ public class RunningPage implements Page {
         restartBtn.setStyle(BTN_SOFT);
         restartBtn.setOnAction(e -> onRestart());
 
-        HBox buttons = new HBox(14, pauseBtn, endBtn, restartBtn);
+        HBox buttons = new HBox(14, endBtn, pauseBtn, restartBtn);
         buttons.setAlignment(Pos.CENTER_LEFT);
 
         return buttons;

@@ -231,8 +231,8 @@ public class RunComparePage implements Page {
         chartRow.add(timeCard, 1, 0);
 
         VBox additionalConfigCard = buildAdditionalConfigCard(leftConfig, rightConfig);
-        VBox configDiffCard = buildConfigDifferencesCard(result.configDifferences());
-        VBox metricDeltaCard = buildRawMetricDeltasCard(result.metricDeltas());
+        // VBox configDiffCard = buildConfigDifferencesCard(result.configDifferences());
+        // VBox metricDeltaCard = buildRawMetricDeltasCard(result.metricDeltas());
 
         GridPane bottomRow = new GridPane();
         bottomRow.setHgap(22);
@@ -249,17 +249,10 @@ public class RunComparePage implements Page {
 
         bottomRow.getColumnConstraints().setAll(bottomC1, bottomC2);
 
-        configDiffCard.setMaxWidth(Double.MAX_VALUE);
-        metricDeltaCard.setMaxWidth(Double.MAX_VALUE);
-
-        bottomRow.add(configDiffCard, 0, 0);
-        bottomRow.add(metricDeltaCard, 1, 0);
-
         content.getChildren().addAll(
                 statsRow,
                 chartRow,
-                additionalConfigCard,
-                bottomRow
+                additionalConfigCard
         );
     }
 
@@ -669,104 +662,6 @@ public class RunComparePage implements Page {
                 leftConfig.randomSeed() == rightConfig.randomSeed() ? "0" : "Different");
 
         card.getChildren().addAll(header, grid);
-        return card;
-    }
-
-    // ----- Config differences card -----
-    // Displays the compare-service summary of changed config fields in a readable list.
-    private VBox buildConfigDifferencesCard(Map<String, String> configDifferences) {
-        VBox card = new VBox(14);
-        card.setStyle(CARD);
-        card.setMaxWidth(Double.MAX_VALUE);
-
-        Label header = new Label("Configuration Differences");
-        header.setFont(Font.font(20));
-        header.setStyle(MONITOR_LABEL);
-
-        VBox body = new VBox(10);
-
-        if (configDifferences == null || configDifferences.isEmpty()) {
-            Label none = new Label("No configuration differences.");
-            none.setStyle(SMALL_TEXT);
-            body.getChildren().add(none);
-        } else {
-            for (Map.Entry<String, String> entry : configDifferences.entrySet()) {
-                VBox row = new VBox(4);
-
-                Label key = new Label(entry.getKey());
-                key.setStyle(MONITOR_LABEL);
-
-                Label value = new Label(entry.getValue());
-                value.setWrapText(true);
-                value.setStyle(SMALL_TEXT);
-
-                Separator sep = new Separator();
-                sep.setOpacity(0.35);
-
-                row.getChildren().addAll(key, value, sep);
-                body.getChildren().add(row);
-            }
-        }
-
-        Separator topSep = new Separator();
-        topSep.setOpacity(0.35);
-
-        card.getChildren().addAll(header, topSep, body);
-        return card;
-    }
-
-    // ----- Raw metric deltas card -----
-    // Keeps the lower-level compare-service metric list for users who want the full delta summary.
-    private VBox buildRawMetricDeltasCard(Map<String, Double> metricDeltas) {
-        VBox card = new VBox(14);
-        card.setStyle(CARD);
-
-        Label header = new Label("Metric Differences (Right - Left)");
-        header.setFont(Font.font(20));
-        header.setStyle(MONITOR_LABEL);
-
-        VBox body = new VBox(10);
-
-        if (metricDeltas == null || metricDeltas.isEmpty()) {
-            Label none = new Label("No metric difference.");
-            none.setStyle(SMALL_TEXT);
-            body.getChildren().add(none);
-        } else {
-            GridPane grid = new GridPane();
-            grid.setHgap(16);
-            grid.setVgap(10);
-
-            ColumnConstraints c0 = new ColumnConstraints();
-            c0.setHgrow(Priority.ALWAYS);
-
-            ColumnConstraints c1 = new ColumnConstraints();
-            c1.setMinWidth(160);
-            c1.setHgrow(Priority.NEVER);
-
-            grid.getColumnConstraints().setAll(c0, c1);
-
-            int row = 0;
-            for (Map.Entry<String, Double> entry : metricDeltas.entrySet()) {
-                Label metricName = new Label(entry.getKey());
-                metricName.setStyle(LABEL_TEXT);
-
-                Label metricDelta = new Label(formatDelta(entry.getValue(), ""));
-                metricDelta.setAlignment(Pos.CENTER_RIGHT);
-                metricDelta.setMaxWidth(Double.MAX_VALUE);
-                metricDelta.setStyle(MONITOR_TITLE);
-
-                grid.add(metricName, 0, row);
-                grid.add(metricDelta, 1, row);
-                row++;
-            }
-
-            body.getChildren().add(grid);
-        }
-
-        Separator topSep = new Separator();
-        topSep.setOpacity(0.35);
-
-        card.getChildren().addAll(header, topSep, body);
         return card;
     }
 
