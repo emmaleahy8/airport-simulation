@@ -117,9 +117,11 @@ public class BackendSimulationService implements SimulationService {
      * @return backend simulation config
      */
     private static SimConfig mapConfig(SimulationData ui) {
+        Instant start = Instant.now();
+
         return SimConfig.builder()
-            .startTime(Instant.now())
-            .endTime(Instant.now().plus(Duration.ofHours(1)))
+            .startTime(start)
+            .endTime(start.plus(Duration.ofHours(ui.simulationHours)))
             .randomSeed(new Random().nextLong())
             .inboundRatePerHour(ui.inboundRatePerHour)
             .outboundRatePerHour(ui.outboundRatePerHour)
@@ -174,6 +176,7 @@ public class BackendSimulationService implements SimulationService {
         snapshot.outboundRatePerHour = (int) sim.config().outboundRatePerHour();
         snapshot.mechanicalEmergencyProbability = sim.config().mechanicalEmergencyProbability();
         snapshot.passengerHealthEmergencyProbability = sim.config().passengerHealthEmergencyProbability();
+        snapshot.simulationHours = (int) Duration.between(sim.config().startTime(), sim.config().endTime()).toHours();
 
         // pass runways
         snapshot.runways.clear();
@@ -333,15 +336,27 @@ public class BackendSimulationService implements SimulationService {
      * Tick the simulation by a set amount
      */
     private void tick() {
-        if (!this.running || this.paused)
+        if (!this.running || this.paused || this.backendSim == null) {
             return;
+        }
 
         for (int i = 0; i < this.numEventsPerTick; i++) {
             this.backendSim.step();
         }
 
         SimulationData snap = snapshotFrom(this.backendSim);
-        this.onSnapshot.accept(snap);
+        Consumer<SimulationData> callback = this.onSnapshot;
+        if (callback != null) {
+            callback.accept(snap);
+        }
+
+        if (!this.backendSim.engine().now().isBefore(this.backendSim.config().endTime())) {
+            callback = this.onSnapshot;
+            SimulationData finalSnap = stop();
+            if (callback != null) {
+                callback.accept(finalSnap);
+            }
+        }
     }
 
 
