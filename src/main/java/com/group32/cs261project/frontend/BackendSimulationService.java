@@ -129,7 +129,6 @@ public class BackendSimulationService implements SimulationService {
             .fuelDiversionMinutes(10)
             .mechanicalEmergencyProbability(ui.mechanicalEmergencyProbability)
             .passengerHealthEmergencyProbability(ui.passengerHealthEmergencyProbability)
-            .verbose(true)
             .build();
     }
 
