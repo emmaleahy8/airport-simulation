@@ -211,7 +211,7 @@ public class BackendSimulationService implements SimulationService {
             uiPlane.id = aircraft.callsign();
             uiPlane.code = aircraft.callsign();
             uiPlane.direction = PlaneDirection.OUTBOUND;
-            uiPlane.status = PlaneStatus.LANDING;
+            uiPlane.status = PlaneStatus.OUTBOUND_QUEUE;
             uiPlane.emergency = aircraft.isEmergency();
             uiPlane.etaTicks = 0; // i dont know what to do here
             uiPlane.assignedRunwayIndex = -1;
@@ -234,10 +234,21 @@ public class BackendSimulationService implements SimulationService {
 
             // Plane has newly appeared on a runway this snapshot
             if (previousRunway == null) {
+                double occupancySeconds = sim.config().runwayOccupancySeconds();
+
                 if (aircraft.direction() == AircraftDirection.INBOUND) {
-                    snapshot.events.add(new SimulationData.PlaneLanded(id, i, aircraft.isEmergency()));
+                    snapshot.events.add(new SimulationData.PlaneLanded(
+                        id,
+                        i,
+                        aircraft.isEmergency(),
+                        occupancySeconds
+                    ));
                 } else {
-                    snapshot.events.add(new SimulationData.PlaneTookOff(id, i));
+                    snapshot.events.add(new SimulationData.PlaneTookOff(
+                        id,
+                        i,
+                        occupancySeconds
+                    ));
                 }
             }
 
@@ -247,8 +258,8 @@ public class BackendSimulationService implements SimulationService {
             uiPlane.direction = convertDirection(aircraft.direction());
             uiPlane.status = (uiPlane.direction == PlaneDirection.INBOUND) ? PlaneStatus.LANDING : PlaneStatus.TAKING_OFF;
             uiPlane.emergency = aircraft.isEmergency();
-            uiPlane.etaTicks = 0; // i dont know what to do here
-            uiPlane.assignedRunwayIndex = -1;
+            uiPlane.etaTicks = 0; 
+            uiPlane.assignedRunwayIndex = i;
 
             snapshot.planes.add(uiPlane);
         }

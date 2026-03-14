@@ -54,8 +54,8 @@ public class SimulationData {
     public sealed interface SimEvent permits PlaneArrivedHolding, PlaneArrivedTakeoff, PlaneLanded, PlaneTookOff, PlaneEmergency, PlaneDiverted {}
     public record PlaneArrivedHolding(String planeId, boolean emergency) implements SimEvent {}
     public record PlaneArrivedTakeoff(String planeId) implements SimEvent {}
-    public record PlaneLanded(String planeId, int runwayIndex, boolean emergency) implements SimEvent {}
-    public record PlaneTookOff(String planeId, int runwayIndex) implements SimEvent {}
+    public record PlaneLanded(String planeId, int runwayIndex, boolean emergency,  double runwayOccupancySeconds) implements SimEvent {}
+    public record PlaneTookOff(String planeId, int runwayIndex,  double runwayOccupancySeconds) implements SimEvent {}
     public record PlaneEmergency(String planeId) implements SimEvent {}
     public record PlaneDiverted(String planeId, String reason) implements SimEvent {}
 
