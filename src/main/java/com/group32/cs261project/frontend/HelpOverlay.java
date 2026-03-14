@@ -13,7 +13,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
-import javafx.scene.control.ButtonType;
 
 public final class HelpOverlay {
 
@@ -65,17 +64,7 @@ public final class HelpOverlay {
     private static void showHelpDialog(String title, String helpText) {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(title + " Help");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        Button closeButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
-
-        closeButton.setStyle(
-            "-fx-background-color: linear-gradient(to bottom, #1b4fff, #163fc7);" +
-            "-fx-text-fill: white;" +
-            "-fx-font-weight: 700;" +
-            "-fx-padding: 8 12;" +
-            "-fx-background-radius: 8;"
-        );
+        dialog.getDialogPane().getButtonTypes().add(javafx.scene.control.ButtonType.CLOSE);
 
         Label heading = new Label(title);
         heading.setFont(Font.font("System", FontWeight.BOLD, 20));
