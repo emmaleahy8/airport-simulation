@@ -609,14 +609,10 @@ public class RunningPage implements Page {
 
     private void updateRunwayTable(SimulationData d) {
         d.ensureRunwayListSize();
-        currentConfig = d.copy();
 
         if (runwayEditorCards.size() != d.runways.size()) {
+            currentConfig = d.copy();
             rebuildRunwayTable(currentConfig.runwayCount);
-        } else {
-            for (int i = 0; i < runwayEditorCards.size(); i++) {
-                runwayEditorCards.get(i).bindTo(currentConfig.runways.get(i));
-            }
         }
     }
 
@@ -639,7 +635,6 @@ public class RunningPage implements Page {
         currentConfig = updated.copy();
         sim.updateConfig(updated);
 
-        // optional: rebind cards once here if you want UI to snap to applied values
         for (int i = 0; i < n; i++) {
             runwayEditorCards.get(i).bindTo(currentConfig.runways.get(i));
         }
