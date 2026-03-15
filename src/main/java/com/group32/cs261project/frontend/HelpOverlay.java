@@ -13,6 +13,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Window;
 
 /**
  * Utility class for adding a help button overlay to a page.
@@ -90,7 +92,7 @@ public final class HelpOverlay {
 
         helpButton.setEffect(glow);
 
-        helpButton.setOnAction(e -> showHelpDialog(title, helpText));
+        helpButton.setOnAction(e -> showHelpDialog(title, helpText, helpButton.getScene().getWindow()));
         return helpButton;
     }
 
@@ -103,9 +105,11 @@ public final class HelpOverlay {
      * @param title the title of the page or section requiring help
      * @param helpText the explanatory help text to display
      */
-    private static void showHelpDialog(String title, String helpText) {
+   private static void showHelpDialog(String title, String helpText, Window owner) {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(title + " Help");
+        dialog.initOwner(owner);
+        dialog.initModality(Modality.WINDOW_MODAL);
         dialog.getDialogPane().getButtonTypes().add(javafx.scene.control.ButtonType.CLOSE);
 
         Label heading = new Label(title);
@@ -128,6 +132,7 @@ public final class HelpOverlay {
 
         dialog.getDialogPane().setContent(scrollPane);
         dialog.getDialogPane().setStyle("-fx-background-color: #111827;");
+
         dialog.showAndWait();
     }
 }
