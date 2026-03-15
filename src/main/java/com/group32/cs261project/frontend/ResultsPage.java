@@ -422,8 +422,8 @@ public class ResultsPage implements Page {
         StringBuilder status = new StringBuilder();
         for (int i = 0; i < d.runways.size(); i++) {
             var r = d.runways.get(i);
-            modes.append("Runway ").append(r.id).append(": ").append(r.mode).append("\n");
-            status.append("Runway ").append(r.id).append(": ").append(r.status).append("\n");
+            modes.append("Runway ").append(r.id + 1).append(": ").append(r.mode).append("\n");
+            status.append("Runway ").append(r.id + 1).append(": ").append(r.status).append("\n");
         }
         runwayModesVal.setText(modes.toString().trim());
         runwayStatusVal.setText(status.toString().trim());
