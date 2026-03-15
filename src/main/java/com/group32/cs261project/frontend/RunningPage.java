@@ -2,6 +2,14 @@ package com.group32.cs261project.frontend;
 
 import javafx.animation.Animation;
 import javafx.animation.PathTransition;
+import javafx.animation.RotateTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -9,35 +17,26 @@ import javafx.scene.Parent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Arc;
+import javafx.scene.shape.ArcType;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
-import javafx.scene.control.Slider;
-import javafx.animation.Interpolator;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Glow;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Arc;
-import javafx.scene.shape.ArcType;
-import javafx.animation.RotateTransition;
 import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.scene.transform.Rotate;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ScrollPane;
-import javafx.animation.FadeTransition;
-import javafx.animation.PauseTransition;
-import javafx.animation.SequentialTransition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +45,14 @@ import com.group32.cs261project.App;
 import com.group32.cs261project.frontend.HelpOverlay;
 import com.group32.cs261project.frontend.HelpText;
 
+/**
+ * Page displaying the live simulation while it is running.
+ *
+ * This page shows real-time simulation metrics, a visual representation
+ * of aircraft movement, runway configuration controls, and simulation
+ * speed controls. It also allows the user to pause, restart, end the
+ * simulation, and apply runway configuration changes during runtime.
+ */
 public class RunningPage implements Page {
 
     private final App app;
@@ -81,6 +88,7 @@ public class RunningPage implements Page {
     private Button applyRunwayChangesBtn;
     private final Label changesAppliedLabel = new Label("Changes applied!");
 
+    // ----- Styling -----
     private static final String PAGE_BG =
         "-fx-background-color: rgb(14, 26, 40);";
 
@@ -110,13 +118,13 @@ public class RunningPage implements Page {
             "-fx-background-radius: 8;";
 
     private static final String RUNWAY_EDIT_CARD =
-        "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
-        "-fx-border-color: #1dd6ff;" +
-        "-fx-border-width: 1.4;" +
-        "-fx-border-radius: 12;" +
-        "-fx-background-radius: 14;" +
-        "-fx-padding: 10;" +
-        "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.16), 12, 0.22, 0, 0);";
+            "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
+            "-fx-border-color: #1dd6ff;" +
+            "-fx-border-width: 1.4;" +
+            "-fx-border-radius: 12;" +
+            "-fx-background-radius: 14;" +
+            "-fx-padding: 10;" +
+            "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.16), 12, 0.22, 0, 0);";
 
     private static final String RUNWAY_EDIT_CARD_DISABLED =
             "-fx-background-color: linear-gradient(to bottom, #1a232b 0%, #182028 100%);" +
@@ -128,15 +136,15 @@ public class RunningPage implements Page {
             "-fx-opacity: 0.74;";
 
     private static final String COMBO_STYLE =
-                "-fx-background-color: #0d1d29;" +
-                "-fx-control-inner-background: #0d1d29;" +
-                "-fx-background-insets: 0;" +
-                "-fx-background-radius: 6;" +
-                "-fx-border-color: #2d6678;" +
-                "-fx-border-radius: 6;" +
-                "-fx-text-fill: white;" +
-                "-fx-prompt-text-fill: white;" +
-                "-fx-mark-color: white;";
+            "-fx-background-color: #0d1d29;" +
+            "-fx-control-inner-background: #0d1d29;" +
+            "-fx-background-insets: 0;" +
+            "-fx-background-radius: 6;" +
+            "-fx-border-color: #2d6678;" +
+            "-fx-border-radius: 6;" +
+            "-fx-text-fill: white;" +
+            "-fx-prompt-text-fill: white;" +
+            "-fx-mark-color: white;";
             
     private static final String TITLE_TEXT = "-fx-text-fill: #eaf6ff;";
     private static final String SUBTITLE_TEXT = "-fx-text-fill: #cccccc;";
@@ -145,6 +153,16 @@ public class RunningPage implements Page {
     private static final String MONITOR_TITLE = "-fx-text-fill: #63e6ff;";
     private static final String MONITOR_LABEL = "-fx-text-fill: #d7f8ff;";
 
+    /**
+     * Creates a new running page.
+     *
+     * This constructor builds the page layout, including the live metrics
+     * panel, runway configuration editor, simulation speed controls,
+     * control buttons, and simulation visual area.
+     *
+     * @param app the main application controller used for page navigation
+     * @param sim the simulation service used to control the running simulation
+     */
     public RunningPage(App app, SimulationService sim) {
         this.app = app;
         this.sim = sim;
@@ -155,12 +173,14 @@ public class RunningPage implements Page {
         mainLayout.setPadding(new Insets(18));
         mainLayout.setMinWidth(1500);
 
+        // Page title
         Label title = new Label("Running Simulation");
         title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
         BorderPane.setMargin(title, new Insets(18, 18, 14, 18));
         root.setTop(title);
 
+        // ----- Left Column -----
         VBox leftColumn = new VBox(20);
         leftColumn.setPrefWidth(400);
         leftColumn.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.33));
@@ -183,6 +203,7 @@ public class RunningPage implements Page {
         visual = new SimulationPaneVisual();
         fastModeOverlay = buildFastModeOverlay();
 
+        // ----- Simulation View -----
         simulationPane = new StackPane();
         simulationPane.setAlignment(Pos.CENTER);
         simulationPane.prefWidthProperty().bind(mainLayout.widthProperty().multiply(0.67));
@@ -200,6 +221,7 @@ public class RunningPage implements Page {
 
         mainLayout.getChildren().addAll(leftColumn, simulationPane);
 
+        // Scrollpane
         ScrollPane scroll = new ScrollPane(mainLayout);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -210,11 +232,26 @@ public class RunningPage implements Page {
         root.setCenter(scroll);    
     }
 
+    /**
+     * Returns the root view for this page wrapped in the help overlay.
+     *
+     * @return the page view
+     */
     @Override
     public Parent getView() {
         return HelpOverlay.wrap(root, "Running", HelpText.runningPage());
     }
 
+    /**
+     * Called when the application navigates to this page.
+     *
+     * The provided data is expected to be a {@link SimulationData} object
+     * containing the simulation configuration. This method resets the
+     * displayed metrics, rebuilds the runway editor, starts the simulation,
+     * and begins receiving live snapshots from the backend.
+     *
+     * @param data the simulation configuration passed during navigation
+     */
     @Override
     public void onEnter(Object data) {
         currentConfig = ((SimulationData) data).copy();
@@ -227,6 +264,7 @@ public class RunningPage implements Page {
         rebuildRunwayTable(currentConfig.runwayCount);
         updateRunwayTable(currentConfig);
 
+        // Restart spinner 
         if (spinnerAnim != null) {
             spinnerAnim.playFromStart();
         }
@@ -259,6 +297,11 @@ public class RunningPage implements Page {
         }));
     }
 
+    /**
+     * Called when the application navigates away from this page.
+     *
+     * This implementation stops the spinner animation if it is running.
+     */
     @Override
     public void onExit() {
         if (spinnerAnim != null) {
@@ -266,7 +309,14 @@ public class RunningPage implements Page {
         }
     }
 
-    // ----- Speed Slider -----
+    /**
+     * Builds the simulation speed control card.
+     *
+     * This card contains the speed slider and the label showing the
+     * currently selected playback speed.
+     *
+     * @return the simulation speed control card
+     */
     private VBox buildSpeedCard() {
         VBox box = new VBox(8);
 
@@ -308,6 +358,14 @@ public class RunningPage implements Page {
         return box;
     }
 
+    /**
+     * Builds the live metrics card.
+     *
+     * This card displays key real-time simulation information such as
+     * simulation time, holding queue size, and take-off queue size.
+     *
+     * @return the live metrics card
+     */
     private VBox buildMetricsCard() {
 
         VBox card = new VBox(12);
@@ -333,6 +391,14 @@ public class RunningPage implements Page {
         return card;
     }
 
+    /**
+     * Builds the runway configuration editor card.
+     *
+     * This card allows the user to view and modify runway operating
+     * modes and statuses while the simulation is running.
+     *
+     * @return the runway configuration editor card
+     */
     private VBox buildRunwayCard() {
         VBox card = new VBox(12);
         card.setStyle(CARD);
@@ -382,6 +448,16 @@ public class RunningPage implements Page {
         return card;
     }
 
+    /**
+     * Builds the animated radar-style loading graphic used in fast mode.
+     *
+     * The graphic includes a circular track, rotating radar sweep,
+     * and moving aircraft icon.
+     *
+     * @param paneSize the size of the containing pane
+     * @param radius the radius of the radar track
+     * @return the completed animated loading graphic
+     */
     private Node buildPlaneSpinnerWithTrack(double paneSize, double radius) {
         StackPane wrap = new StackPane();
         wrap.setAlignment(Pos.CENTER);
@@ -477,11 +553,6 @@ public class RunningPage implements Page {
         spinnerAnim.setInterpolator(Interpolator.LINEAR);
         spinnerAnim.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
 
-        spinnerAnim = new PathTransition(Duration.seconds(1.8), path, plane);
-        spinnerAnim.setCycleCount(Animation.INDEFINITE);
-        spinnerAnim.setInterpolator(Interpolator.LINEAR);
-        spinnerAnim.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
-
         // Centre dot
         Circle centreDot = new Circle(cx, cy, 3.5);
         centreDot.setFill(Color.web("#39e75f"));
@@ -518,9 +589,17 @@ public class RunningPage implements Page {
         return wrap;
     }
 
+    /**
+     * Builds the overlay shown when the simulation is running in fast mode.
+     *
+     * In fast mode, the main visual is hidden and replaced with a message
+     * and animated indicator informing the user that the visual has been
+     * disabled at high speed.
+     *
+     * @return the fast mode overlay
+     */
     private VBox buildFastModeOverlay() {
-
-    VBox box = new VBox(14);
+        VBox box = new VBox(14);
         box.setAlignment(Pos.CENTER);
         box.setStyle(
             "-fx-background-color: rgb(14, 26, 40);" +
@@ -545,6 +624,17 @@ public class RunningPage implements Page {
         return box;
     }
 
+    /**
+     * Adds a labelled metric row to the given grid pane.
+     *
+     * Each row consists of a label, a value label, and an optional suffix.
+     *
+     * @param gp the grid pane to add the row to
+     * @param row the target row index
+     * @param labelText the descriptive label text
+     * @param valueLabel the label displaying the metric value
+     * @param suffix the optional suffix displayed beside the value
+     */
     private void addRow(GridPane gp, int row, String labelText, Label valueLabel, String suffix) {
         Label l = new Label(labelText);
         l.setStyle(SMALL_TEXT);
@@ -577,6 +667,14 @@ public class RunningPage implements Page {
         gp.getColumnConstraints().setAll(c0, c1);
     }
 
+    /**
+     * Rebuilds the runway editor table for the given number of runways.
+     *
+     * Existing runway editor cards are removed and replaced with new cards
+     * bound to the current runway configuration.
+     *
+     * @param runwayCount the number of runways to display
+     */
     private void rebuildRunwayTable(int runwayCount) {
         runwayTable.getChildren().clear();
         runwayEditorCards.clear();
@@ -605,8 +703,18 @@ public class RunningPage implements Page {
         }
     }
 
+    // ===================
     // ----- Helpers -----
+    // ===================
 
+    /**
+     * Updates the runway editor table to match the supplied simulation data.
+     *
+     * If the number of runway editor cards no longer matches the runway
+     * configuration, the table is rebuilt.
+     *
+     * @param d the latest simulation snapshot
+     */
     private void updateRunwayTable(SimulationData d) {
         d.ensureRunwayListSize();
 
@@ -616,6 +724,12 @@ public class RunningPage implements Page {
         }
     }
 
+    /**
+     * Applies the current runway editor selections to the running simulation.
+     *
+     * The updated runway modes and statuses are copied into a new
+     * {@link SimulationData} object and passed to the simulation service.
+     */
     private void applyRunwayChanges() {
         if (currentConfig == null) {
             return;
@@ -640,6 +754,12 @@ public class RunningPage implements Page {
         }
     }
 
+    /**
+     * UI component representing an editable runway configuration card.
+     *
+     * Each card allows the user to view and modify the status and mode
+     * of a single runway during the simulation.
+     */
     private class RunwayEditorCard {
         private final VBox root = new VBox(6);
         private final Label title = new Label();
@@ -647,6 +767,11 @@ public class RunningPage implements Page {
         private final ComboBox<SimulationData.RunwayStatus> statusBox = new ComboBox<>();
         private final ComboBox<SimulationData.RunwayMode> modeBox = new ComboBox<>();
 
+        /**
+         * Creates a runway editor card bound to the given runway configuration.
+         *
+         * @param cfg the initial runway configuration for this card
+         */
         RunwayEditorCard(SimulationData.RunwayConfig cfg) {
             root.setStyle(RUNWAY_EDIT_CARD);
             root.setMaxWidth(Double.MAX_VALUE);
@@ -720,6 +845,14 @@ public class RunningPage implements Page {
             bindTo(cfg);
         }
 
+        /**
+         * Binds this editor card to the given runway configuration.
+         *
+         * The displayed title and combo box selections are updated to reflect
+         * the supplied runway data.
+         *
+         * @param cfg the runway configuration to bind to
+         */
         void bindTo(SimulationData.RunwayConfig cfg) {
             title.setText("Runway " + (cfg.id));
             statusBox.setValue(cfg.status);
@@ -727,6 +860,13 @@ public class RunningPage implements Page {
             setEnabled(true);
         }
 
+        /**
+         * Enables or disables this runway editor card.
+         *
+         * Disabled cards remain visible but cannot be edited.
+         *
+         * @param enabled true to enable the card, false to disable it
+         */
         void setEnabled(boolean enabled) {
             root.setStyle(enabled ? RUNWAY_EDIT_CARD : RUNWAY_EDIT_CARD_DISABLED);
             statusBox.setDisable(!enabled);
@@ -735,16 +875,25 @@ public class RunningPage implements Page {
             root.setOpacity(enabled ? 1.0 : 0.82);
         }
 
+        // Returns the runway status currently selected in this card.
         SimulationData.RunwayStatus getStatus() {
             return statusBox.getValue();
         }
 
+        // Returns the runway mode currently selected in this card.
         SimulationData.RunwayMode getMode() {
             return modeBox.getValue();
         }
     }
 
-    // Buttons Control Card
+    /**
+     * Builds the main simulation control buttons.
+     *
+     * These controls allow the user to pause or resume the simulation,
+     * end the run, or restart and return to the configuration page.
+     *
+     * @return the control button row
+     */
     private HBox buildControlButtons() {
         pauseBtn = new Button("Pause");
         pauseBtn.setStyle(BTN_SOFT);
@@ -767,6 +916,15 @@ public class RunningPage implements Page {
         return buttons;
     }
 
+    /**
+     * Maps a slider position to the corresponding playback speed multiplier.
+     *
+     * Slider values below 10 represent decimal speeds, 10 represents normal
+     * speed, and values above 10 represent integer multiples above 1x.
+     *
+     * @param sliderValue the raw slider value
+     * @return the corresponding playback speed
+     */
     private double mapSliderToSpeed(double sliderValue) {
         int v = (int) Math.round(sliderValue);
 
@@ -779,6 +937,14 @@ public class RunningPage implements Page {
         return v - 9;          // 11->2.0, 12->3.0, ..., 19->10.0
     }
 
+    /**
+     * Updates whether the main simulation visual or the fast mode overlay
+     * should be displayed.
+     *
+     * At high speeds, the visual is hidden and the fast mode overlay is shown.
+     *
+     * @param speed the current playback speed
+     */
     private void updateVisualMode(double speed) {
         boolean hideVisual = speed >= 3.0;
 
@@ -789,12 +955,23 @@ public class RunningPage implements Page {
         fastModeOverlay.setManaged(hideVisual);
     }
 
+    /**
+     * Formats a playback speed value for display.
+     *
+     * @param speed the playback speed multiplier
+     * @return the formatted speed string
+     */
     private String formatSpeed(double speed) {
         return (speed < 1.0)
                 ? String.format("%.1fx", speed)
                 : (speed == 1.0 ? "1.0x" : String.format("%.0fx", speed));
     }
 
+    /**
+     * Shows a temporary confirmation message after runway changes are applied.
+     *
+     * The message is displayed briefly and then fades out automatically.
+     */
     private void showChangesAppliedMessage() {
         changesAppliedLabel.setVisible(true);
         changesAppliedLabel.setManaged(true);
@@ -814,27 +991,13 @@ public class RunningPage implements Page {
         new SequentialTransition(pause, fade).play();
     }
 
-    private String pretty(String enumName) {
-
-        String lower = enumName.toLowerCase().replace('_', ' ');
-        String[] parts = lower.split(" ");
-
-        StringBuilder sb = new StringBuilder();
-
-        for (String p : parts) {
-
-            if (p.isBlank()) continue;
-
-            sb.append(Character.toUpperCase(p.charAt(0)))
-              .append(p.substring(1))
-              .append(" ");
-        }
-
-        return sb.toString().trim();
-    }
-
+    /**
+     * Toggles the paused state of the simulation.
+     *
+     * If the simulation is paused it is resumed, otherwise it is paused.
+     * The pause button text is updated accordingly.
+     */
     private void togglePause() {
-
         if (sim.isPaused()) {
 
             sim.resume();
@@ -847,6 +1010,12 @@ public class RunningPage implements Page {
         }
     }
 
+    /**
+     * Ends the current simulation and opens the results page.
+     *
+     * If the simulation is still running, it is stopped first so that a
+     * final report can be generated.
+     */
     private void onEnd() {
         SimulationData report;
 
@@ -859,6 +1028,9 @@ public class RunningPage implements Page {
         app.switchTo(AppState.RESULTS, report);
     }
 
+    /**
+     * Stops the simulation if necessary and returns to the configuration page.
+     */
     private void onRestart() {
         if (sim.isRunning()) {
             sim.stop();
