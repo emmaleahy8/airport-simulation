@@ -8,6 +8,10 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for when inbound aircraft arrives, created by FlightSeeder at start of simulation
+ */
 public class AircraftInboundArrivesEvent implements Event<SimulationContext> {
 
     private final Instant time;

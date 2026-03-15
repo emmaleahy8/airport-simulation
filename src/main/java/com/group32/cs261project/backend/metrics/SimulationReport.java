@@ -1,5 +1,10 @@
 package com.group32.cs261project.backend.metrics;
 
+
+/**
+ * Simulation report class containing data to be displayed on the UI
+ * data fields map to requirements in the specification
+ */
 public record SimulationReport(
 
     Integer numRunways,
