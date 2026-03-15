@@ -35,14 +35,14 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.geometry.VPos;
 import javafx.scene.text.TextAlignment;
+import java.time.Duration;
 
 import com.group32.cs261project.frontend.HelpOverlay;
 import com.group32.cs261project.frontend.HelpText;
 
 public class RunComparePage implements Page {
 
-    // ----- Shared page styling -----
-    // Matches the updated dark dashboard style used by the newer frontend pages.
+    // ----- Page styling -----
     private static final String PAGE_BG =
             "-fx-background-color: rgb(14, 26, 40);";
 
@@ -91,7 +91,7 @@ public class RunComparePage implements Page {
     private static final int CHART_W = 750;
     private static final int CHART_H = 230;
 
-    // Fixed short legend names to avoid the overlap caused by long run IDs.
+    // Fixed short legend names
     private static final String LEFT_LEGEND = "Left Run";
     private static final String RIGHT_LEGEND = "Right Run";
 
@@ -115,7 +115,6 @@ public class RunComparePage implements Page {
         root.setPadding(new Insets(18));
 
         // ----- Header -----
-        // Uses a title + subtitle layout consistent with the updated frontend style.
         VBox header = new VBox(4);
 
         Label title = new Label("Compare Simulation Runs");
@@ -170,9 +169,11 @@ public class RunComparePage implements Page {
         // no-op
     }
 
+    //Populates the comparison view using the results of a run comparison.
     private void fillFrom(RunCompareResult result) {
         content.getChildren().clear();
 
+        // Extract both runs and their associated configuration and metrics.
         RunCompareCompletedRun leftRun = result.leftRun();
         RunCompareCompletedRun rightRun = result.rightRun();
 
@@ -212,6 +213,7 @@ public class RunComparePage implements Page {
         VBox countCard = buildCountChartCard(leftReport, rightReport);
         VBox timeCard = buildTimeChartCard(leftReport, rightReport);
 
+        // Chart row: Displays metric comparisons visually
         GridPane chartRow = new GridPane();
         chartRow.setHgap(22);
 
@@ -233,10 +235,9 @@ public class RunComparePage implements Page {
         chartRow.add(countCard, 0, 0);
         chartRow.add(timeCard, 1, 0);
 
+        // Bottom section: additional configuration parameters for the two runs.
         VBox additionalConfigCard = buildAdditionalConfigCard(leftConfig, rightConfig);
-        // VBox configDiffCard = buildConfigDifferencesCard(result.configDifferences());
-        // VBox metricDeltaCard = buildRawMetricDeltasCard(result.metricDeltas());
-
+        
         GridPane bottomRow = new GridPane();
         bottomRow.setHgap(22);
 
@@ -270,10 +271,12 @@ public class RunComparePage implements Page {
         VBox card = new VBox(14);
         card.setStyle(CARD);
 
+        // Heading
         Label header = new Label("General Information");
         header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
+        // ----- Table-like comparison rows -----
         GridPane grid = createFourColumnGrid();
         addComparisonHeaderRow(grid, LEFT_LEGEND, RIGHT_LEGEND);
 
@@ -302,7 +305,22 @@ public class RunComparePage implements Page {
                 formatWhole(safeInt(rightReport.numRunways())),
                 formatDelta(safeInt(rightReport.numRunways()) - safeInt(leftReport.numRunways()), ""));
 
-        addComparisonRow(grid, 6, "Maximum wait time:",
+        long leftSimulationHours = Duration.between(
+                leftConfig.startTime(),
+                leftConfig.endTime()
+        ).toHours();
+
+        long rightSimulationHours = Duration.between(
+                rightConfig.startTime(),
+                rightConfig.endTime()
+        ).toHours();
+
+        addComparisonRow(grid, 6, "Simulation duration:",
+                formatWhole(leftSimulationHours) + " hours",
+                formatWhole(rightSimulationHours) + " hours",
+                formatDelta(rightSimulationHours - leftSimulationHours, " hours"));
+
+        addComparisonRow(grid, 7, "Max. time in takeoff queue:",
                 formatWhole(leftConfig.maxTakeoffWaitMinutes()) + " minutes",
                 formatWhole(rightConfig.maxTakeoffWaitMinutes()) + " minutes",
                 formatDelta(rightConfig.maxTakeoffWaitMinutes() - leftConfig.maxTakeoffWaitMinutes(), " minutes"));
@@ -361,16 +379,19 @@ public class RunComparePage implements Page {
         return right;
     }
 
+    // Build a metric comparison card
     private VBox buildMetricCard(String titleText,
                                  String label1, String left1, String right1, String delta1,
                                  String label2, String left2, String right2, String delta2) {
         VBox card = new VBox(12);
         card.setStyle(CARD);
 
+        // Header
         Label header = new Label(titleText);
         header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
+        // Table-like comparison rows
         GridPane grid = createFourColumnGrid();
         addComparisonHeaderRow(grid, LEFT_LEGEND, RIGHT_LEGEND);
         addComparisonRow(grid, 1, label1, left1, right1, delta1);
@@ -442,6 +463,8 @@ public class RunComparePage implements Page {
         return buildChartCard("Time Metrics Comparison (minutes)", canvas);
     }
 
+    // ----- Bar chart builder method -----
+    // Combines bar chart and heading into a card 
     private VBox buildChartCard(String heading, Canvas canvas) {
         VBox card = new VBox(10);
         card.setStyle(CARD);
@@ -466,7 +489,7 @@ public class RunComparePage implements Page {
         double W = canvas.getWidth();
         double H = canvas.getHeight();
 
-        // Extra top padding is intentional so the legend has room and does not overlap the chart.
+        // Fixed padding reserves space for the y-axis labels, x-axis labels, and legend.
         final double PAD_LEFT = 70;
         final double PAD_RIGHT = 20;
         final double PAD_TOP = 46;
@@ -475,12 +498,15 @@ public class RunComparePage implements Page {
         double chartW = W - PAD_LEFT - PAD_RIGHT;
         double chartH = H - PAD_TOP - PAD_BOTTOM;
 
+        // Clear any previous drawing before rendering the updated chart.
         gc.clearRect(0, 0, W, H);
         gc.setFill(Color.TRANSPARENT);
         gc.fillRect(0, 0, W, H);
 
+        // Draw legend first so the colour meaning of each run is always visible.
         drawLegend(gc);
 
+        // Find the data range across both runs so both sets of bars share one scale.
         double maxVal = 0;
         double minVal = 0;
         for (double v : leftValues) {
@@ -503,13 +529,14 @@ public class RunComparePage implements Page {
             maxVal = 1;
         }
 
+        // Round the axis maximum to a "nice" value so tick labels remain readable.
         double niceMax = niceNumber(maxVal * 1.20, true);
         int tickCount = 5;
 
         // small negative leeway if needed
         double niceMin = 0;
         if (minVal < 0) {
-            niceMin = minVal * 1.2;   // e.g. -1 becomes about -1.2
+            niceMin = minVal * 1.2;   
         }
 
         double tickStep = niceNumber((niceMax - niceMin) / tickCount, false);
@@ -554,6 +581,7 @@ public class RunComparePage implements Page {
 
         gc.restore();
 
+        // Calculate the layout of each grouped pair of bars.
         int n = labels.length;
         double groupW = chartW / n;
         double innerGroupW = groupW * 0.72;
@@ -562,6 +590,7 @@ public class RunComparePage implements Page {
         double startOffset = (groupW - innerGroupW) / 2.0;
 
         for (int i = 0; i < n; i++) {
+            // Convert metric values into bar heights using the shared chart scale.
             double leftBarH = ((leftValues[i] - niceMin) / (niceMax - niceMin)) * chartH;
             double rightBarH = ((rightValues[i] - niceMin) / (niceMax - niceMin)) * chartH;
 
@@ -641,10 +670,12 @@ public class RunComparePage implements Page {
         card.setStyle(CARD);
         card.setMaxWidth(Double.MAX_VALUE);
 
+        // Heading
         Label header = new Label("Additional Configuration");
         header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
 
+        // Table-like comparison rows
         GridPane grid = createFourColumnGrid();
         addComparisonHeaderRow(grid, LEFT_LEGEND, RIGHT_LEGEND);
 
@@ -673,6 +704,7 @@ public class RunComparePage implements Page {
                 formatProbability(rightConfig.passengerHealthEmergencyProbability()),
                 formatDelta(rightConfig.passengerHealthEmergencyProbability() - leftConfig.passengerHealthEmergencyProbability(), "%"));
 
+        // Show seed separately because matching seeds indicate comparable randomness.
         addComparisonRow(grid, 6, "Random seed:",
                 String.valueOf(leftConfig.randomSeed()),
                 String.valueOf(rightConfig.randomSeed()),
@@ -682,6 +714,11 @@ public class RunComparePage implements Page {
         return card;
     }
 
+    /**
+     * Displays a placeholder message when the page is opened without
+     * any comparison data. This prevents the view from appearing empty
+     * and informs the user that no runs were selected for comparison.
+     */
     private void showNoComparisonData() {
         content.getChildren().clear();
 
@@ -725,6 +762,14 @@ public class RunComparePage implements Page {
         return grid;
     }
 
+    /**
+     * Adds the header row for a comparison grid.
+     * 
+     * The row labels the columns for the left run, the right run,
+     * and the calculated difference between them. A spacer is placed
+     * in the first column to align the headers with the metric labels
+     * used in the rows below.
+     */
     private void addComparisonHeaderRow(GridPane grid, String leftHeaderText, String rightHeaderText) {
         Label spacer = new Label("");
         Label leftHeader = new Label(leftHeaderText);
@@ -775,6 +820,10 @@ public class RunComparePage implements Page {
         grid.add(deltaValue, 3, row);
     }
 
+    // ----- Formatting and utility helpers -----
+    // These methods standardise numeric formatting and null-handling across the
+    // comparison view and charts so values are displayed consistently.
+
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
     }
@@ -795,6 +844,7 @@ public class RunComparePage implements Page {
         return String.format("%.2f minutes", value);
     }
 
+    // Formats numbers without decimals when they are effectively whole values.
     private String formatWhole(double value) {
         if (Math.abs(value - Math.rint(value)) < 0.0000001) {
             return String.valueOf((long) Math.rint(value));
@@ -806,6 +856,7 @@ public class RunComparePage implements Page {
         return String.format("%.0f%%", value);
     }
 
+    // Formats the difference between two values with an explicit sign.
     private String formatDelta(double value, String suffix) {
         if (suffix == null) {
             suffix = "";
@@ -819,6 +870,7 @@ public class RunComparePage implements Page {
         return sign + String.format("%.2f", value) + suffix;
     }
 
+    // Short numeric format used for chart labels.
     private String formatChartValue(double value) {
         if (Math.abs(value - Math.rint(value)) < 0.0000001) {
             return String.valueOf((long) Math.rint(value));

@@ -15,6 +15,7 @@ public record SimConfig(
     double outboundRatePerHour,
     int runwayOccupancySeconds,
     long maxTakeoffWaitMinutes,
+    int runwayCount,
     int lowFuelMinutes,
     int fuelDiversionMinutes,
     double mechanicalEmergencyProbability,
@@ -50,6 +51,7 @@ public record SimConfig(
         private double outboundRatePerHour = 15.0;
         private int runwayOccupancySeconds = 60;
         private long maxTakeoffWaitMinutes = 30;
+        private int runwayCount = 2;
         private int lowFuelMinutes = 20;
         private int fuelDiversionMinutes = 10;
         private double mechanicalEmergencyProbability = 0.10;
@@ -65,6 +67,7 @@ public record SimConfig(
         public Builder outboundRatePerHour(double v) { this.outboundRatePerHour = v; return this; }
         public Builder runwayOccupancySeconds(int v) { this.runwayOccupancySeconds = v; return this; }
         public Builder maxTakeoffWaitMinutes(long v) { this.maxTakeoffWaitMinutes = v; return this; }
+        public Builder runwayCount(int v) { this.runwayCount = v; return this; }
         public Builder lowFuelMinutes(int v) { this.lowFuelMinutes = v; return this; }
         public Builder fuelDiversionMinutes(int v) { this.fuelDiversionMinutes = v; return this; }
         public Builder mechanicalEmergencyProbability(double v) { this.mechanicalEmergencyProbability = v; return this; }
@@ -84,6 +87,7 @@ public record SimConfig(
                 this.outboundRatePerHour,
                 this.runwayOccupancySeconds,
                 this.maxTakeoffWaitMinutes,
+                this.runwayCount,
                 this.lowFuelMinutes,
                 this.fuelDiversionMinutes,
                 this.mechanicalEmergencyProbability,

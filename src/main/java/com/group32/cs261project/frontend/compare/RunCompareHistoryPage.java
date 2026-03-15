@@ -27,6 +27,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import java.time.Duration;
 
 import com.group32.cs261project.frontend.HelpOverlay;
 import com.group32.cs261project.frontend.HelpText;
@@ -205,6 +206,7 @@ public class RunCompareHistoryPage implements Page {
         VBox card = new VBox(10);
         card.setStyle(row.checkBox.isSelected() ? CARD_SELECTED : CARD);
         card.setFocusTraversable(false);
+        row.card = card;
 
         // ----- Top row -----
         // Keeps selection control and main run identity together.
@@ -226,33 +228,83 @@ public class RunCompareHistoryPage implements Page {
         Label seedLabel = new Label("Seed: " + row.run.config().randomSeed());
         seedLabel.setStyle(SMALL_TEXT);
 
-        Label inboundLabel = new Label(String.format("Inbound: %.2f aircraft/hour", row.run.config().inboundRatePerHour()));
-        inboundLabel.setStyle(SMALL_TEXT);
-
-        Label outboundLabel = new Label(String.format("Outbound: %.2f aircraft/hour", row.run.config().outboundRatePerHour()));
-        outboundLabel.setStyle(SMALL_TEXT);
-
+        // Separator
         Separator sep = new Separator();
         sep.setOpacity(0.35);
 
-        Label maxHoldingLabel = new Label(String.format("Max holding size: %s", String.valueOf(row.run.report().maxHoldingSize())));
+        // ----- Configuration Section -----
+        Label configTitle = new Label("Configuration");
+        configTitle.setStyle(MONITOR_TITLE);
+
+        Label runwayCountLabel = new Label("Runways: " + row.run.config().runwayCount());
+        runwayCountLabel.setStyle(LABEL_TEXT);
+
+        Label inboundLabel = new Label(String.format(
+                "Arrival rate: %.0f aircraft/hour", row.run.config().inboundRatePerHour()));
+        inboundLabel.setStyle(LABEL_TEXT);
+
+        Label outboundLabel = new Label(String.format(
+                "Departure rate: %.0f aircraft/hour", row.run.config().outboundRatePerHour()));
+        outboundLabel.setStyle(LABEL_TEXT);
+
+        Label passengerEmergencyLabel = new Label(String.format(
+                "Passenger health emergencies: %.0f%%",
+                row.run.config().passengerHealthEmergencyProbability()));
+        passengerEmergencyLabel.setStyle(LABEL_TEXT);
+
+        Label mechanicalEmergencyLabel = new Label(String.format(
+                "Mechanical emergencies: %.0f%%",
+                row.run.config().mechanicalEmergencyProbability()));
+        mechanicalEmergencyLabel.setStyle(LABEL_TEXT);
+
+       long simulationHours = Duration.between(
+                row.run.config().startTime(),
+                row.run.config().endTime()
+        ).toHours();
+        Label simulationHoursLabel = new Label(String.format(
+                "Simulation duration: %d hours",
+                simulationHours));
+        simulationHoursLabel.setStyle(LABEL_TEXT);
+
+        Label maxTakeoffQueueTimeLabel = new Label(String.format(
+                "Max. time in takeoff queue: %d mins",
+                row.run.config().maxTakeoffWaitMinutes()));
+        maxTakeoffQueueTimeLabel.setStyle(LABEL_TEXT);
+
+        // Separator
+        Separator sep2 = new Separator();
+        sep2.setOpacity(0.35);
+
+        // ----- Metrics section -----
+        Label resultsTitle = new Label("Key Results");
+        resultsTitle.setStyle(MONITOR_TITLE);
+
+        Label maxHoldingLabel = new Label("Max holding size: " + row.run.report().maxHoldingSize());
         maxHoldingLabel.setStyle(LABEL_TEXT);
 
-        Label maxTakeoffLabel = new Label(String.format("Max takeoff queue size: %s", String.valueOf(row.run.report().maxTakeoffQueueSize())));
+        Label maxTakeoffLabel = new Label("Max takeoff queue size: " + row.run.report().maxTakeoffQueueSize());
         maxTakeoffLabel.setStyle(LABEL_TEXT);
 
-        Label divertedLabel = new Label(String.format("Diversions: %s", String.valueOf(row.run.report().numDiverted())));
+        Label divertedLabel = new Label("Diversions: " + row.run.report().numDiverted());
         divertedLabel.setStyle(LABEL_TEXT);
 
-        Label cancellationsLabel = new Label(String.format("Cancellations: %s", String.valueOf(row.run.report().numCancellations())));
+        Label cancellationsLabel = new Label("Cancellations: " + row.run.report().numCancellations());
         cancellationsLabel.setStyle(LABEL_TEXT);
 
         VBox details = new VBox(6,
                 completedLabel,
                 seedLabel,
+                sep,
+                configTitle,
+                runwayCountLabel,
                 inboundLabel,
                 outboundLabel,
-                sep,
+                passengerEmergencyLabel,
+                mechanicalEmergencyLabel,
+                simulationHoursLabel,
+                maxTakeoffQueueTimeLabel,
+                sep2,
+                resultsTitle,
                 maxHoldingLabel,
                 maxTakeoffLabel,
                 divertedLabel,
@@ -260,6 +312,7 @@ public class RunCompareHistoryPage implements Page {
         );
 
         card.getChildren().addAll(topRow, details);
+
         return card;
     }
 
