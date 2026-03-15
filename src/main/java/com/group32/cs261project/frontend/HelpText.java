@@ -10,6 +10,7 @@ Use this page to set up the simulation before it starts.
 
 • Choose the number of runways.
 • Choose the length of simulation to run.
+• Choose the maximum amount of time a plane is in the takeoff queue before being cancelled.
 • Set the inbound and outbound traffic rates.
 • Adjust the emergency probabilities - this is the chance of any inbound plane having a passenger health or mechanical emergency. 
 • Select each runway's operational status and operating mode (note that these are adjustable during the run).
