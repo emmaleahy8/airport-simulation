@@ -24,6 +24,20 @@ import com.group32.cs261project.App;
 import com.group32.cs261project.frontend.HelpOverlay;
 import com.group32.cs261project.frontend.HelpText;
 
+/**
+ * Configuration page for the airport simulation system.
+ *
+ * This page allows the user to configure all simulation inputs before
+ * starting a run, including:
+ * • runway count and runway settings
+ * • inbound and outbound aircraft generation rates
+ * • emergency probabilities
+ * • simulation duration
+ * • maximum takeoff queue time
+ *
+ * It also supports undo/redo functionality for configuration changes
+ * and displays configurable runway configuration cards for each runway.
+ */
 public class ConfigurePage implements Page {
 
     private final App app;
@@ -79,7 +93,7 @@ public class ConfigurePage implements Page {
         "-fx-padding: 12;" +
         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.2, 0, 3);";
     
-        // "Wall"
+    // "Wall"
     private static final String SCREEN_WALL =
         "-fx-background-color: rgba(5, 12, 20, 0.97);" +
         "-fx-border-color: #24445b;" +
@@ -89,7 +103,7 @@ public class ConfigurePage implements Page {
         "-fx-padding: 18;" +
         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.40), 18, 0.22, 0, 5);";
     
-        // Runway cards (active)
+    // Runway cards (active)
     private static final String CARD =
         "-fx-background-color: linear-gradient(to bottom, #071018 0%, #081722 55%, #06111a 100%);" +
         "-fx-border-color: #1dd6ff;" +
@@ -99,7 +113,7 @@ public class ConfigurePage implements Page {
         "-fx-padding: 14;" +
         "-fx-effect: dropshadow(gaussian, rgba(29,214,255,0.22), 14, 0.25, 0, 0);";
     
-        // Runway cards (disabled)
+    // Runway cards (disabled)
     private static final String CARD_DISABLED =
         "-fx-background-color:  linear-gradient(to bottom, #1a232b 0%, #182028 100%);" +
         "-fx-border-color: #46535e;" +
@@ -156,6 +170,16 @@ public class ConfigurePage implements Page {
         "-fx-prompt-text-fill: white;" +
         "-fx-mark-color: white;";
 
+        /**
+     * Creates a new configuration page.
+     *
+     * This constructor initialises the page layout, creates all major UI
+     * sections, configures slider behaviour, loads the default simulation
+     * data into the controls, and prepares the runway card grid.
+     *
+     * @param app the main application controller used for page navigation
+     * @param sim the simulation service used to run the simulation
+     */
     public ConfigurePage(App app, SimulationService sim) {
         this.app = app;
         this.sim = sim;
@@ -224,27 +248,52 @@ public class ConfigurePage implements Page {
         maxTakeoffQueueTimeSlider.setOnMousePressed(e -> pushUndoSnapshot());
     }
 
+    // ==================================
     // ----- Page Interface Methods -----
+    // ==================================
+
+    /**
+     * Returns the root view for this page wrapped in the help overlay.
+     *
+     * @return the page view
+     */
     @Override
     public Parent getView() {
         return HelpOverlay.wrap(root, "Configure Page", HelpText.configurePage());
     }
 
+    /**
+     * Called when the page becomes active.
+     *
+     * This implementation preserves the current configuration state and
+     * does not reset the controls.
+     *
+     * @param ignored optional navigation data, not used on this page
+     */
     @Override
     public void onEnter(Object ignored) {
         // keep last state
     }
 
-    // ----- UI Builder for left side content -----
+    /**
+     * Builds the left-hand sidebar containing the main simulation controls.
+     *
+     * This includes panels for:
+     * • simulation control
+     * • aircraft generation
+     * • emergency generation
+     *
+     * @return the fully constructed left sidebar
+     */
     private VBox buildLeftSidebar() {
-        VBox left = new VBox(8); // Vertical box with spacing of 8px between sections
+        VBox left = new VBox(8); 
         left.setPrefWidth(330);
         left.setAlignment(Pos.BOTTOM_LEFT);
         VBox.setVgrow(left, Priority.ALWAYS);
 
         // ----- Simulation Control panel -----
-        VBox simPanel = new VBox(8); // Vertical box with spacing of 14px between controls
-        simPanel.setStyle(PANEL); // Apply panel styling 
+        VBox simPanel = new VBox(8); 
+        simPanel.setStyle(PANEL); 
 
         Label simTitle = new Label("Simulation Control");
         simTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
@@ -253,9 +302,9 @@ public class ConfigurePage implements Page {
         // Number of runways
         runwayValue.setFont(Font.font(null, FontWeight.BOLD, 12));
 
-        VBox runwayRow = new VBox(6); // Vertical box with spacing of 6px between label and slider
+        VBox runwayRow = new VBox(6); 
         Label runwayLabel = new Label("Number of Runways: ");
-        HBox runwayLine = new HBox(6, runwayLabel, runwayValue); // Horizontal box to put label and value on the same line with spacing of 6px
+        HBox runwayLine = new HBox(6, runwayLabel, runwayValue); 
         runwayLine.setAlignment(Pos.CENTER_LEFT);
         runwayRow.getChildren().addAll(runwayLine, runwaySlider);
 
@@ -341,7 +390,7 @@ public class ConfigurePage implements Page {
         simPanel.getChildren().addAll(simTitle, runwayRow, durationRow, maxTakeoffQueueTimeRow, runBtn, undoRedoReset);
 
         // ----- Aircraft Generation panel -----
-        VBox aircraftPanel = new VBox(8); // Vertical box with spacing of 14px between controls
+        VBox aircraftPanel = new VBox(8); 
         aircraftPanel.setStyle(PANEL);
 
         Label aircraftTitle = new Label("Aircraft Generation");
@@ -376,7 +425,7 @@ public class ConfigurePage implements Page {
         aircraftPanel.getChildren().addAll(aircraftTitle, inboundBox, outboundBox);
 
         // ----- Emergency Generation panel -----
-        VBox emergencyPanel = new VBox(8); // Vertical box with spacing of 14px between controls
+        VBox emergencyPanel = new VBox(8); 
         emergencyPanel.setStyle(PANEL);
 
         Label emergencyTitle = new Label("Emergency Generation");
@@ -415,7 +464,14 @@ public class ConfigurePage implements Page {
         return left;
     }
 
-    // ----- UI Builder for the right side content -----
+    /**
+     * Builds the right-hand content area of the page.
+     *
+     * This section contains the runway configuration monitor wall and
+     * the grid of runway cards used to configure each runway.
+     *
+     * @return the fully constructed right-side content area
+     */
     private VBox buildRightContent() {
         VBox right = new VBox(16);
         right.setAlignment(Pos.BOTTOM_LEFT);
@@ -449,7 +505,6 @@ public class ConfigurePage implements Page {
                 runwayGrid.getColumnConstraints().add(cc);
             }
         }
-
         if (runwayGrid.getRowConstraints().isEmpty()) {
             for (int r = 0; r < 5; r++) {
                 RowConstraints rc = new RowConstraints();
@@ -474,8 +529,14 @@ public class ConfigurePage implements Page {
 
         return right;
     }
-
-    // Initialize slider properties (tick marks, labels, etc.)
+    
+    /**
+     * Initialises all sliders used on the page.
+     *
+     * This includes setting tick behaviour, snap settings, and registering
+     * listeners so that slider movements update the underlying simulation
+     * configuration data and visible value labels.
+     */
     private void initSliders() {
         runwaySlider.setMajorTickUnit(1);
         runwaySlider.setMinorTickCount(0);
@@ -549,7 +610,12 @@ public class ConfigurePage implements Page {
         });
     }
 
-    // ----- Runway Cards -----
+    /**
+     * Creates the runway card components used in the runway configuration grid.
+     *
+     * Cards are created for all ten possible runway positions so that inactive
+     * runways can still be shown visually in a disabled state.
+     */
     private void buildRunwayCards() {
         runwayCards.clear(); // Clear old UI cards
         data.ensureRunwayListSize();
@@ -565,6 +631,13 @@ public class ConfigurePage implements Page {
         }
     }
 
+    /**
+     * Refreshes the runway card grid to reflect the current runway count
+     * and runway configuration data.
+     *
+     * Active runway cards are bound to the current simulation data and enabled,
+     * while inactive runway cards remain visible but disabled.
+    */
     private void refreshRunwayGrid() {
         data.ensureRunwayListSize();
 
@@ -593,7 +666,14 @@ public class ConfigurePage implements Page {
         }
     }
 
-    // ----- Data Handling -----
+    /**
+     * Loads simulation configuration data into the page controls.
+     *
+     * This updates the slider positions and numeric labels so that the UI
+     * reflects the values stored in the provided {@link SimulationData}.
+     *
+     * @param d the simulation configuration to display in the controls
+     */
     private void loadIntoControls(SimulationData d) {
         d.ensureRunwayListSize();
 
@@ -617,7 +697,16 @@ public class ConfigurePage implements Page {
         maxTakeoffQueueTimeValue.setText(String.valueOf(d.maxWaitMinutes));
     }
 
-    // ----- Run Simulation Button Handler -----
+    /**
+     * Handles the Run Simulation action.
+     *
+     * This method reads the current control values, validates the input,
+     * writes the validated values back into the page's simulation data,
+     * and switches to the running page if all inputs are valid.
+     *
+     * If validation fails, an error message is displayed and navigation
+     * does not occur.
+     */
     private void onRun() {
         // Read values from sliders
         int runways = (int) Math.round(runwaySlider.getValue());
@@ -640,7 +729,7 @@ public class ConfigurePage implements Page {
             return;
         }
 
-        errorLabel.setText(""); // Clear error message
+        errorLabel.setText(""); 
 
         // Write validated values back into data
         data.runwayCount = runways;
@@ -653,7 +742,17 @@ public class ConfigurePage implements Page {
         app.switchTo(AppState.RUNNING, data.copy()); // Navigate to Running Page and pass a copy of the current config data
     }
 
-    // ----- Runway card component -----
+    /**
+     * UI component representing a single runway configuration card.
+     *
+     * Each card displays the runway identifier together with controls for:
+     * • operational status
+     * • operating mode
+     *
+     * A card can be bound to a specific {@link SimulationData.RunwayConfig}
+     * object and can also be enabled or disabled depending on whether the
+     * runway is currently active.
+     */
     private class RunwayCard {
         private final VBox root = new VBox(10); // Set runway card size and spacing
 
@@ -663,7 +762,14 @@ public class ConfigurePage implements Page {
 
         private SimulationData.RunwayConfig bound;
 
-        // Runway card constructor
+        /**
+         * Creates a runway card bound to the given runway configuration.
+         *
+         * The card initialises its labels, combo boxes, styling, and listeners
+         * so that UI changes are written back into the bound runway data.
+         *
+         * @param cfg the initial runway configuration for this card
+         */
         RunwayCard(SimulationData.RunwayConfig cfg) {
             root.setStyle(CARD);
             root.setMinWidth(180);
@@ -729,7 +835,14 @@ public class ConfigurePage implements Page {
             });
         }
 
-        // Binding method - connects this UI card to a specific RunwayConfig data object
+        /**
+         * Binds this card to a specific runway configuration object.
+         *
+         * The card title and control values are updated to reflect the
+         * provided runway data.
+         *
+         * @param cfg the runway configuration to bind to
+         */
         void bindTo(SimulationData.RunwayConfig cfg) {
             this.bound = cfg;
             title.setText("Runway " + cfg.id + ":");
@@ -737,7 +850,14 @@ public class ConfigurePage implements Page {
             modeBox.setValue(cfg.mode);
         }
 
-        // Enable or disable this card
+        /**
+         * Enables or disables this runway card.
+         *
+         * Disabled cards remain visible but are styled differently and their
+         * controls cannot be edited.
+         *
+         * @param enabled true to enable the card, false to disable it
+         */
         void setEnabled(boolean enabled) {
             root.setStyle(enabled ? CARD : CARD_DISABLED);
             statusBox.setDisable(!enabled);
@@ -747,7 +867,18 @@ public class ConfigurePage implements Page {
         }
     }
 
+    // ================================================
     // ----- Helper Methods for Undo/Redo Buttons -----
+    // ================================================
+
+    /**
+     * Saves the current configuration state to the undo stack.
+     *
+     * This method is called before a user change is applied so that the
+     * previous state can be restored using undo.
+     *
+     * Any existing redo history is cleared when a new snapshot is added.
+     */
     private void pushUndoSnapshot(){
         if (applyingSnapshot) return;
 
@@ -758,6 +889,14 @@ public class ConfigurePage implements Page {
         updateUndoRedoButtons();
     }
 
+    /**
+     * Replaces the current page configuration with a previously saved snapshot.
+     *
+     * This updates the stored simulation data, reloads all controls, rebuilds
+     * the runway cards, refreshes the grid, and clears any visible error message.
+     *
+     * @param snapshot the configuration snapshot to apply
+     */
     private void applySnapshot(SimulationData snapshot) {
         applyingSnapshot = true;
         try {
@@ -773,6 +912,12 @@ public class ConfigurePage implements Page {
         }
     }
 
+    /**
+     * Restores the most recent configuration state from the undo stack.
+     *
+     * The current state is first saved to the redo stack so that the
+     * change can be reversed using redo.
+     */
     private void undo() {
         if (undoStack.isEmpty()) return;
         redoStack.add(data.copy());     // Save current for redo
@@ -780,6 +925,12 @@ public class ConfigurePage implements Page {
         applySnapshot(prev);
     }
 
+    /**
+     * Restores the most recent configuration state from the redo stack.
+     *
+     * The current state is first saved to the undo stack so that the
+     * change can be reversed again using undo.
+     */
     private void redo() {
         if (redoStack.isEmpty()) return;
         undoStack.add(data.copy());     // Save current for undo
@@ -787,12 +938,28 @@ public class ConfigurePage implements Page {
         applySnapshot(next);
     }
 
+    /**
+     * Updates the enabled state of the undo and redo buttons.
+     *
+     * Each button is disabled when its corresponding history stack is empty.
+     */
     private void updateUndoRedoButtons() {
         if (undoBtn != null) undoBtn.setDisable(undoStack.isEmpty());
         if (redoBtn != null) redoBtn.setDisable(redoStack.isEmpty());
     }
 
+    // =============================
     // ----- Atc "Window" View -----
+    // =============================
+
+    /**
+     * Builds the decorative ATC window view shown at the top of the page.
+     *
+     * This creates the background image view, scales it responsively to fit
+     * the available space, and overlays the custom window frame effect.
+     *
+     * @return the completed ATC view container
+     */
     private StackPane buildAtcView() {
         double windowHeight = 265;
 
@@ -849,7 +1016,14 @@ public class ConfigurePage implements Page {
         return airportWindow;
     }
 
-    // ----- Create window panes and add 3D effect -----
+    /**
+     * Builds the custom overlay used to create the ATC window frame effect.
+     *
+     * The overlay consists of shaped cutouts, border lines, and divider lines
+     * which together create a stylised multi-panel control-tower window.
+     *
+     * @return the overlay pane drawn above the background image
+     */
     private Pane buildWindowOverlay() {
         double windowHeight = 266;
         double frameThickness = 4;
