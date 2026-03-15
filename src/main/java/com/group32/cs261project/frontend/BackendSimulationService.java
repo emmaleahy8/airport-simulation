@@ -126,7 +126,7 @@ public class BackendSimulationService implements SimulationService {
             .inboundRatePerHour(ui.inboundRatePerHour)
             .outboundRatePerHour(ui.outboundRatePerHour)
             .runwayOccupancySeconds(60)
-            .maxTakeoffWaitMinutes(30)
+            .maxTakeoffWaitMinutes(ui.maxWaitMinutes)
             .lowFuelMinutes(20)
             .fuelDiversionMinutes(10)
             .mechanicalEmergencyProbability(ui.mechanicalEmergencyProbability)

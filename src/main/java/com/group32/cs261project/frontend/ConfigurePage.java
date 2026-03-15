@@ -38,7 +38,7 @@ public class ConfigurePage implements Page {
     private final Slider passengerHealthEmergencySlider = new Slider(0, 100, 0);
     private final Slider mechanicalEmergencySlider = new Slider(0, 100, 0);
     private final Slider simulationTimeSlider = new Slider(1, 24, 6);
-
+    private final Slider maxTakeoffQueueTimeSlider = new Slider(10, 60, 30);
 
     // Labels showing current slider values
     private final Label runwayValue = new Label();
@@ -47,6 +47,7 @@ public class ConfigurePage implements Page {
     private final Label passengerHealthEmergencyValue = new Label();
     private final Label mechanicalEmergencyValue = new Label();
     private final Label simulationTimeValue = new Label();
+    private final Label maxTakeoffQueueTimeValue = new Label();
 
     private final Label errorLabel = new Label();
 
@@ -75,7 +76,7 @@ public class ConfigurePage implements Page {
         "-fx-border-width: 1.5;" +
         "-fx-border-radius: 14;" +
         "-fx-background-radius: 14;" +
-        "-fx-padding: 16;" +
+        "-fx-padding: 12;" +
         "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.2, 0, 3);";
     
         // "Wall"
@@ -220,6 +221,7 @@ public class ConfigurePage implements Page {
         passengerHealthEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
         mechanicalEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
         simulationTimeSlider.setOnMousePressed(e -> pushUndoSnapshot());
+        maxTakeoffQueueTimeSlider.setOnMousePressed(e -> pushUndoSnapshot());
     }
 
     // ----- Page Interface Methods -----
@@ -241,7 +243,7 @@ public class ConfigurePage implements Page {
         VBox.setVgrow(left, Priority.ALWAYS);
 
         // ----- Simulation Control panel -----
-        VBox simPanel = new VBox(11); // Vertical box with spacing of 14px between controls
+        VBox simPanel = new VBox(8); // Vertical box with spacing of 14px between controls
         simPanel.setStyle(PANEL); // Apply panel styling 
 
         Label simTitle = new Label("Simulation Control");
@@ -276,6 +278,27 @@ public class ConfigurePage implements Page {
         durationLabel.setStyle(LABEL_TEXT);
         ((Label) durationLine.getChildren().get(2)).setStyle(SMALL_TEXT);
         simulationTimeValue.setStyle(MONITOR_TITLE);
+
+        // ----- Max takeoff queue time -----
+        maxTakeoffQueueTimeValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
+        VBox maxTakeoffQueueTimeRow = new VBox(6);
+        Label maxTakeoffQueueTimeLabel = new Label("Max. time in takeoff queue:");
+
+        HBox maxTakeoffQueueTimeLine = new HBox(
+            6,
+            maxTakeoffQueueTimeLabel,
+            maxTakeoffQueueTimeValue,
+            new Label("mins")
+        );
+        maxTakeoffQueueTimeLine.setAlignment(Pos.CENTER_LEFT);
+
+        maxTakeoffQueueTimeRow.getChildren().addAll(maxTakeoffQueueTimeLine, maxTakeoffQueueTimeSlider);
+
+        // styling
+        maxTakeoffQueueTimeLabel.setStyle(LABEL_TEXT);
+        ((Label) maxTakeoffQueueTimeLine.getChildren().get(2)).setStyle(SMALL_TEXT);
+        maxTakeoffQueueTimeValue.setStyle(MONITOR_TITLE);
 
         // Run button - on click, confirm inputs are valid, then switch to RunningPage and pass the current config data
         Button runBtn = new Button("▶  Run Simulation");
@@ -315,10 +338,10 @@ public class ConfigurePage implements Page {
 
         undoRedoReset.getChildren().addAll(undoBtn, redoBtn, resetBtn);
 
-        simPanel.getChildren().addAll(simTitle, runwayRow, durationRow, runBtn, undoRedoReset);
+        simPanel.getChildren().addAll(simTitle, runwayRow, durationRow, maxTakeoffQueueTimeRow, runBtn, undoRedoReset);
 
         // ----- Aircraft Generation panel -----
-        VBox aircraftPanel = new VBox(10); // Vertical box with spacing of 14px between controls
+        VBox aircraftPanel = new VBox(8); // Vertical box with spacing of 14px between controls
         aircraftPanel.setStyle(PANEL);
 
         Label aircraftTitle = new Label("Aircraft Generation");
@@ -353,7 +376,7 @@ public class ConfigurePage implements Page {
         aircraftPanel.getChildren().addAll(aircraftTitle, inboundBox, outboundBox);
 
         // ----- Emergency Generation panel -----
-        VBox emergencyPanel = new VBox(10); // Vertical box with spacing of 14px between controls
+        VBox emergencyPanel = new VBox(8); // Vertical box with spacing of 14px between controls
         emergencyPanel.setStyle(PANEL);
 
         Label emergencyTitle = new Label("Emergency Generation");
@@ -474,6 +497,12 @@ public class ConfigurePage implements Page {
         simulationTimeSlider.setShowTickLabels(false);
         simulationTimeSlider.setShowTickMarks(false);
 
+        maxTakeoffQueueTimeSlider.setMajorTickUnit(10);
+        maxTakeoffQueueTimeSlider.setMinorTickCount(0);
+        maxTakeoffQueueTimeSlider.setSnapToTicks(true);
+        maxTakeoffQueueTimeSlider.setShowTickLabels(false);
+        maxTakeoffQueueTimeSlider.setShowTickMarks(false);
+
         // ----- Listeners -----
         runwaySlider.valueProperty().addListener((obs, o, n) -> {
             if (applyingSnapshot) return;
@@ -511,6 +540,12 @@ public class ConfigurePage implements Page {
             if (applyingSnapshot) return;
             data.simulationHours = (int) Math.round(n.doubleValue());
             simulationTimeValue.setText(String.valueOf(data.simulationHours));
+        });
+
+        maxTakeoffQueueTimeSlider.valueProperty().addListener((obs, o, n) -> {
+            if (applyingSnapshot) return;
+            data.maxWaitMinutes = (int) Math.round(n.doubleValue());
+            maxTakeoffQueueTimeValue.setText(String.valueOf(data.maxWaitMinutes));
         });
     }
 
@@ -569,6 +604,7 @@ public class ConfigurePage implements Page {
         passengerHealthEmergencySlider.setValue(d.passengerHealthEmergencyProbability);
         mechanicalEmergencySlider.setValue(d.mechanicalEmergencyProbability);
         simulationTimeSlider.setValue(d.simulationHours);
+        maxTakeoffQueueTimeSlider.setValue(d.maxWaitMinutes);
 
 
         // Set numeric labels accordingly
@@ -578,6 +614,7 @@ public class ConfigurePage implements Page {
         passengerHealthEmergencyValue.setText(String.valueOf(d.passengerHealthEmergencyProbability));
         mechanicalEmergencyValue.setText(String.valueOf(d.mechanicalEmergencyProbability));
         simulationTimeValue.setText(String.valueOf(d.simulationHours));
+        maxTakeoffQueueTimeValue.setText(String.valueOf(d.maxWaitMinutes));
     }
 
     // ----- Run Simulation Button Handler -----
@@ -587,6 +624,7 @@ public class ConfigurePage implements Page {
         int in = (int) Math.round(inboundSlider.getValue());
         int out = (int) Math.round(outboundSlider.getValue());
         int hours = (int) Math.round(simulationTimeSlider.getValue());
+        int maxWait = (int) Math.round(maxTakeoffQueueTimeSlider.getValue());
 
         // Validate runway count and flow rates - if invalid, show error message and don't proceed
         if (runways < 1 || runways > 10) {
@@ -597,6 +635,10 @@ public class ConfigurePage implements Page {
             errorLabel.setText("Flow rates must be between 0 and 30 per hour.");
             return;
         }
+        if (maxWait < 10 || maxWait > 60) {
+            errorLabel.setText("Max. time in takeoff queue must be between 10 and 60 minutes.");
+            return;
+        }
 
         errorLabel.setText(""); // Clear error message
 
@@ -605,6 +647,7 @@ public class ConfigurePage implements Page {
         data.inboundRatePerHour = in;
         data.outboundRatePerHour = out;
         data.simulationHours = hours;
+        data.maxWaitMinutes = maxWait;
         data.ensureRunwayListSize();
 
         app.switchTo(AppState.RUNNING, data.copy()); // Navigate to Running Page and pass a copy of the current config data
@@ -808,7 +851,7 @@ public class ConfigurePage implements Page {
 
     // ----- Create window panes and add 3D effect -----
     private Pane buildWindowOverlay() {
-        double windowHeight = 310;
+        double windowHeight = 266;
         double frameThickness = 4;
         double dividerThickness = 4;
         double middleCut = 18;
