@@ -12,8 +12,8 @@ import com.group32.cs261project.backend.model.enums.RunwayStatus;
 public class Runway {
 
     private final int runwayNumber;
-    private final int lengthM;
-    private final int bearingDeg;
+    private final int lengthM; // basically unused
+    private final int bearingDeg; // basically unused
     private RunwayMode mode;
     private RunwayStatus status;
     private Instant occupiedUntil;
@@ -35,20 +35,22 @@ public class Runway {
         this.occupiedUntil = null;
     }
 
-    /**
-     * Get string representation
-     */
-    @Override
-    public String toString() {
-        return String.format("Runway(%s)",this.getRunwayNumberString());
-    }
+    /* getters */
+    public int runwayNumber() { return this.runwayNumber; }
+    public int lengthM() { return this.lengthM; }
+    public int bearingDeg() { return this.bearingDeg; }
+    public RunwayMode mode() { return this.mode; }
+    public RunwayStatus status() { return this.status; }
+    public Instant occupiedUntil() { return this.occupiedUntil; }
 
-    /**
-     * Getter for runway number
-     * @return the runway number
-     */
-    public int runwayNumber() {
-        return this.runwayNumber;
+    /* setters */
+    public void setMode(RunwayMode newMode) { this.mode = newMode; }
+    public void setStatus(RunwayStatus newStatus) { this.status = newStatus; }
+    public void clearOccupancy() { this.occupiedUntil = null; }
+
+    public void occupyUntil(Instant time) {
+        if (!this.isOccupied(time))
+            this.occupiedUntil = time;
     }
 
     /**
@@ -61,55 +63,11 @@ public class Runway {
         } else {
             return String.valueOf(this.runwayNumber);
         }
-
     }
 
-    /**
-     * Getter for runway length
-     * @return runway length in metres
-     */
-    public int lengthM() {
-        return this.lengthM;
-    }
-
-    /**
-     * Getter for bearing of runway
-     * @return bearing in degrees
-     */
-    public int bearingDeg() {
-        return this.bearingDeg;
-    }
-
-    /**
-     * Getter for runway mode
-     * @return one of MIXED, LANDING, TAKEOFF
-     */
-    public RunwayMode mode() {
-        return this.mode;
-    }
-
-    /**
-     * Getter for runway status
-     * @return one of AVAILABLE, INSPECTION, SNOW_CLEARANCE, EQUIPMENT_FAILURE
-     */
-    public RunwayStatus status() {
-        return this.status;
-    }
-
-    /**
-     * Setter for runway mode
-     * @param newMode one of LANDING, TAKEOFF, MIXED
-     */
-    public void setMode(RunwayMode newMode) {
-        this.mode = newMode;
-    }
-
-    /**
-     * Setter for runway status
-     * @param newStatus one of AVAILABLE, INSPECTION, SNOW_CLEARANCE, EQUIPMENT_FAILURE
-     */
-    public void setStatus(RunwayStatus newStatus) {
-        this.status = newStatus;
+    @Override
+    public String toString() {
+        return String.format("Runway(%s)",this.getRunwayNumberString());
     }
 
     /**
@@ -148,23 +106,6 @@ public class Runway {
     }
 
     /**
-     * Getter for time the runway is occupied until
-     * @return a time if the runway is occupied, null otherwise
-     */
-    public Instant occupiedUntil() {
-        return this.occupiedUntil;
-    }
-
-    /**
-     * set runway to be occupied until a given time
-     * @param time time to set
-     */
-    public void occupyUntil(Instant time) {
-        if (!this.isOccupied(time))
-            this.occupiedUntil = time;
-    }
-    
-    /**
      * Checks if runway is occupied at a given time
      * @param time time to check
      * @return true if occupied
@@ -173,13 +114,6 @@ public class Runway {
         return (this.occupiedUntil != null && this.occupiedUntil.isAfter(time));
     }
     
-    /**
-     * Marks runway is not occupied
-     */
-    public void clearOccupancy() {
-        this.occupiedUntil = null;
-    }
-
     /**
      * Gets gets next available time runway is available
      * @param time current time

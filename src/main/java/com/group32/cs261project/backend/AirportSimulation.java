@@ -31,29 +31,10 @@ public class AirportSimulation {
         this.engine = new SimulationEngine<>(config, new SimulationContext(airport, new Scheduler(), new MetricsCollector()), new EventQueue<>());
     }
 
-    /**
-     * Getter for airport
-     * @return airport object
-     */
-    public Airport airport() {
-        return this.airport;
-    }
-
-    /**
-     * Getter for engine
-     * @return simulation engine object
-     */
-    public SimulationEngine<SimulationContext> engine() {
-        return this.engine;
-    }
-
-    /**
-     * Getter for simulation configuration
-     * @return config object
-     */
-    public SimConfig config() {
-        return this.config;
-    }
+    /* getters */
+    public Airport airport() { return this.airport; }
+    public SimulationEngine<SimulationContext> engine() { return this.engine; }
+    public SimConfig config() { return this.config; }
 
     /**
      * Run until config end time
