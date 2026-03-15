@@ -4,6 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Data transfer object representing simulation configuration, live state,
+ * and completed run results.
+ *
+ * This class is used throughout the frontend to store:
+ * • initial simulation input parameters
+ * • live snapshot data while the simulation is running
+ * • end-of-run result metrics
+ * • runway and aircraft UI state
+ *
+ * It also provides helper methods for maintaining runway configuration
+ * consistency, creating safe deep copies, and generating a stable hash
+ * for configuration comparison.
+ */
 public class SimulationData {
 
     // ----- Config inputs -----
@@ -60,10 +74,16 @@ public class SimulationData {
     public record PlaneEmergency(String planeId) implements SimEvent {}
     public record PlaneDiverted(String planeId, String reason) implements SimEvent {}
 
-    // Enums - allowed values for runway config
+    /**
+     * Enumeration of the operating modes available for a runway.
+     */
     public enum RunwayMode { LANDING, TAKE_OFF, MIXED;
 
-        // ----- Print Enums as Normal Text -----
+        /**
+         * Returns a human-readable version of the runway mode.
+         *
+         * @return the runway mode formatted for display
+         */
         @Override 
         public String toString() {
             String lower = name().toLowerCase().replace('_', ' '); // Change underscores to spaces eg. RUNWAY_INSPECTION -> Runway Inspection
@@ -76,9 +96,17 @@ public class SimulationData {
             return sb.toString().trim(); // Remove trailing space
         }
     }
+
+    /**
+     * Enumeration of the operational statuses available for a runway.
+     */
     public enum RunwayStatus { AVAILABLE, RUNWAY_INSPECTION, SNOW_CLEARANCE, EQUIPMENT_FAILURE;
 
-        // ----- Print Enums as Normal Text -----
+        /**
+         * Returns a human-readable version of the runway status.
+         *
+         * @return the runway status formatted for display
+         */
         @Override 
         public String toString() {
             String lower = name().toLowerCase().replace('_', ' '); // Change underscores to spaces eg. RUNWAY_INSPECTION -> Runway Inspection
@@ -92,8 +120,15 @@ public class SimulationData {
         }
      }
 
-     // Plane enums + DTO for UI visuals
+    /**
+     * Enumeration representing whether an aircraft is inbound or outbound.
+     */
     public enum PlaneDirection { INBOUND, OUTBOUND }
+
+    /**
+     * Enumeration representing the current visual state of an aircraft
+     * within the frontend simulation view.
+     */
     public enum PlaneStatus {
         HOLDING,            // inbound holding
         OUTBOUND_QUEUE,     // waiting in takeoff queue
@@ -103,6 +138,13 @@ public class SimulationData {
         DIVERTED,
         COMPLETED
     }
+
+    /**
+     * Data transfer object representing an aircraft in the frontend view.
+     *
+     * This stores the information needed by the UI to render aircraft
+     * position, status, direction, and emergency state.
+     */
     public static class PlaneDTO {
         public String id;   // identifier for UI mapping
         public String code; // display label
@@ -112,27 +154,53 @@ public class SimulationData {
         public int etaTicks; // remaining ticks in landing/takeoff/divert/taxi (0 otherwise)
         public int assignedRunwayIndex; // -1 if none
     }
-    // --- Runway Config Inner Class -----
+    /**
+     * Data object representing the configuration of a single runway.
+     *
+     * Each runway has a unique identifier together with an operating mode
+     * and operational status.
+     */
     public static class RunwayConfig {
         public final int id; // Runway identifier
         public RunwayMode mode = RunwayMode.MIXED; // Default to MIXED
         public RunwayStatus status = RunwayStatus.AVAILABLE; // Default to AVAILABLE
 
+        /**
+         * Creates a runway configuration for the given runway identifier.
+         *
+         * @param id the runway identifier
+         */
         public RunwayConfig(int id) { this.id = id; }
 
-        // Debug-friendly string representation
+        /**
+         * Returns a debug-friendly string representation of this runway configuration.
+         *
+         * @return a string describing the runway identifier, status, and mode
+         */
         @Override public String toString() {
             return "Runway " + id + " [" + status + ", " + mode + "]";
         }
     }
 
-    // Ensures the runway list length always matches runway count
+    /**
+     * Ensures that the runway configuration list matches the current runway count.
+     *
+     * New runway configurations are added if the list is too short, and
+     * excess runway configurations are removed if the list is too long.
+     */
     public void ensureRunwayListSize() {
         while (runways.size() < runwayCount) runways.add(new RunwayConfig(runways.size() + 1)); // If the list is too small: add new RunwayConfig objects 
         while (runways.size() > runwayCount) runways.remove(runways.size() - 1); // If list is too big: remove entries from end 
     }
 
-    // Creates a deep copy of this SimulationData (for safely passing snapshots to the UI)
+    /**
+     * Creates a deep copy of this simulation data object.
+     *
+     * This is used to safely pass simulation snapshots between components
+     * without allowing accidental mutation of shared state.
+     *
+     * @return a deep copy of this simulation data
+     */
     public SimulationData copy() {
         SimulationData d = new SimulationData();  // Create a separate SimulationData object 
         d.runwayCount = runwayCount;
@@ -198,7 +266,14 @@ public class SimulationData {
         return d;
     }
 
-    // Generate hash based on config fields
+    /**
+     * Generates a stable hash value based on the simulation configuration.
+     *
+     * The hash is derived from the main input parameters and runway
+     * configurations, allowing configurations to be compared efficiently.
+     *
+     * @return a stable hash representing the current configuration
+     */
     public int stableConfigHash() {
         ensureRunwayListSize();
         int h = Objects.hash(runwayCount, inboundRatePerHour, outboundRatePerHour, maxWaitMinutes, simulationHours);
