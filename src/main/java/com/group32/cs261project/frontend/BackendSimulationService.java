@@ -33,9 +33,23 @@ import com.group32.cs261project.frontend.SimulationData.PlaneDTO;
 import com.group32.cs261project.frontend.SimulationData.PlaneDirection;
 import com.group32.cs261project.frontend.SimulationData.PlaneStatus;
 
-
-
-
+/**
+ * Backend implementation of the {@link SimulationService} interface.
+ *
+ * This class acts as the bridge between the JavaFX frontend and the
+ * backend airport simulation engine. It is responsible for:
+ *
+ * • Starting and stopping the simulation
+ * • Advancing the simulation using scheduled ticks
+ * • Converting backend simulation state into frontend {@link SimulationData}
+ *   snapshots for visualisation
+ * • Applying configuration updates from the UI
+ * • Recording completed runs for the run comparison feature
+ *
+ * The simulation is advanced asynchronously using a
+ * {@link ScheduledExecutorService} which repeatedly triggers simulation ticks
+ * and publishes snapshots to the UI through a callback.
+ */
 public class BackendSimulationService implements SimulationService {
 
     // Private variables
@@ -59,6 +73,7 @@ public class BackendSimulationService implements SimulationService {
 
     /**
      * Helper function to convert UI runway mode to backend runway mode
+     * 
      * @param uiMode frontend runway mode
      * @return backend runway mode
      */
@@ -81,6 +96,7 @@ public class BackendSimulationService implements SimulationService {
 
     /**
      * Helper function to convert UI runway status to backend runway status
+     * 
      * @param uiStatus frontend runway status
      * @return backend runway status
      */
@@ -112,7 +128,8 @@ public class BackendSimulationService implements SimulationService {
 
     
     /**
-     * get backend config from frontend snapshot (helper method)
+     * Get backend config from frontend snapshot (helper method)
+     * 
      * @param ui frontend snapshot
      * @return backend simulation config
      */
@@ -136,7 +153,8 @@ public class BackendSimulationService implements SimulationService {
 
 
     /**
-     * get backend airport form frontend snapshot (helper method)
+     * Get backend airport from frontend snapshot (helper method)
+     * 
      * @param ui frontend snapshot
      * @return airport object
      */
@@ -151,9 +169,21 @@ public class BackendSimulationService implements SimulationService {
 
 
     /**
-     * Take a snapshot from the backend simulation
-     * @param sim instance of backend simulation
-     * @return frontend snapshot
+     * Generates a frontend {@link SimulationData} snapshot from the current
+     * state of the backend simulation.
+     *
+     * The snapshot contains information required by the UI including:
+     * • simulation time
+     * • queue sizes
+     * • runway states
+     * • aircraft positions
+     * • animation events (take-off / landing)
+     *
+     * This method acts as the main translation layer between the backend
+     * simulation model and the frontend visualisation.
+     *
+     * @param sim the backend airport simulation instance
+     * @return a snapshot of the current simulation state
      */
     private SimulationData snapshotFrom(AirportSimulation sim) {
 
@@ -273,6 +303,16 @@ public class BackendSimulationService implements SimulationService {
     }
 
 
+    /**
+     * Starts a new simulation run using the provided configuration.
+     *
+     * This method initialises the backend simulation, seeds the flight
+     * schedules, creates the simulation executor, and begins producing
+     * periodic snapshots for the frontend.
+     *
+     * @param uiConfig the initial simulation configuration from the UI
+     * @param onSnapshot callback invoked whenever a new simulation snapshot is produced
+     */
     @Override
     public void start(SimulationData uiConfig, Consumer<SimulationData> onSnapshot) {
 
@@ -308,6 +348,14 @@ public class BackendSimulationService implements SimulationService {
         scheduleNextTick(0);
     }
 
+    /**
+     * Schedules the next simulation tick using the executor service.
+     *
+     * The delay depends on the configured playback speed to allow
+     * the simulation to run faster or slower.
+     *
+     * @param delayMs delay in milliseconds before the next tick executes
+     */
     private void scheduleNextTick(long delayMs) {
         if (this.executor == null || this.executor.isShutdown()) {
             return;
@@ -316,6 +364,12 @@ public class BackendSimulationService implements SimulationService {
         this.executor.schedule(this::runTickAndReschedule, delayMs, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Executes a simulation tick and schedules the next one.
+     *
+     * This method is repeatedly called by the executor service to advance
+     * the simulation and maintain the continuous update loop.
+     */
     private void runTickAndReschedule() {
         if (!this.running) {
             return;
@@ -332,7 +386,13 @@ public class BackendSimulationService implements SimulationService {
     }
 
     /**
-     * Tick the simulation by a set amount
+     * Advances the simulation by a single tick.
+     *
+     * The backend engine processes events and a new snapshot of the
+     * simulation state is produced and sent to the frontend.
+     *
+     * If the simulation end time has been reached, the simulation
+     * automatically stops.
      */
     private void tick() {
         if (!this.running || this.paused || this.backendSim == null) {
@@ -359,6 +419,14 @@ public class BackendSimulationService implements SimulationService {
     }
 
 
+    /**
+     * Applies configuration updates to the currently running simulation.
+     *
+     * Only runway mode and status changes are applied dynamically.
+     * Other configuration parameters require restarting the simulation.
+     *
+     * @param newConfig the updated frontend configuration
+     */
     @Override
     public void updateConfig(SimulationData newConfig) {
         if (!this.running || this.backendSim == null || newConfig == null) {
@@ -387,6 +455,15 @@ public class BackendSimulationService implements SimulationService {
         }
     }
 
+    /**
+     * Stops the simulation and finalises the current run.
+     *
+     * The executor service is shut down, final performance metrics are
+     * generated, and the completed run is stored in the run comparison
+     * history.
+     *
+     * @return the final simulation snapshot including run metrics
+     */
     @Override
     public SimulationData stop() {
 
@@ -436,38 +513,68 @@ public class BackendSimulationService implements SimulationService {
     }
 
 
+    /**
+     * Checks whether the simulation is currently running.
+     *
+     * @return true if the simulation is active
+     */
     @Override
     public boolean isRunning() {
         return this.running;
     }
 
-    
+    /**
+     * Pauses the simulation.
+     *
+     * While paused, simulation ticks are skipped but the executor
+     * remains active.
+     */
     @Override
     public void pause() {
         this.paused = true;
     }
 
-
+    /**
+     * Resumes a previously paused simulation.
+     */
     @Override
     public void resume() {
         this.paused = false;
     }
 
 
+    /**
+     * Returns whether the simulation is currently paused.
+     *
+     * @return true if the simulation is paused
+     */
     @Override
     public boolean isPaused() {
         return this.paused;
     }
 
     /**
-     * Returns the stored compare-run history for this service instance.
-     * Keeps only the most recent completed runs.
+     * Returns the stored history of completed simulation runs.
+     *
+     * This history is used by the run comparison feature to allow
+     * users to compare the results of different simulation
+     * configurations.
+     *
+     * @return the run comparison history
      */
     @Override
     public RunCompareHistory getRunCompareHistory() {
         return this.runCompareHistory;
     }
 
+    /**
+     * Sets the playback speed of the simulation.
+     *
+     * Higher speeds cause simulation ticks to occur more frequently,
+     * allowing the simulation to run faster.
+     *
+     * @param speed the playback speed multiplier (minimum 0.1)
+     */
     @Override
     public void setPlaybackSpeed(double speed) {
         this.playbackSpeed = Math.max(0.1, speed);
