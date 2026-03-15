@@ -82,12 +82,12 @@ public class EmergencyGenerator {
             switch (emergencyType) {
 
                 case MECHANICAL_FAILURE -> {
-                    System.out.printf("**** mechanical failure emergency scheduled for %s at %s\n", aircraft, emergencyTime);
+                    // System.out.printf("**** mechanical failure emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new MechanicalFailureEmergencyEvent(aircraft, emergencyTime));
                 }
 
                 case PASSENGER_HEALTH -> {
-                    System.out.printf("**** passenger health emergency scheduled for %s at %s\n", aircraft, emergencyTime);
+                    // System.out.printf("**** passenger health emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new PassengerHealthEmergencyEvent(aircraft, emergencyTime));
                 }
 
