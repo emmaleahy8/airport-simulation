@@ -1,9 +1,23 @@
 package com.group32.cs261project.frontend;
 
+/**
+ * Centralised provider for help text used throughout the application.
+ *
+ * Each method returns a formatted help description for a specific page
+ * in the system. These strings are displayed in the help overlay dialog
+ * when the user presses the help button on that page.
+ *
+ * Keeping help text here ensures that explanatory content is separated
+ * from UI logic and can be easily maintained.
+ */
 public final class HelpText {
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private HelpText() {}
 
+    // Returns the help text shown on the Configure Page.
     public static String configurePage() {
         return """
 Use this page to set up the simulation before it starts.
@@ -22,6 +36,7 @@ When you are happy with the setup, start the simulation by pressing the "Run Sim
 """;
     }
 
+    // Returns the help text shown on the Running Page.
     public static String runningPage() {
         return """
 This page shows the simulation while it is running and allows you to update the runway configuration during runtime.
@@ -42,6 +57,7 @@ To end the simulation early, click the "End Simulation" button to see the result
 """;
     }
 
+    // Returns the help text shown on the End-of-Run Summary Page.
     public static String endOfRunSummaryPage() {
         return """
 This page shows the results of a completed simulation run.
@@ -58,6 +74,7 @@ Click the "Compare Any Two Runs" button to select two runs to compare, or the "C
 """;
     }
 
+    // Returns the help text shown on the run selection page used for comparing two completed simulation runs.
     public static String compareAnyTwoRunsPage() {
         return """
 This page allows you to select two of your completed simulation runs to compare.
@@ -68,6 +85,7 @@ Click the "Compare Selected Runs" button when you are ready to see the side-by-s
 """;
     }
 
+    // Returns the help text shown on the run comparison page.
     public static String comparisonPage() {
         return """
 This page gives a comparison view of two completed runs.

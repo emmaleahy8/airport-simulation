@@ -14,10 +14,33 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.paint.Color;
 
+/**
+ * Utility class for adding a help button overlay to a page.
+ *
+ * This class wraps existing page content with a small help button placed
+ * in the top-right corner. When pressed, the button opens a dialog showing
+ * the supplied help title and explanatory text.
+ *
+ * The class is static-only and is not intended to be instantiated.
+ */
 public final class HelpOverlay {
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
     private HelpOverlay() {}
 
+    /**
+     * Wraps page content with a help button overlay.
+     *
+     * The help button is positioned in the top-right corner of the returned
+     * container and opens a help dialog containing the supplied title and text.
+     *
+     * @param pageContent the main page content to wrap
+     * @param title the title shown in the help dialog
+     * @param helpText the explanatory help text shown in the dialog
+     * @return a parent node containing the page content and help button overlay
+     */
     public static Parent wrap(Parent pageContent, String title, String helpText) {
         Button helpButton = createHelpButton(title, helpText);
 
@@ -28,6 +51,16 @@ public final class HelpOverlay {
         return overlay;
     }
 
+    /**
+     * Creates the help button used by the overlay.
+     *
+     * The button is styled as a circular icon and configured to open the
+     * help dialog when clicked.
+     *
+     * @param title the help dialog title
+     * @param helpText the help dialog content text
+     * @return the configured help button
+     */
     private static Button createHelpButton(String title, String helpText) {
         Button helpButton = new Button("?");
         helpButton.setFocusTraversable(false);
@@ -61,6 +94,15 @@ public final class HelpOverlay {
         return helpButton;
     }
 
+    /**
+     * Displays the help dialog for the given page.
+     *
+     * The dialog contains a heading, the supplied help text, and a close
+     * button. A scroll pane is used so longer help content remains readable.
+     *
+     * @param title the title of the page or section requiring help
+     * @param helpText the explanatory help text to display
+     */
     private static void showHelpDialog(String title, String helpText) {
         Dialog<Void> dialog = new Dialog<>();
         dialog.setTitle(title + " Help");
