@@ -9,6 +9,7 @@ public final class HelpText {
 Use this page to set up the simulation before it starts.
 
 • Choose the number of runways.
+• Choose the length of simulation to run.
 • Set the inbound and outbound traffic rates.
 • Adjust the emergency probabilities - this is the chance of any inbound plane having a passenger health or mechanical emergency. 
 • Select each runway's operational status and operating mode (note that these are adjustable during the run).
@@ -32,8 +33,11 @@ This page shows the simulation while it is running and allows you to update the 
 
 Use this page to monitor congestion, delays, and runway usage in real time.
 
-The simulation will automatically end after 90 minutes.
-To go back to the Configuration Page, press the "Restart" button.
+The simulation will automatically end after the chosen simulation time.
+To see the end-of-run results, click the "End Simulation" button.
+Otherwise, to go back to the Configuration Page, press the "Restart" button.
+
+To end the simulation early, click the "End Simulation" button to see the results gathered so far, or return to the Configuration Page using the "Restart" button.
 """;
     }
 

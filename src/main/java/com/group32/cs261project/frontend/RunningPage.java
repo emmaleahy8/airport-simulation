@@ -74,6 +74,7 @@ public class RunningPage implements Page {
     // Simulation Speed Slider
     private final Slider speedSlider = new Slider(1, 19, 10);
     private final Label speedValueLabel = new Label("1.0x");
+    private SimulationData latestSnapshot;
 
     // Buttons
     private Button pauseBtn;
@@ -243,6 +244,8 @@ public class RunningPage implements Page {
         pauseBtn.setText("Pause");
 
         sim.start(currentConfig, snap -> Platform.runLater(() -> {
+
+            latestSnapshot = snap.copy();
 
             simTimeVal.setText(String.valueOf(snap.simMinute));
             holdingVal.setText(String.valueOf(snap.holdingQueue));
@@ -632,7 +635,6 @@ public class RunningPage implements Page {
         currentConfig = updated.copy();
         sim.updateConfig(updated);
 
-        // optional: rebind cards once here if you want UI to snap to applied values
         for (int i = 0; i < n; i++) {
             runwayEditorCards.get(i).bindTo(currentConfig.runways.get(i));
         }
@@ -846,14 +848,21 @@ public class RunningPage implements Page {
     }
 
     private void onEnd() {
+        SimulationData report;
 
-        SimulationData report = sim.stop();
+        if (sim.isRunning()) {
+            report = sim.stop();
+        } else {
+            report = (latestSnapshot != null) ? latestSnapshot.copy() : currentConfig.copy();
+        }
+
         app.switchTo(AppState.RESULTS, report);
     }
 
     private void onRestart() {
-
-        sim.stop();
+        if (sim.isRunning()) {
+            sim.stop();
+        }
         app.switchTo(AppState.CONFIGURE, null);
     }
 }

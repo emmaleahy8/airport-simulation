@@ -23,6 +23,7 @@ import java.util.List;
 import com.group32.cs261project.App;
 import com.group32.cs261project.frontend.HelpOverlay;
 import com.group32.cs261project.frontend.HelpText;
+
 public class ConfigurePage implements Page {
 
     private final App app;
@@ -36,6 +37,8 @@ public class ConfigurePage implements Page {
     private final Slider outboundSlider = new Slider(0, 30, 30);
     private final Slider passengerHealthEmergencySlider = new Slider(0, 100, 0);
     private final Slider mechanicalEmergencySlider = new Slider(0, 100, 0);
+    private final Slider simulationTimeSlider = new Slider(1, 24, 6);
+
 
     // Labels showing current slider values
     private final Label runwayValue = new Label();
@@ -43,6 +46,7 @@ public class ConfigurePage implements Page {
     private final Label outboundValue = new Label();
     private final Label passengerHealthEmergencyValue = new Label();
     private final Label mechanicalEmergencyValue = new Label();
+    private final Label simulationTimeValue = new Label();
 
     private final Label errorLabel = new Label();
 
@@ -142,11 +146,14 @@ public class ConfigurePage implements Page {
     
     private static final String COMBO_STYLE =
         "-fx-background-color: #0d1d29;" +
-        "-fx-text-fill: white;" +
-        "-fx-prompt-text-fill: white;" +
+        "-fx-control-inner-background: #0d1d29;" +
+        "-fx-background-insets: 0;" +
+        "-fx-background-radius: 6;" +
         "-fx-border-color: #2d6678;" +
         "-fx-border-radius: 6;" +
-        "-fx-background-radius: 6;";
+        "-fx-text-fill: white;" +
+        "-fx-prompt-text-fill: white;" +
+        "-fx-mark-color: white;";
 
     public ConfigurePage(App app, SimulationService sim) {
         this.app = app;
@@ -212,6 +219,7 @@ public class ConfigurePage implements Page {
         outboundSlider.setOnMousePressed(e -> pushUndoSnapshot());
         passengerHealthEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
         mechanicalEmergencySlider.setOnMousePressed(e -> pushUndoSnapshot());
+        simulationTimeSlider.setOnMousePressed(e -> pushUndoSnapshot());
     }
 
     // ----- Page Interface Methods -----
@@ -227,7 +235,7 @@ public class ConfigurePage implements Page {
 
     // ----- UI Builder for left side content -----
     private VBox buildLeftSidebar() {
-        VBox left = new VBox(10); // Vertical box with spacing of 16px between sections
+        VBox left = new VBox(8); // Vertical box with spacing of 8px between sections
         left.setPrefWidth(330);
         left.setAlignment(Pos.BOTTOM_LEFT);
         VBox.setVgrow(left, Priority.ALWAYS);
@@ -252,6 +260,22 @@ public class ConfigurePage implements Page {
         // Style runway labels
         runwayLabel.setStyle(LABEL_TEXT);
         runwayValue.setStyle(MONITOR_TITLE);
+
+        // ----- Simulation Duration -----
+        simulationTimeValue.setFont(Font.font(null, FontWeight.BOLD, 12));
+
+        VBox durationRow = new VBox(6);
+        Label durationLabel = new Label("Simulation Duration:");
+
+        HBox durationLine = new HBox(6, durationLabel, simulationTimeValue, new Label("hours"));
+        durationLine.setAlignment(Pos.CENTER_LEFT);
+
+        durationRow.getChildren().addAll(durationLine, simulationTimeSlider);
+
+        // styling
+        durationLabel.setStyle(LABEL_TEXT);
+        ((Label) durationLine.getChildren().get(2)).setStyle(SMALL_TEXT);
+        simulationTimeValue.setStyle(MONITOR_TITLE);
 
         // Run button - on click, confirm inputs are valid, then switch to RunningPage and pass the current config data
         Button runBtn = new Button("▶  Run Simulation");
@@ -291,7 +315,7 @@ public class ConfigurePage implements Page {
 
         undoRedoReset.getChildren().addAll(undoBtn, redoBtn, resetBtn);
 
-        simPanel.getChildren().addAll(simTitle, runwayRow, runBtn, undoRedoReset);
+        simPanel.getChildren().addAll(simTitle, runwayRow, durationRow, runBtn, undoRedoReset);
 
         // ----- Aircraft Generation panel -----
         VBox aircraftPanel = new VBox(10); // Vertical box with spacing of 14px between controls
@@ -363,10 +387,7 @@ public class ConfigurePage implements Page {
 
         emergencyPanel.getChildren().addAll(emergencyTitle, passengerHealthEmergencyBox, mechanicalEmergencyBox);
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-
-        left.getChildren().addAll(spacer, simPanel, aircraftPanel, emergencyPanel);
+        left.getChildren().addAll(simPanel, aircraftPanel, emergencyPanel);
         
         return left;
     }
@@ -384,17 +405,17 @@ public class ConfigurePage implements Page {
         monitorWall.setAlignment(Pos.TOP_LEFT);
         monitorWall.setStyle(SCREEN_WALL);
         VBox.setVgrow(monitorWall, Priority.ALWAYS);
-        monitorWall.setMaxHeight(Double.MAX_VALUE);
-        monitorWall.setPrefHeight(545);
-        monitorWall.setMaxHeight(545);
+        monitorWall.setPrefHeight(587);
+        monitorWall.setMaxHeight(587);
 
-        Label runwayTitle = new Label("Runway Configuration Screens");
-        runwayTitle.setFont(Font.font(null, FontWeight.BOLD, 20));
+        Label runwayTitle = new Label("Runway Configuration");
+        runwayTitle.setFont(Font.font(null, FontWeight.BOLD, 22));
         runwayTitle.setStyle(MONITOR_LABEL);
 
         runwayGrid.setHgap(18);
-        runwayGrid.setVgap(18);
+        runwayGrid.setVgap(0);
         runwayGrid.setPadding(new Insets(8));
+        VBox.setVgrow(runwayGrid, Priority.ALWAYS);
 
         if (runwayGrid.getColumnConstraints().isEmpty()) {
             for (int c = 0; c < 5; c++) {
@@ -406,7 +427,22 @@ public class ConfigurePage implements Page {
             }
         }
 
-        monitorWall.getChildren().addAll(runwayTitle, runwayGrid, errorLabel);
+        if (runwayGrid.getRowConstraints().isEmpty()) {
+            for (int r = 0; r < 5; r++) {
+                RowConstraints rc = new RowConstraints();
+
+                // spacer rows: 0, 2, 4
+                if (r % 2 == 0) {
+                    rc.setVgrow(Priority.ALWAYS);
+                } else {
+                    rc.setVgrow(Priority.NEVER);
+                }
+
+                runwayGrid.getRowConstraints().add(rc);
+            }
+        }
+
+        monitorWall.getChildren().addAll(runwayTitle, runwayGrid);
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
@@ -431,6 +467,12 @@ public class ConfigurePage implements Page {
         outboundSlider.setMajorTickUnit(5);
         outboundSlider.setShowTickLabels(false);
         outboundSlider.setShowTickMarks(false);
+
+        simulationTimeSlider.setMajorTickUnit(1);
+        simulationTimeSlider.setMinorTickCount(0);
+        simulationTimeSlider.setSnapToTicks(true);
+        simulationTimeSlider.setShowTickLabels(false);
+        simulationTimeSlider.setShowTickMarks(false);
 
         // ----- Listeners -----
         runwaySlider.valueProperty().addListener((obs, o, n) -> {
@@ -463,6 +505,12 @@ public class ConfigurePage implements Page {
             if (applyingSnapshot) return;
             data.mechanicalEmergencyProbability = (int) Math.round(n.doubleValue());
             mechanicalEmergencyValue.setText(String.valueOf(data.mechanicalEmergencyProbability));
+        });
+
+        simulationTimeSlider.valueProperty().addListener((obs, o, n) -> {
+            if (applyingSnapshot) return;
+            data.simulationHours = (int) Math.round(n.doubleValue());
+            simulationTimeValue.setText(String.valueOf(data.simulationHours));
         });
     }
 
@@ -502,7 +550,8 @@ public class ConfigurePage implements Page {
 
             // Compute grid position
             int idx = i - 1;
-            int row = idx / 5;
+            int visualRow = idx / 5;          // 0 or 1
+            int row = visualRow * 2 + 1;      // puts rows at 1 and 3
             int col = idx % 5;
 
             runwayGrid.add(card.root, col, row);
@@ -519,6 +568,8 @@ public class ConfigurePage implements Page {
         outboundSlider.setValue(d.outboundRatePerHour);
         passengerHealthEmergencySlider.setValue(d.passengerHealthEmergencyProbability);
         mechanicalEmergencySlider.setValue(d.mechanicalEmergencyProbability);
+        simulationTimeSlider.setValue(d.simulationHours);
+
 
         // Set numeric labels accordingly
         runwayValue.setText(String.valueOf(d.runwayCount));
@@ -526,6 +577,7 @@ public class ConfigurePage implements Page {
         outboundValue.setText(String.valueOf(d.outboundRatePerHour));
         passengerHealthEmergencyValue.setText(String.valueOf(d.passengerHealthEmergencyProbability));
         mechanicalEmergencyValue.setText(String.valueOf(d.mechanicalEmergencyProbability));
+        simulationTimeValue.setText(String.valueOf(d.simulationHours));
     }
 
     // ----- Run Simulation Button Handler -----
@@ -534,6 +586,7 @@ public class ConfigurePage implements Page {
         int runways = (int) Math.round(runwaySlider.getValue());
         int in = (int) Math.round(inboundSlider.getValue());
         int out = (int) Math.round(outboundSlider.getValue());
+        int hours = (int) Math.round(simulationTimeSlider.getValue());
 
         // Validate runway count and flow rates - if invalid, show error message and don't proceed
         if (runways < 1 || runways > 10) {
@@ -551,6 +604,7 @@ public class ConfigurePage implements Page {
         data.runwayCount = runways;
         data.inboundRatePerHour = in;
         data.outboundRatePerHour = out;
+        data.simulationHours = hours;
         data.ensureRunwayListSize();
 
         app.switchTo(AppState.RUNNING, data.copy()); // Navigate to Running Page and pass a copy of the current config data
@@ -697,7 +751,7 @@ public class ConfigurePage implements Page {
 
     // ----- Atc "Window" View -----
     private StackPane buildAtcView() {
-        double windowHeight = 310;
+        double windowHeight = 265;
 
         // Build window
         StackPane airportWindow = new StackPane();

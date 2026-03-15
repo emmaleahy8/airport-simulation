@@ -15,6 +15,7 @@ public class SimulationData {
     public double mechanicalEmergencyProbability = 0.0; // 0-100 (%)
     public double passengerHealthEmergencyProbability = 0.0; // 0-100 (%)
     
+    public int simulationHours = 6;     // 1–24 hours
 
     public final List<RunwayConfig> runways = new ArrayList<>();
 
@@ -140,6 +141,7 @@ public class SimulationData {
         d.maxWaitMinutes = maxWaitMinutes;
         d.passengerHealthEmergencyProbability = passengerHealthEmergencyProbability;
         d.mechanicalEmergencyProbability = mechanicalEmergencyProbability;
+        d.simulationHours = simulationHours;
 
         d.simMinute = simMinute;
         d.holdingQueue = holdingQueue;
@@ -199,7 +201,7 @@ public class SimulationData {
     // Generate hash based on config fields
     public int stableConfigHash() {
         ensureRunwayListSize();
-        int h = Objects.hash(runwayCount, inboundRatePerHour, outboundRatePerHour, maxWaitMinutes);
+        int h = Objects.hash(runwayCount, inboundRatePerHour, outboundRatePerHour, maxWaitMinutes, simulationHours);
         for (RunwayConfig r : runways) {
             h = 31 * h + Objects.hash(r.id, r.mode, r.status);
         }
