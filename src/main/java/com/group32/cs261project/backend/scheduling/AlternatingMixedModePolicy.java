@@ -6,9 +6,14 @@ import java.util.Map;
 import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.model.enums.AircraftDirection;
 
+
+/**
+ * Policy for mixed mode runway scheduling that alternates between landing and takeoffs
+ */
 public class AlternatingMixedModePolicy implements MixedModePolicy {
 
-    private final Map<Integer, AircraftDirection> lastOpByRunway ;
+    // stores the last operation for each runway
+    private final Map<Integer, AircraftDirection> lastOpByRunway;
 
     public AlternatingMixedModePolicy() {
         this.lastOpByRunway = new HashMap<>();

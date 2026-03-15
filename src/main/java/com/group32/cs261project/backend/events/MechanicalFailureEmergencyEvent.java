@@ -6,6 +6,12 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for promoting aircraft to emergency due to mechanical failure
+ * Created in the future with a given probability for an aircraft
+ * If aircraft isn't in holding anymore, this is just ignored
+ */
 public class MechanicalFailureEmergencyEvent implements Event<SimulationContext> {
     
     private final Aircraft aircraft;

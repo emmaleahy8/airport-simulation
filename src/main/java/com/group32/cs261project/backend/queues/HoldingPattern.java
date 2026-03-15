@@ -10,6 +10,10 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.model.enums.AircraftDirection;
 import com.group32.cs261project.backend.model.enums.EmergencyStatus;
 
+
+/**
+ * Class for the holding pattern
+ */
 public class HoldingPattern {
 
     private final Queue<Aircraft> emergencyQueue;
@@ -122,32 +126,5 @@ public class HoldingPattern {
         aircraft.setEmergencyStatus(EmergencyStatus.FUEL);
         this.enqueue(aircraft, time);
     }
-
-     
-    // /**
-    //  * consumes fuel for all waiting aircraft
-    //  * checks fuel
-    //  * escalates emergency
-    //  * moves low fuel aircarft to the emergency queue
-    //  * 
-    //  */
-    // public void updateFuelStates(double thresholdMinutes, double minutesPassed) {
-
-    //     for (Aircraft aircraft : normalQueue) {
-    
-    //         aircraft.consumeFuelMinutes(minutesPassed);
-    //         aircraft.updateFuelEmergency(thresholdMinutes);
-    
-    //         if (aircraft.isEmergency()) {
-    //             emergencyQueue.add(aircraft);
-    //         }
-    //     }
-    
-    //     normalQueue.removeIf(Aircraft::isEmergency);
-    
-    //     for (Aircraft aircraft : emergencyQueue) {
-    //         aircraft.consumeFuelMinutes(minutesPassed);
-    //     }
-    // }
 
 }

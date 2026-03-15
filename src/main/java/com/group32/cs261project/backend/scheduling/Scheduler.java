@@ -9,6 +9,11 @@ import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Scheduler class that schedules aircraft to runways
+ * Main method is tryScheduleOperations
+ */
 public class Scheduler {
 
     private final MixedModePolicy mixedModePolicy;

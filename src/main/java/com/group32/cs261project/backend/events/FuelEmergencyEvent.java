@@ -6,6 +6,12 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for when aircraft is promoted to emergency due to low fuel
+ * Low fuel by default is 20 minutes remaining
+ * Event is created for in the future and is ignored if the aircraft isn't in holding pattern anymore
+ */
 public class FuelEmergencyEvent implements Event<SimulationContext> {
 
     private final Aircraft aircraft;

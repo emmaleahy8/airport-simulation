@@ -7,6 +7,10 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for when outbound aircraft is ready, created by flight seeder at start of simulation
+ */
 public class AircraftOutboundReadyEvent implements Event<SimulationContext> {
 
     private final Instant time;

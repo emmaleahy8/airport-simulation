@@ -6,6 +6,12 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for when aircraft has a fuel deadline and must divert
+ * Occurs when aircraft reaches (by default) 10 minutes of fuel
+ * Event is created in the future for each aircraft, and is ignored if the aircraft is out of holding pattern
+ */
 public class FuelDeadlineDiversionEvent implements Event<SimulationContext> {
 
     private final Aircraft aircraft;

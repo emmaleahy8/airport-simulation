@@ -32,6 +32,10 @@ public record SimConfig(
 
     }
 
+    /**
+     * Makes a new builder to specify optional parameters
+     * @return sim config builder
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -67,6 +71,10 @@ public record SimConfig(
         public Builder passengerHealthEmergencyProbability(double v) { this.passengerHealthEmergencyProbability = v; return this; }
         public Builder verbose(boolean v) { this.verbose = v; return this; }
 
+        /**
+         * turn the builder object back into a simconfig object
+         * @return simconfig
+         */
         public SimConfig build() {
             return new SimConfig(
                 this.startTime,

@@ -9,6 +9,7 @@ import com.group32.cs261project.backend.events.Event;
 
 /**
  * Simulation engine kernel class that handles events
+ * Generic which separates engine implementation from rest of code
  */
 public final class SimulationEngine<C> {
 
@@ -34,26 +35,12 @@ public final class SimulationEngine<C> {
         this.now = config.startTime();
     }
 
-    // getters
-    public SimConfig config() { 
-        return config;
-    }
-
-    public C context() {
-        return context;
-    }
-
-    public EventQueue<C> eventQueue() {
-        return eventQueue;
-    }
-
-    public Random rng() {
-        return rng;
-    }
-
-    public Instant now() {
-        return now;
-    }
+    /*  getters */
+    public SimConfig config() { return config; }
+    public C context() { return context; }
+    public EventQueue<C> eventQueue() { return eventQueue; }
+    public Random rng() { return rng; }
+    public Instant now() { return now; }
 
     /**
      * Schedules an event to the simulation kernel

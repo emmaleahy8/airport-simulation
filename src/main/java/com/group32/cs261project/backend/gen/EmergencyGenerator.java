@@ -11,6 +11,11 @@ import com.group32.cs261project.backend.sim.SimConfig;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Class to generate passenger health or mechanical failure emegencies for an aircraft
+ * based on the probabilities given in the simulation config
+ */
 public class EmergencyGenerator {
 
     /**
@@ -76,18 +81,17 @@ public class EmergencyGenerator {
 
             switch (emergencyType) {
 
-                case MECHANICAL_FAILURE:
-                    System.out.printf("**** mechanical failure emergency scheduled for %s at %s\n", aircraft, emergencyTime);
+                case MECHANICAL_FAILURE -> {
+                    // System.out.printf("**** mechanical failure emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new MechanicalFailureEmergencyEvent(aircraft, emergencyTime));
-                    break;
+                }
 
-                case PASSENGER_HEALTH:
-                    System.out.printf("**** passenger health emergency scheduled for %s at %s\n", aircraft, emergencyTime);
+                case PASSENGER_HEALTH -> {
+                    // System.out.printf("**** passenger health emergency scheduled for %s at %s\n", aircraft, emergencyTime);
                     engine.schedule(new PassengerHealthEmergencyEvent(aircraft, emergencyTime));
-                    break;
+                }
 
-                default:
-                    break;
+                default -> {}
             }
 
         }

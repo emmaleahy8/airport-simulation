@@ -6,6 +6,12 @@ import com.group32.cs261project.backend.model.Aircraft;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for promoting aircraft to emergency due to passenger health emergency
+ * Created in the future with a given probability for each aircraft
+ * If aircraft isn't in holding pattern anymore, this is just ignored
+ */
 public class PassengerHealthEmergencyEvent implements Event<SimulationContext> {
 
     private final Aircraft aircraft;

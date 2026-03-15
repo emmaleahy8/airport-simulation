@@ -7,6 +7,12 @@ import com.group32.cs261project.backend.model.Runway;
 import com.group32.cs261project.backend.sim.SimulationContext;
 import com.group32.cs261project.backend.sim.SimulationEngine;
 
+
+/**
+ * Event for when a runway operation (landing or takeoff) completes
+ * Scheduled in the future from when an aircraft gets assigned to a runway
+ * Calls the scheduler to try schedule another runway operation so we continually try to keep runways busy
+ */
 public class RunwayOperationCompleteEvent implements Event<SimulationContext> {
 
     private final Instant time;

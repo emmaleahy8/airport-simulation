@@ -25,9 +25,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
-import com.group32.cs261project.frontend.HelpOverlay;
-import com.group32.cs261project.frontend.HelpText;
-
 public class ResultsPage implements Page {
 
     private final App app;
@@ -310,25 +307,27 @@ public class ResultsPage implements Page {
 
         right.getChildren().addAll(
                 smallCard("Take-off Queue",
-                        "Maximum number of planes in take-off queue:", maxTakeoffQueueVal,
-                        "Average wait time in take-off queue:", avgTakeoffWaitVal),
+                        "Maximum number of planes in take-off queue:", maxTakeoffQueueVal, "",
+                        "Average wait time in take-off queue:", avgTakeoffWaitVal, "minutes"), 
                 smallCard("Holding Pattern",
-                        "Maximum number of planes in holding pattern:", maxHoldingVal,
-                        "Average hold time for inbound aircraft:", avgHoldingVal),
+                        "Maximum number of planes in holding pattern:", maxHoldingVal, "",
+                        "Average hold time for inbound aircraft:", avgHoldingVal, "minutes"),
                 smallCard("Delays",
-                        "Maximum inbound delay:", maxInboundDelayVal,
-                        "Average inbound delay:", avgInboundDelayVal),
+                        "Maximum inbound delay:", maxInboundDelayVal, "minutes",
+                        "Average inbound delay:", avgInboundDelayVal, "minutes"),
                 smallCard("Cancellations and Diversions",
-                        "Total planes cancelled:", cancelledVal,
-                        "Inbound aircraft diverted due to low fuel:", divertedVal)
+                        "Total planes cancelled:", cancelledVal, "",
+                        "Inbound aircraft diverted due to low fuel:", divertedVal, "")
         );
         return right;
     }
 
     // ----- UI Builder: small reusable cards for right column -----
-    private VBox smallCard(String titleText,
-                           String label1, Label value1,
-                           String label2, Label value2) {
+    private VBox smallCard(
+        String titleText, 
+        String label1, Label value1, String unit1,
+        String label2, Label value2, String unit2
+    ) {
         VBox card = new VBox(12);
         card.setStyle(CARD);
 
@@ -340,8 +339,8 @@ public class ResultsPage implements Page {
         grid.setHgap(10);
         grid.setVgap(10);
 
-        addRow(grid, 0, label1, value1, "minutes");
-        addRow(grid, 1, label2, value2, "minutes");
+        addRow(grid, 0, label1, value1, unit1);
+        addRow(grid, 1, label2, value2, unit2);
 
         card.getChildren().addAll(header, grid);
         return card;
