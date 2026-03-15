@@ -47,8 +47,8 @@ public class ConfigurePage implements Page {
 
     // Sliders
     private final Slider runwaySlider = new Slider(1, 10, 2);
-    private final Slider inboundSlider = new Slider(0, 30, 30);
-    private final Slider outboundSlider = new Slider(0, 30, 30);
+    private final Slider inboundSlider = new Slider(1, 45, 44);
+    private final Slider outboundSlider = new Slider(1, 45, 44);
     private final Slider passengerHealthEmergencySlider = new Slider(0, 100, 0);
     private final Slider mechanicalEmergencySlider = new Slider(0, 100, 0);
     private final Slider simulationTimeSlider = new Slider(1, 24, 6);
@@ -720,7 +720,7 @@ public class ConfigurePage implements Page {
             errorLabel.setText("Runway count must be between 1 and 10.");
             return;
         }
-        if (in < 0 || in > 30 || out < 0 || out > 30) {
+        if (in < 0 || in > 45 || out < 0 || out > 45) {
             errorLabel.setText("Flow rates must be between 0 and 30 per hour.");
             return;
         }
