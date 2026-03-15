@@ -25,6 +25,17 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
+/**
+ * Page displaying the end-of-run summary for a completed simulation.
+ *
+ * This page presents the configuration used for the run together with
+ * key performance metrics such as queue sizes, delays, cancellations,
+ * and diversions. It also provides visual bar charts to help compare
+ * count-based and time-based outcomes.
+ *
+ * If enough completed runs exist, the page also allows the user to
+ * open the run comparison features.
+ */
 public class ResultsPage implements Page {
 
     private final App app;
@@ -40,6 +51,8 @@ public class ResultsPage implements Page {
     private final Label outboundRateVal = new Label("-");
     private final Label runwayCountVal  = new Label("-");
     private final Label maxWaitVal      = new Label("-");
+    private final Label simulationDurationVal = new Label("-");
+    private final Label maxTakeoffQueueTimeVal = new Label("-");
 
     private final Label runwayModesVal  = new Label("-");
     private final Label runwayStatusVal = new Label("-");
@@ -126,7 +139,15 @@ public class ResultsPage implements Page {
     private static final Color CHART_TEXT = Color.web("#dcebf5");
     private static final Color CHART_SUBTLE_TEXT = Color.web("#b8cad6");
 
-    // ----- Constructor: Builds UI Layout -----
+    /**
+     * Creates a new results page.
+     *
+     * This constructor builds the page layout, including the summary cards,
+     * chart panels, scrollable centre content, and navigation buttons.
+     *
+     * @param app the main application controller used for page navigation
+     * @param sim the simulation service providing run history and results data
+     */
     public ResultsPage(App app, SimulationService sim) {
         this.app = app;
         this.sim = sim;
@@ -223,12 +244,25 @@ public class ResultsPage implements Page {
         root.setBottom(bottomBar);
     }
 
-    // ----- Page Interface Methods -----
+    /**
+     * Returns the root view for this page wrapped in the help overlay.
+     *
+     * @return the page view
+     */
     @Override
     public Parent getView() {
         return HelpOverlay.wrap(root, "End of Run Summary", HelpText.endOfRunSummaryPage());
     }
 
+    /**
+     * Called when the application navigates to this page.
+     *
+     * The provided data is expected to be a {@link SimulationData} object
+     * containing the completed run results. The page uses this data to
+     * populate the summary labels and redraw the charts.
+     *
+     * @param data the completed simulation data passed during navigation
+     */
     @Override
     public void onEnter(Object data) {
         SimulationData d = (SimulationData) data;
@@ -236,7 +270,13 @@ public class ResultsPage implements Page {
         updateCompareButtonState();
     }
 
-    // ----- UI Builder: Chart wrapper card -----
+    /**
+     * Builds a styled card containing a chart canvas and heading.
+     *
+     * @param heading the title shown above the chart
+     * @param canvas the canvas displaying the chart
+     * @return a chart wrapper card
+     */
     private VBox buildChartCard(String heading, Canvas canvas) {
         VBox card = new VBox(10);
         card.setStyle(CARD);
@@ -251,11 +291,19 @@ public class ResultsPage implements Page {
         return card;
     }
 
-    // ----- UI Builder: Left Card (General Information) -----
+    /**
+     * Builds the general information card shown on the left side of the page.
+     *
+     * This card displays the main input configuration used for the run,
+     * together with the list of runway operating modes and statuses.
+     *
+     * @return the general information summary card
+     */
     private VBox buildGeneralInfoCard() {
         VBox card = new VBox(14);
         card.setStyle(CARD);
 
+        // Header
         Label header = new Label("General Information");
         header.setFont(Font.font(null, FontWeight.BOLD, 20));
         header.setStyle(MONITOR_LABEL);
@@ -267,7 +315,8 @@ public class ResultsPage implements Page {
         addRow(grid, 0, "Inbound flow rate:", inboundRateVal, "aircraft /hour");
         addRow(grid, 1, "Outbound flow rate:", outboundRateVal, "aircraft /hour");
         addRow(grid, 2, "Number of runways:", runwayCountVal, "");
-        addRow(grid, 3, "Maximum wait time:", maxWaitVal, "minutes");
+        addRow(grid, 3, "Simulation duration:", simulationDurationVal, "hours");
+        addRow(grid, 4, "Max. time in takeoff queue:", maxTakeoffQueueTimeVal, "minutes");
 
         Separator sep = new Separator();
         sep.setPadding(new Insets(8, 0, 8, 0));
@@ -301,7 +350,14 @@ public class ResultsPage implements Page {
         return card;
     }
 
-    // ----- UI Builder: Right Column -----
+    /**
+     * Builds the right-hand column of metric summary cards.
+     *
+     * These cards show queue, holding pattern, delay, cancellation,
+     * and diversion metrics.
+     *
+     * @return the right-hand metric card column
+     */
     private VBox buildRightCards() {
         VBox right = new VBox(16);
 
@@ -322,7 +378,18 @@ public class ResultsPage implements Page {
         return right;
     }
 
-    // ----- UI Builder: small reusable cards for right column -----
+    /**
+     * Builds a reusable small summary card containing two labelled metrics.
+     *
+     * @param titleText the card heading
+     * @param label1 the first metric label
+     * @param value1 the first metric value label
+     * @param unit1 the unit displayed beside the first metric
+     * @param label2 the second metric label
+     * @param value2 the second metric value label
+     * @param unit2 the unit displayed beside the second metric
+     * @return a configured summary card
+    */
     private VBox smallCard(
         String titleText, 
         String label1, Label value1, String unit1,
@@ -346,7 +413,18 @@ public class ResultsPage implements Page {
         return card;
     }
 
-    // ----- Helper Method for Adding Row to Grid -----
+    /**
+     * Adds a labelled value row to the given grid pane.
+     *
+     * Each row consists of a descriptive label, a value label, and an
+     * optional unit label.
+     *
+     * @param grid the grid pane to add the row to
+     * @param row the target row index
+     * @param labelText the descriptive label text
+     * @param valueLabel the label displaying the metric value
+     * @param unit the unit text shown beside the value
+     */
     private void addRow(GridPane grid, int row, String labelText, Label valueLabel, String unit) {
         Label l = new Label(labelText); // Create label for the left column
         l.setStyle(LABEL_TEXT);
@@ -377,6 +455,12 @@ public class ResultsPage implements Page {
         grid.getColumnConstraints().setAll(c0, c1);
     }
 
+    /**
+     * Updates the visibility of the comparison buttons.
+     *
+     * The compare buttons are shown only when at least two completed
+     * simulation runs exist in the run history.
+     */
     private void updateCompareButtonState() {
         RunCompareHistory history = sim.getRunCompareHistory();
         boolean hasAtLeastTwoRuns = history != null && history.hasAtLeast(2);
@@ -388,6 +472,11 @@ public class ResultsPage implements Page {
         compareAnyTwoButton.setManaged(hasAtLeastTwoRuns);
     }
 
+    /**
+     * Opens the comparison page for the two most recent completed runs.
+     *
+     * If fewer than two completed runs are available, no action is taken.
+     */
     private void openCompareWithPreviousRun() {
         RunCompareHistory history = sim.getRunCompareHistory();
         if (history == null || !history.hasAtLeast(2)) {
@@ -407,7 +496,14 @@ public class ResultsPage implements Page {
         app.switchTo(AppState.COMPARE, selectionData);
     }
 
-    // ----- Results Data -----
+    /**
+     * Populates the page using the supplied simulation results.
+     *
+     * This method updates all displayed labels, fills the runway mode and
+     * status summaries, and redraws the result charts.
+     *
+     * @param d the completed simulation data to display
+     */
     private void fillFrom(SimulationData d) {
         d.ensureRunwayListSize();
 
@@ -416,6 +512,8 @@ public class ResultsPage implements Page {
         outboundRateVal.setText(String.format("%.2f", (double) d.outboundRatePerHour));
         runwayCountVal.setText(String.valueOf(d.runwayCount));
         maxWaitVal.setText(String.format("%.2f", (double) d.maxWaitMinutes));
+        simulationDurationVal.setText(String.valueOf(d.simulationHours));
+        maxTakeoffQueueTimeVal.setText(String.format("%.2f", (double) d.maxWaitMinutes));
         
         // Runway Mode/Status Lists
         StringBuilder modes = new StringBuilder();
@@ -454,8 +552,17 @@ public class ResultsPage implements Page {
     }
 
     // ============================================================
-    //  BAR CHART 1 – Count Metrics
+    //  BAR CHARTS 
     // ============================================================
+
+    /**
+    * Draws the count-based bar chart for the supplied simulation data.
+    *
+    * This chart visualises metrics such as queue sizes, cancellations,
+    * and diversions.
+    *
+    * @param d the completed simulation data
+    */
     private void drawCountChart(SimulationData d) {
         String[] labels = {
             "Max Takeoff\nQueue",
@@ -474,9 +581,14 @@ public class ResultsPage implements Page {
         drawBarChart(countChart, labels, values, "Number of Planes");
     }
 
-    // ============================================================
-    //  BAR CHART 2 – Time Metrics (minutes)
-    // ============================================================
+    /**
+     * Draws the time-based bar chart for the supplied simulation data.
+     *
+     * This chart visualises metrics measured in minutes, such as wait
+     * times, hold times, and delays.
+     *
+     * @param d the completed simulation data
+     */
     private void drawTimeChart(SimulationData d) {
         String[] labels = {
             "Max Wait",
@@ -495,9 +607,17 @@ public class ResultsPage implements Page {
         drawBarChart(timeChart, labels, values, "Minutes");
     }
 
-    // ============================================================
-    //  Generic bar-chart renderer using JavaFX Canvas
-    // ============================================================
+    /**
+     * Draws a generic bar chart on the given canvas.
+     *
+     * This method renders the chart axes, tick marks, grid lines, labels,
+     * and bars for the supplied values.
+     *
+     * @param canvas the canvas on which the chart is drawn
+     * @param labels the category labels for each bar
+     * @param values the values represented by the bars
+     * @param yAxisLabel the label shown on the y-axis
+     */
     private void drawBarChart(Canvas canvas, String[] labels, double[] values, String yAxisLabel) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         double W = canvas.getWidth();
@@ -603,7 +723,16 @@ public class ResultsPage implements Page {
         }
     }
 
-    /** Returns a "nice" round number >= val when round=true, otherwise the nearest step. */
+    /**
+     * Returns a rounded "nice" number for chart axis scaling.
+     *
+     * This is used to generate readable axis limits and tick intervals.
+     *
+     * @param val the raw numeric value
+     * @param round true to round up to a nice axis maximum, false to
+     *              choose a suitable tick interval
+     * @return a rounded chart-friendly value
+     */
     private double niceNumber(double val, boolean round) {
         if (val <= 0) {
             return 1;
@@ -635,7 +764,16 @@ public class ResultsPage implements Page {
         return nice * Math.pow(10, exp);
     }
 
-    /** Approximate text width for a given font size (JavaFX Text for measurement). */
+    /**
+     * Approximates the width of a text string for the given font size.
+     *
+     * This is used when positioning chart labels and values so that they
+     * can be centred accurately.
+     *
+     * @param s the text to measure
+     * @param fontSize the font size used for measurement
+     * @return the approximate rendered text width
+     */
     private double measureText(String s, double fontSize) {
         Text t = new Text(s);
         t.setFont(Font.font(null, FontWeight.BOLD, fontSize));
