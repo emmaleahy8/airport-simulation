@@ -523,7 +523,7 @@ public class ResultsPage implements Page {
             maxVal = 1;
         }
 
-        double niceMax = niceNumber(maxVal * 1.10, true);
+        double niceMax = niceNumber(maxVal * 1.20, true);
         int tickCount = 5;
         double tickStep = niceNumber(niceMax / tickCount, false);
         niceMax = tickStep * tickCount;

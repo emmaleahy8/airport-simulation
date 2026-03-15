@@ -33,8 +33,7 @@ import com.group32.cs261project.frontend.HelpText;
 
 public class RunCompareHistoryPage implements Page {
 
-    // ----- Shared page styling -----
-    // Matches the updated dark dashboard style used across the newer frontend pages.
+    // ----- Page styling -----
     private static final String PAGE_BG =
             "-fx-background-color: rgb(14, 26, 40);";
 
@@ -47,7 +46,6 @@ public class RunCompareHistoryPage implements Page {
             "-fx-padding: 16;" +
             "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 14, 0.2, 0, 3);";
 
-    // Slightly brighter border used when a run is selected.
     private static final String CARD_SELECTED =
             "-fx-background-color: rgba(8, 18, 28, 0.98);" +
             "-fx-border-color: #1a6eff;" +
@@ -119,7 +117,6 @@ public class RunCompareHistoryPage implements Page {
         root.setPadding(new Insets(18));
 
         // ----- Header -----
-        // Uses the newer title + subtitle style so this page matches the updated UI.
         title.setFont(Font.font(null, FontWeight.BOLD, 30));
         title.setStyle(TITLE_TEXT);
 
@@ -174,8 +171,7 @@ public class RunCompareHistoryPage implements Page {
         // no-op
     }
 
-    // Rebuilds the list from history each time the page is entered so the view always reflects
-    // the current stored runs.
+    // Rebuilds the list from history each time the page is entered so the view always reflects the current stored runs.
     private void rebuildHistoryList() {
         runsBox.getChildren().clear();
         selectionRows.clear();
@@ -267,6 +263,7 @@ public class RunCompareHistoryPage implements Page {
         return card;
     }
 
+    // Compare Selected Runs button
     private void compareSelectedRuns() {
         List<RunCompareCompletedRun> selectedRuns = getSelectedRuns();
         if (selectedRuns.size() != 2) {
@@ -279,7 +276,8 @@ public class RunCompareHistoryPage implements Page {
 
         app.switchTo(AppState.COMPARE, selectionData);
     }
-
+ 
+    // Selected runs
     private List<RunCompareCompletedRun> getSelectedRuns() {
         List<RunCompareCompletedRun> selected = new ArrayList<>();
 
@@ -320,6 +318,7 @@ public class RunCompareHistoryPage implements Page {
         refreshSelectionStyles();
     }
 
+    // Updates the visual styling of each run selection card based on whether the corresponding checkbox is selected.
     private void refreshSelectionStyles() {
         for (RunSelectionRow row : selectionRows) {
             if (row.card != null) {

@@ -482,23 +482,37 @@ public class RunComparePage implements Page {
         drawLegend(gc);
 
         double maxVal = 0;
+        double minVal = 0;
         for (double v : leftValues) {
             if (v > maxVal) {
                 maxVal = v;
+            }
+            if (v < minVal) {
+                minVal = v;
             }
         }
         for (double v : rightValues) {
             if (v > maxVal) {
                 maxVal = v;
             }
+            if (v < minVal) {
+                minVal = v;
+            }
         }
         if (maxVal == 0) {
             maxVal = 1;
         }
 
-        double niceMax = niceNumber(maxVal * 1.10, true);
+        double niceMax = niceNumber(maxVal * 1.20, true);
         int tickCount = 5;
-        double tickStep = niceNumber(niceMax / tickCount, false);
+
+        // small negative leeway if needed
+        double niceMin = 0;
+        if (minVal < 0) {
+            niceMin = minVal * 1.2;   // e.g. -1 becomes about -1.2
+        }
+
+        double tickStep = niceNumber((niceMax - niceMin) / tickCount, false);
         niceMax = tickStep * tickCount;
 
         // Axes
@@ -548,8 +562,8 @@ public class RunComparePage implements Page {
         double startOffset = (groupW - innerGroupW) / 2.0;
 
         for (int i = 0; i < n; i++) {
-            double leftBarH = (leftValues[i] / niceMax) * chartH;
-            double rightBarH = (rightValues[i] / niceMax) * chartH;
+            double leftBarH = ((leftValues[i] - niceMin) / (niceMax - niceMin)) * chartH;
+            double rightBarH = ((rightValues[i] - niceMin) / (niceMax - niceMin)) * chartH;
 
             double leftBarX = PAD_LEFT + i * groupW + startOffset;
             double rightBarX = leftBarX + barW + pairGap;
