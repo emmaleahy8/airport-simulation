@@ -1,9 +1,5 @@
 package com.group32.cs261project.frontend;
 
-import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
-import javafx.animation.ParallelTransition;
-import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
@@ -26,16 +22,25 @@ import javafx.scene.shape.ArcType;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * JavaFX pane responsible for rendering the live simulation visual.
+ *
+ * This component displays the holding queue, take-off queue, radar view,
+ * runways, and animated aircraft movements during the simulation.
+ * It receives simulation snapshots from the frontend service layer and
+ * updates the visual state accordingly.
+ *
+ * The pane also handles event-based animations such as aircraft landing
+ * and take-off, together with playback-speed-dependent timing.
+ */
 public class SimulationPaneVisual extends Pane {
 
     // ----- Styling -----
-    private static final Color BG = Color.web("#000000");
     private static final Color GREEN = Color.web("#39e75f");
     private static final Color GREEN_DIM = Color.web("#1f6f2c");
     private static final Color RUNWAY_FILL = Color.web("#0a2a10");
     private static final Color RADAR_FILL = Color.web("#071407");
     private static final Color EMERGENCY_RED = Color.web("#ff3b3b");
-    private static final Color EMERGENCY_LABEL = Color.web("#ff8a8a");
 
     private static final double PREF_W = 1200;
     private static final double PREF_H = 760;
@@ -62,7 +67,6 @@ public class SimulationPaneVisual extends Pane {
     private double radarCy;
     private double radarRadius;
     private double radarSweepAngleDeg = -45;
-    private double holdingRotationDeg = 0;
     private final Arc radarSweepArc = new Arc();
     private final Line radarHorizontalLine = new Line();
     private final Line radarVerticalLine = new Line();
@@ -73,12 +77,10 @@ public class SimulationPaneVisual extends Pane {
     private final List<Line> runwayTopLines = new ArrayList<>();
     private final List<Line> runwayBottomLines = new ArrayList<>();
     private final List<Point2D> runwayLandingEndPoints = new ArrayList<>();
-    private final List<Point2D> runwayTakeoffStartPoints = new ArrayList<>();
     private final List<Point2D> runwayTakeoffRunEndPoints = new ArrayList<>();
     private final List<Point2D> runwayLandingStartPoints = new ArrayList<>();
     private final List<Point2D> runwayTakeoffQueuePoints = new ArrayList<>();
     private final List<Point2D> runwayTakeoffRunStartPoints = new ArrayList<>();
-    private final Map<Integer, Integer> runwayTakeoffWaitCounts = new HashMap<>();
 
     private final Map<Integer, Long> runwayBusyUntilMs = new HashMap<>();
 
@@ -106,6 +108,13 @@ public class SimulationPaneVisual extends Pane {
     private final Map<String, Boolean> knownEmergencyByPlaneId = new HashMap<>();
     private final Map<String, Long> queueSuppressedUntil = new HashMap<>();
 
+    /**
+     * Creates a new simulation visual pane.
+     *
+     * This constructor initialises the background, queue, and action layers,
+     * creates the radar display, starts the radar sweep animation, and sets
+     * up listeners so that the layout updates when the pane is resized.
+     */
     public SimulationPaneVisual() {
         setPrefSize(PREF_W, PREF_H);
         setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -131,7 +140,7 @@ public class SimulationPaneVisual extends Pane {
         queueLayer.setPickOnBounds(false);
         actionLayer.setPickOnBounds(false);
 
-        // create radar rings 
+        // Create radar rings 
         for (int i = 0; i < 4; i++) {
             Circle ring = new Circle();
             ring.setFill(null);
@@ -208,7 +217,13 @@ public class SimulationPaneVisual extends Pane {
     }
 
     /**
-     * Call this whenever a new snapshot arrives from SimulationService.
+     * Updates the visual using the latest simulation snapshot.
+     *
+     * This method refreshes the layout, updates cached emergency information,
+     * redraws queue aircraft, and plays any newly received landing or take-off
+     * animations.
+     *
+     * @param snapshot the latest simulation snapshot
      */
     public void update(SimulationData snapshot) {
         if (snapshot == null) return;
@@ -222,8 +237,13 @@ public class SimulationPaneVisual extends Pane {
         });
     }
 
-    // ----- Layout -----
-
+    /**
+     * Recomputes the layout of all visual elements based on the current pane size.
+     *
+     * This includes the titles, radar, queue slot positions, and runway layout.
+     *
+     * @param snapshot the simulation snapshot whose runway count is used when rebuilding the runway layout
+     */
     private void relayout(SimulationData snapshot) {
         double w = Math.max(getWidth(), getPrefWidth());
         double h = Math.max(getHeight(), getPrefHeight());
@@ -250,6 +270,12 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Positions the section titles within the visual.
+     *
+     * @param w the current pane width
+     * @param h the current pane height
+     */
     private void layoutTitles(double w, double h) {
         holdingTitle.setLayoutX(250);
         holdingTitle.setLayoutY(25);
@@ -258,6 +284,13 @@ public class SimulationPaneVisual extends Pane {
         takeoffTitle.setLayoutY(h - 250);
     }
 
+    /**
+     * Lays out the radar display, including its outer boundary, rings,
+     * centre point, axis lines, and sweep arc.
+     *
+     * @param w the current pane width
+     * @param h the current pane height
+     */
     private void layoutRadar(double w, double h) {
         radarCx = 320;
         radarCy = 310;
@@ -319,6 +352,12 @@ public class SimulationPaneVisual extends Pane {
         updateRadarSweepLine();
     }
 
+    /**
+     * Computes the slot positions used to display aircraft in the holding queue.
+     *
+     * The positions are distributed across the radar area so that holding
+     * aircraft appear visually scattered rather than arranged in a simple line.
+     */
     private void layoutHoldingSlots() {
         holdingSlots.clear();
 
@@ -352,6 +391,12 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Computes the slot positions used to display aircraft in the take-off queue.
+     *
+     * @param w the current pane width
+     * @param h the current pane height
+     */
     private void layoutTakeoffSlots(double w, double h) {
         takeoffSlots.clear();
 
@@ -373,6 +418,16 @@ public class SimulationPaneVisual extends Pane {
         }
     }   
 
+    /**
+     * Lays out the runway visuals and related waypoint positions.
+     *
+     * Existing runway nodes are removed and recreated so that the displayed
+     * runway count and geometry match the current simulation configuration.
+     *
+     * @param runwayCount the number of runways to display
+     * @param w the current pane width
+     * @param h the current pane height
+     */
     private void layoutRunways(int runwayCount, double w, double h) {
         runwayCount = Math.max(1, Math.min(10, runwayCount));
 
@@ -393,7 +448,6 @@ public class SimulationPaneVisual extends Pane {
         runwayLandingStartPoints.clear();
         runwayLandingEndPoints.clear();
         runwayTakeoffRunEndPoints.clear();
-        runwayTakeoffStartPoints.clear();
         runwayTakeoffQueuePoints.clear();
         runwayTakeoffRunStartPoints.clear();
 
@@ -467,8 +521,14 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
-    // ----- Queue rendering -----
-
+    /**
+     * Renders aircraft currently shown in the holding queue and take-off queue.
+     *
+     * Existing plane visuals are updated where possible, new visuals are created
+     * when needed, and visuals no longer required are removed.
+     *
+     * @param snapshot the current simulation snapshot
+     */
     private void renderQueues(SimulationData snapshot) {
         cleanupSuppressedPlanes();
         List<String> desiredIds = new ArrayList<>();
@@ -514,6 +574,18 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Creates or updates a queue aircraft visual at the given target position.
+     *
+     * If the aircraft already exists, its label, style, and position are updated.
+     * Otherwise a new aircraft visual is created and added to the queue layer.
+     *
+     * @param planeId the aircraft identifier
+     * @param code the aircraft display code
+     * @param target the target visual position
+     * @param holding true if the aircraft is in the holding queue
+     * @param emergency true if the aircraft is an emergency aircraft
+     */
     private void upsertQueuePlane(String planeId, String code, Point2D target, boolean holding, boolean emergency) {
         PlaneVisual pv = queuePlaneNodes.get(planeId);
 
@@ -562,6 +634,12 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Repositions any existing queue aircraft so that they align with the
+     * current slot layout after a relayout operation.
+     *
+     * @param snapshot the simulation snapshot used to determine aircraft positions
+     */
     private void snapExistingQueuePlanesToCurrentSnapshot(SimulationData snapshot) {
         if (snapshot == null || snapshot.planes == null) return;
 
@@ -590,8 +668,13 @@ public class SimulationPaneVisual extends Pane {
         }
     }    
 
-    // ----- Event animations -----
-
+    /**
+     * Plays newly received event animations from the current snapshot.
+     *
+     * At present this includes landing and take-off event animations.
+     *
+     * @param snapshot the current simulation snapshot
+     */
     private void playNewEvents(SimulationData snapshot) {
         if (snapshot.events == null) return;
 
@@ -613,6 +696,15 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Animates an aircraft landing event.
+     *
+     * The aircraft moves from its holding position to the runway, waits if the
+     * runway is visually occupied, rolls across the runway, and then fades out.
+     *
+     * @param landed the landing event to animate
+     * @param emergency whether the aircraft should be shown as an emergency
+     */
     private void animateLandingEvent(SimulationData.PlaneLanded landed, boolean emergency) {
         landingNow.add(landed.planeId());
         suppressFromQueues(landed.planeId(), 2500);
@@ -743,6 +835,15 @@ public class SimulationPaneVisual extends Pane {
         pt.play();
     }
 
+    /**
+     * Animates an aircraft take-off event.
+     *
+     * The aircraft moves from the take-off queue to the runway, waits if needed,
+     * rolls along the runway, climbs away, and then fades out.
+     *
+     * @param tookOff the take-off event to animate
+     * @param emergency whether the aircraft should be shown as an emergency
+     */
     private void animateTakeoffEvent(SimulationData.PlaneTookOff tookOff, boolean emergency) {
         int runwayIdx = tookOff.runwayIndex();
         if (runwayIdx < 0
@@ -874,13 +975,29 @@ public class SimulationPaneVisual extends Pane {
         pt.play();
     }
 
+    // ===================
+    // ----- Helpers -----
+    // ===================
+
+    /**
+     * Sets the playback speed used by the visual animation system.
+     *
+     * Changing the playback speed resets transient animations so that future
+     * movement timings remain consistent with the selected speed.
+     *
+     * @param playbackSpeed the playback speed multiplier
+     */
     public void setPlaybackSpeed(double playbackSpeed) {
         this.playbackSpeed = Math.max(0.1, playbackSpeed);
         Platform.runLater(this::resetTransientAnimations);
     }
 
-    // ----- Helpers -----
-
+    /**
+     * Creates a styled section title label for the visual.
+     *
+     * @param text the title text
+     * @return the configured title label
+    */
     private static Label makeTitle(String text) {
         Label l = new Label(text);
         l.setFont(Font.font(20));
@@ -888,12 +1005,32 @@ public class SimulationPaneVisual extends Pane {
         return l;
     }
 
+    /**
+     * Returns a safe display code for the given aircraft snapshot.
+     *
+     * The aircraft code is preferred if present, otherwise the aircraft ID
+     * is used. If neither is available, a placeholder is returned.
+     *
+     * @param p the aircraft snapshot
+     * @return a safe display string for the aircraft
+     */
     private static String safeCode(SimulationData.PlaneDTO p) {
         if (p.code != null && !p.code.isBlank()) return p.code;
         if (p.id != null && !p.id.isBlank()) return p.id;
         return "?";
     }
 
+    /**
+     * Animates a queue aircraft visual to a new position.
+     *
+     * Any existing movement animation on the plane is stopped before the
+     * new movement begins.
+     *
+     * @param pv the plane visual to move
+     * @param targetX the target x-coordinate
+     * @param targetY the target y-coordinate
+     * @param duration the movement duration
+     */
     private void animateNodeTo(PlaneVisual pv, double targetX, double targetY, Duration duration) {
         Pane node = pv.root;
 
@@ -926,14 +1063,39 @@ public class SimulationPaneVisual extends Pane {
         tt.play();
     }
 
+    /**
+     * Returns the x-coordinate required to place a plane visual so that its
+     * internal anchor point aligns with the supplied point.
+     *
+     * @param pv the plane visual
+     * @param point the anchor target point
+     * @return the layout x-coordinate for the plane visual
+     */
     private double anchoredX(PlaneVisual pv, Point2D point) {
             return point.getX() - pv.getAnchorOffsetX();
         }
 
+    /**
+     * Returns the y-coordinate required to place a plane visual so that its
+     * internal anchor point aligns with the supplied point.
+     *
+     * @param pv the plane visual
+     * @param point the anchor target point
+     * @return the layout y-coordinate for the plane visual
+     */
     private double anchoredY(PlaneVisual pv, Point2D point) {
         return point.getY() - pv.getAnchorOffsetY();
     }
 
+    /**
+     * Converts runway occupancy time in simulation seconds into a visual
+     * animation duration.
+     *
+     * The duration is adjusted using the current effective visual speed.
+     *
+     * @param runwayOccupancySeconds the runway occupancy time in seconds
+     * @return the corresponding visual animation duration
+     */
     private Duration runwayOccupancyDuration(double runwayOccupancySeconds) {
         double secs = Math.max(0.1, runwayOccupancySeconds);
 
@@ -944,8 +1106,16 @@ public class SimulationPaneVisual extends Pane {
     }
 
     /**
-     * Reserves a runway from the earliest time the plane could enter it.
-     * Returns how long the plane must wait before entering the runway.
+     * Reserves a runway for a future animation and returns any waiting time
+     * required before the aircraft may enter it.
+     *
+     * This prevents multiple aircraft from appearing to occupy the same runway
+     * at the same time in the visual.
+     *
+     * @param runwayIdx the runway index
+     * @param earliestEntryTime the earliest time the aircraft could enter
+     * @param runwayOccupancySeconds the visual runway occupancy duration basis
+     * @return the wait duration before runway entry
      */
     private Duration reserveRunway(int runwayIdx, Duration earliestEntryTime, double runwayOccupancySeconds) {
         long now = System.currentTimeMillis();
@@ -960,7 +1130,16 @@ public class SimulationPaneVisual extends Pane {
         return wait;
     }
 
-    // Time on Runway 
+    /**
+     * Computes an animation duration based on travel distance and speed.
+     *
+     * @param startX the starting x-coordinate
+     * @param startY the starting y-coordinate
+     * @param endX the ending x-coordinate
+     * @param endY the ending y-coordinate
+     * @param pixelsPerSecond the movement speed in pixels per second
+     * @return the calculated animation duration
+     */
     private Duration durationForDistance(double startX, double startY, double endX, double endY, double pixelsPerSecond) {
         double dx = endX - startX;
         double dy = endY - startY;
@@ -971,10 +1150,25 @@ public class SimulationPaneVisual extends Pane {
         return Duration.millis(millis / effectiveVisualSpeed());
     }
 
+    /**
+     * Converts a base millisecond duration into a playback-speed-adjusted
+     * visual duration.
+     *
+     * @param baseMillis the unscaled duration in milliseconds
+     * @return the scaled duration
+     */
     private Duration scaledMillis(double baseMillis) {
         return Duration.millis(baseMillis / effectiveVisualSpeed());
     }
 
+    /**
+     * Returns the effective visual speed multiplier used for animation timing.
+     *
+     * Low playback speeds are adjusted non-linearly so that aircraft movement
+     * remains visually understandable.
+     *
+     * @return the effective animation speed multiplier
+     */
     private double effectiveVisualSpeed() {
         if (playbackSpeed <= 0.1) return 0.12;
         if (playbackSpeed <= 0.2) return 0.22;
@@ -988,6 +1182,12 @@ public class SimulationPaneVisual extends Pane {
         return playbackSpeed;
     }
 
+    /**
+     * Stops and clears all transient event animations currently in progress.
+     *
+     * Queue aircraft are also reset so that no partial translate transitions
+     * remain active.
+     */
     private void resetTransientAnimations() {
         for (Animation animation : activeEventAnimations) {
             if (animation != null) {
@@ -1013,6 +1213,13 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Finds the previous holding-slot position of the specified aircraft
+     * from the last simulation snapshot.
+     *
+     * @param planeId the aircraft identifier
+     * @return the previous holding-slot position, or null if unavailable
+     */
     private Point2D findPreviousHoldingSlot(String planeId) {
         if (previousSnapshot == null || previousSnapshot.planes == null) return null;
 
@@ -1032,31 +1239,14 @@ public class SimulationPaneVisual extends Pane {
         return null;
     }
 
-    private Set<String> getActiveEventPlaneIds(SimulationData snapshot) {
-        Set<String> ids = new HashSet<>();
-        if (snapshot == null || snapshot.events == null) return ids;
-
-        for (SimulationData.SimEvent ev : snapshot.events) {
-            if (ev instanceof SimulationData.PlaneLanded landed) {
-                ids.add(landed.planeId());
-            } else if (ev instanceof SimulationData.PlaneTookOff tookOff) {
-                ids.add(tookOff.planeId());
-            }
-        }
-        return ids;
-    }
-
-    private Boolean findEmergencyInPreviousSnapshot(String planeId) {
-        if (previousSnapshot == null || previousSnapshot.planes == null) return null;
-
-        for (SimulationData.PlaneDTO p : previousSnapshot.planes) {
-            if (p != null && Objects.equals(p.id, planeId)) {
-                return p.emergency;
-            }
-        }
-        return null;
-    }
-
+    /**
+     * Updates the emergency-status cache using the supplied simulation snapshot.
+     *
+     * Once an aircraft has been observed as an emergency aircraft, that state
+     * can be reused for subsequent visual events.
+     *
+     * @param snapshot the current simulation snapshot
+     */
     private void updateEmergencyCache(SimulationData snapshot) {
         if (snapshot == null || snapshot.planes == null) return;
 
@@ -1071,11 +1261,27 @@ public class SimulationPaneVisual extends Pane {
         }
     }
 
+    /**
+     * Temporarily suppresses an aircraft from queue rendering.
+     *
+     * This is used while event animations are playing so that a plane does not
+     * appear simultaneously in both the queue and the action layer.
+     *
+     * @param planeId the aircraft identifier
+     * @param millis the suppression duration in milliseconds
+     */
     private void suppressFromQueues(String planeId, long millis) {
         if (planeId == null) return;
         queueSuppressedUntil.put(planeId, System.currentTimeMillis() + millis);
     }
 
+    /**
+     * Checks whether the specified aircraft is currently suppressed from
+     * queue rendering.
+     *
+     * @param planeId the aircraft identifier
+     * @return true if the aircraft is currently suppressed
+     */
     private boolean isSuppressedFromQueues(String planeId) {
         if (planeId == null) return false;
         Long until = queueSuppressedUntil.get(planeId);
@@ -1088,13 +1294,24 @@ public class SimulationPaneVisual extends Pane {
         return true;
     }
 
+    /**
+     * Removes expired suppression entries from the queue suppression map.
+     */
     private void cleanupSuppressedPlanes() {
         long now = System.currentTimeMillis();
         queueSuppressedUntil.entrySet().removeIf(e -> e.getValue() < now);
     }
 
+    // ============================
     // ----- Plane Animations -----
+    // ============================
 
+    /**
+     * UI object representing a single aircraft in the simulation visual.
+     *
+     * A plane visual contains the aircraft icon, label, and any movement
+     * transition currently being applied to it.
+     */
     private static class PlaneVisual {
         final Pane root = new Pane();
         final StackPane iconWrap = new StackPane();
@@ -1110,6 +1327,11 @@ public class SimulationPaneVisual extends Pane {
         static final double ANCHOR_X = 24;
         static final double ANCHOR_Y = 24;
 
+        /**
+         * Creates a new plane visual for the given aircraft code.
+         *
+         * @param code the aircraft display code
+         */
         PlaneVisual(String code) {
             root.setPrefSize(ROOT_W, ROOT_H);
             root.setMinSize(ROOT_W, ROOT_H);
@@ -1141,6 +1363,11 @@ public class SimulationPaneVisual extends Pane {
             codeLabel.setLayoutY(16);
         }
 
+        /**
+         * Applies either normal or emergency styling to this plane visual.
+         *
+         * @param emergency true to apply emergency styling, false for normal styling
+         */
         void setEmergencyStyle(boolean emergency) {
             if (emergency) {
                 planeIcon.setStyle(
@@ -1166,28 +1393,51 @@ public class SimulationPaneVisual extends Pane {
             }
         }
 
+        /**
+         * Sets the displayed aircraft code for this plane visual.
+         *
+         * @param code the aircraft code to display
+         */
         void setCode(String code) {
             codeLabel.setText(code);
         }
 
+        /**
+        * Updates the aircraft icon styling depending on whether the plane is
+        * displayed in the holding queue.
+        *
+        * @param holding true if the aircraft is in the holding queue
+        */
         void setHoldingStyle(boolean holding) {
             planeIcon.setRotate(holding ? -20 : 0);
         }
 
+        /**
+         * Sets the position of the aircraft code label relative to the plane icon.
+         *
+         * @param x the label x-offset
+         * @param y the label y-offset
+         */
         void setLabelPosition(double x, double y) {
             codeLabel.setLayoutX(x);
             codeLabel.setLayoutY(y);
         }
 
+        // Returns the x-offset of the internal aircraft anchor point.
         double getAnchorOffsetX() {
             return ANCHOR_X;
         }
 
+        // Returns the y-offset of the internal aircraft anchor point.
         double getAnchorOffsetY() {
             return ANCHOR_Y;
         }
     }
 
+    /**
+     * Updates the radar sweep guide line and arc to reflect the current
+     * sweep angle.
+     */
     private void updateRadarSweepLine() {
         double angle = Math.toRadians(radarSweepAngleDeg);
 
