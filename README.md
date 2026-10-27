@@ -14,6 +14,8 @@ The simulation includes:
 
 The aim is to explore how different airport configurations affect congestion and efficiency.
 
+<img width="1277" height="744" alt="image" src="https://github.com/user-attachments/assets/54a38eb7-833b-4a0b-a916-7a5d98c68a8d" />
+
 ## Features
 ### Simulation configuration
 Users can configure:
