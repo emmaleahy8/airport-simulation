@@ -14,8 +14,6 @@ The simulation includes:
 
 The aim is to explore how different airport configurations affect congestion and efficiency.
 
-<img width="1277" height="744" alt="image" src="https://github.com/user-attachments/assets/54a38eb7-833b-4a0b-a916-7a5d98c68a8d" />
-
 ## Features
 ### Simulation configuration
 Users can configure:
@@ -27,6 +25,8 @@ Users can configure:
 - Simulation duration
 - Runway operating mode and operational status
 
+<img width="1277" height="744" alt="image" src="https://github.com/user-attachments/assets/54a38eb7-833b-4a0b-a916-7a5d98c68a8d" />
+
 ### Live visualisation
 The interface shows:
 - Aircraft entering the airspace
@@ -37,6 +37,9 @@ The interface shows:
 
 The runway operating modes and operational status, as well as the speed of the simulation can be adjusted during runtime.
 The visualisation automatically disables at speeds above 2× to maintain clarity.
+
+<img width="1280" height="745" alt="image" src="https://github.com/user-attachments/assets/179f4ded-93fb-491d-b406-b77d6960ba3c" />
+
 
 ### Simulation metrics
 After each run the system reports:
@@ -50,6 +53,10 @@ After each run the system reports:
 - Number of diversions
 
 These metrics allow performance comparison between different configurations.
+
+
+<img width="1278" height="737" alt="image" src="https://github.com/user-attachments/assets/cfb7978d-5ee2-45bc-af8a-d93f9460cefc" />
+
 
 ### Run comparison
 Completed simulation runs are stored and can be compared to identify how configuration changes affect outcomes.
