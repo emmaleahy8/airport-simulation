@@ -63,6 +63,10 @@ Completed simulation runs are stored and can be compared to identify how configu
 
 The comparison view shows side-by-side lists and bar charts of key metrics.
 
+
+<img width="1278" height="737" alt="image" src="https://github.com/user-attachments/assets/24ad0018-9ca7-48e5-b061-3ddda9c19cb1" />
+
+
 # How to Run
 ## Requirements
 - Java 17+
