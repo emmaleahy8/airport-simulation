@@ -72,12 +72,12 @@ Run the automated tests using the command: ```mvn verify```
 - TestFX (UI testing)
 
 # Authors
-- Isabella Borgese 
-- Tom Draper
-- Emma Leahy
-- Nok Hang Lo
-- Ayden Mehmood
-- Turgut Sahin
+- Isabella Borgese - Project Manager and Frontend
+- Tom Draper - Frontend
+- Emma Leahy - Frontend Lead
+- Nok Hang Lo - Backend Lead
+- Ayden Mehmood - Backend
+- Turgut Sahin - Testing
 
 # References
 CravenA (2020) Ho Chi Minh City, Vietnam – 04 Aug 2020: Vietnam Airlines fly over urban airport runway. Available at: https://www.shutterstock.com/image-photo/ho-chi-minh-city-vietnam-04-1790036027. (Accessed: 1 March 2026).
